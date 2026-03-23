@@ -114,6 +114,20 @@ p{margin-bottom:10px;}
   .sidebar-overlay.open{display:block;}
   .page-content{margin-left:0;}
   .wrap{padding:60px 16px 100px;}
+  .game-log-form{grid-template-columns:1fr 1fr;}
+  .game-log-form select,.game-log-form input{font-size:16px;}
+}
+
+@media(max-width:480px){
+  .hdr h1{font-size:18px;}
+  .stage-hdr h1{font-size:22px;}
+  .stats{grid-template-columns:repeat(2,1fr);}
+  .tbl{font-size:12px;}
+  .tbl th,.tbl td{padding:6px 4px;}
+  .compare-row{grid-template-columns:repeat(3,1fr);gap:4px;}
+  .game-log-form{grid-template-columns:1fr;}
+  .tip{padding:14px 16px;font-size:14px;}
+  .con{padding:16px;}
 }
 
 /* Stage pages */
