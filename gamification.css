@@ -13,18 +13,18 @@
 /* === Mini Panel === */
 .gami-panel{position:fixed;bottom:86px;right:16px;width:280px;background:#fff;border:2px solid #e0e0e0;border-radius:12px;padding:20px;z-index:302;box-shadow:0 4px 24px rgba(0,0,0,0.12);opacity:0;transform:translateY(20px);transition:opacity .25s,transform .25s;pointer-events:none;}
 .gami-panel.show{opacity:1;transform:translateY(0);pointer-events:auto;}
-.gami-panel-close{position:absolute;top:8px;right:12px;background:none;border:none;font-size:18px;cursor:pointer;color:#999;line-height:1;}
+.gami-panel-close{position:absolute;top:8px;right:12px;background:none;border:none;font-size:18px;cursor:pointer;color:#666;line-height:1;}
 .gami-panel-close:hover{color:#1a1a1a;}
-.gami-panel-level{font-family:'IBM Plex Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:#999;margin-bottom:2px;}
+.gami-panel-level{font-family:'IBM Plex Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:#666;margin-bottom:2px;}
 .gami-panel-streak{font-family:'IBM Plex Mono',monospace;font-size:42px;font-weight:700;color:#1a1a1a;line-height:1.1;}
-.gami-panel-streak-label{font-family:'IBM Plex Mono',monospace;font-size:11px;color:#888;margin-bottom:12px;}
+.gami-panel-streak-label{font-family:'IBM Plex Mono',monospace;font-size:11px;color:#555;margin-bottom:12px;}
 .gami-xp-bar{background:#e0e0e0;border-radius:6px;height:10px;margin:8px 0 4px;overflow:hidden;}
 .gami-xp-bar .fill{background:#769656;height:100%;border-radius:6px;transition:width .4s;}
-.gami-xp-label{display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:10px;color:#999;}
+.gami-xp-label{display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:10px;color:#666;}
 .gami-panel-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px;}
 .gami-panel-stat{background:#f8f7f0;border-radius:6px;padding:8px;text-align:center;}
 .gami-panel-stat .val{font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:700;color:#1a1a1a;}
-.gami-panel-stat .lbl{font-family:'IBM Plex Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:1px;color:#999;margin-top:2px;}
+.gami-panel-stat .lbl{font-family:'IBM Plex Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:1px;color:#666;margin-top:2px;}
 
 /* === Nav Progress Dots === */
 .gami-dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-left:6px;vertical-align:middle;flex-shrink:0;}
@@ -61,7 +61,7 @@
 .gami-levelup{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(0.7);background:#fff;border:3px solid #DAB82B;border-radius:16px;padding:32px 48px;text-align:center;z-index:500;opacity:0;pointer-events:none;box-shadow:0 0 40px rgba(218,184,43,0.3);transition:opacity .3s,transform .3s;}
 .gami-levelup.show{opacity:1;transform:translate(-50%,-50%) scale(1);}
 .gami-levelup .emoji{font-size:48px;margin-bottom:8px;}
-.gami-levelup .title{font-family:'IBM Plex Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:2px;color:#999;margin-bottom:4px;}
+.gami-levelup .title{font-family:'IBM Plex Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:2px;color:#666;margin-bottom:4px;}
 .gami-levelup .name{font-family:'IBM Plex Mono',monospace;font-size:24px;font-weight:700;color:#1a1a1a;}
 
 /* === Mobile === */

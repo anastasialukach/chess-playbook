@@ -285,7 +285,7 @@ function setupPageHooks(){
 function autoSyncCheck(){
   var lastSync=lsGet('chess-last-sync',0);
   if(Date.now()-lastSync<7200000) return;
-  var username=lsGet('chess-com-username','');if(!username) return;
+  var username=lsGet('chess-com-username','')||'happery';if(!username) return;
   fetch('https://api.chess.com/pub/player/'+username+'/games/archives')
     .then(function(r){return r.json();})
     .then(function(d){

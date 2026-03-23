@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stats — Chess Playbook</title>
+<link rel="stylesheet" href="shared.css">
+<link rel="stylesheet" href="gamification.css">
+<style>
+.stats-grid{display:grid;grid-template-columns:1fr;gap:20px;margin-top:24px;}
+.chart-card{background:#fff;border:2px solid #e0e0e0;border-radius:10px;padding:20px;margin:0;}
+.chart-card-title{font-family:'IBM Plex Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:2px;color:#666;margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid #eee;}
+.chart-card-subtitle{font-family:'IBM Plex Mono',monospace;font-size:10px;color:#555;margin-top:-8px;margin-bottom:12px;}
+.svg-wrap{width:100%;overflow:hidden;}
+.svg-wrap svg{width:100%;height:auto;display:block;}
+.donut-row{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+.donut-card{text-align:center;}
+.donut-label{font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:700;margin-bottom:8px;color:#1a1a1a;}
+.donut-total{font-family:'IBM Plex Mono',monospace;font-size:11px;color:#666;margin-top:4px;}
+.streak-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.streak-box{background:#fafaf8;border:2px solid #e0e0e0;border-radius:8px;padding:14px;text-align:center;}
+.streak-box .s-val{font-family:'IBM Plex Mono',monospace;font-size:28px;font-weight:700;}
+.streak-box .s-label{font-family:'IBM Plex Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:#666;margin-top:4px;}
+.streak-box .s-dates{font-family:'IBM Plex Mono',monospace;font-size:10px;color:#555;margin-top:2px;}
+.streak-box.win .s-val{color:#22863a;}
+.streak-box.loss .s-val{color:#d73a49;}
+.opening-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #f0f0f0;font-size:13px;}
+.opening-row:last-child{border-bottom:none;}
+.opening-name{flex:1;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:#1a1a1a;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.opening-games{font-family:'IBM Plex Mono',monospace;font-size:11px;color:#666;width:40px;text-align:right;flex-shrink:0;}
+.opening-wld{font-family:'IBM Plex Mono',monospace;font-size:11px;color:#555;width:70px;text-align:center;flex-shrink:0;}
+.opening-bar-wrap{width:80px;flex-shrink:0;height:8px;background:#e0e0e0;border-radius:4px;overflow:hidden;}
+.opening-bar{height:100%;border-radius:4px;}
+
+.tooltip-box{position:fixed;background:#1a1a1a;color:#fff;font-family:'IBM Plex Mono',monospace;font-size:11px;padding:8px 12px;border-radius:6px;pointer-events:none;z-index:9999;max-width:220px;line-height:1.5;display:none;box-shadow:0 4px 12px rgba(0,0,0,0.3);}
+
+.empty-state{text-align:center;padding:60px 20px;color:#555;font-size:15px;}
+.empty-state .empty-icon{font-size:40px;margin-bottom:12px;display:block;opacity:0.4;}
+.empty-state a{color:#769656;text-decoration:none;font-family:'IBM Plex Mono',monospace;font-weight:600;}
+.empty-state a:hover{text-decoration:underline;}
+
+.legend-row{display:flex;gap:16px;flex-wrap:wrap;margin-top:8px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:#555;}
+.legend-row .leg-item{display:flex;align-items:center;gap:4px;}
+.legend-row .leg-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0;}
+
+.streak-timeline{margin-top:14px;}
+
+@media(max-width:768px){
+  .donut-row{grid-template-columns:1fr 1fr;gap:12px;}
+  .streak-grid{grid-template-columns:1fr 1fr;}
+  .chart-card{padding:16px;}
+  .opening-bar-wrap{width:60px;}
+}
+@media(max-width:480px){
+  .donut-row{grid-template-columns:1fr;}
+  .streak-grid{grid-template-columns:1fr;}
+  .chart-card{padding:14px 10px;}
+  .streak-box .s-val{font-size:22px;}
+  .opening-row{flex-wrap:wrap;gap:4px;}
+  .opening-name{width:100%;flex:none;}
+}
+</style>
+</head>
+<body>
+<nav class="site-nav" id="site-nav"></nav>
+<script src="shared.js"></script>
+<script>renderNav("stats")</script>
+<script src="gamification.js"></script>
+<div class="wrap" style="max-width:760px;">
+
+  <div class="stage-hdr">
+    <div class="stage-num">Deep Dive</div>
+    <h1>Statistics</h1>
+    <div class="stage-meta">Visual breakdown of your chess performance</div>
+  </div>
+
+  <div id="stats-root"></div>
+
+</div>
+
+<div class="tooltip-box" id="chart-tooltip"></div>
+
+<script>
+(function(){
+
+  var STORAGE_KEY = 'chess-synced-games';
+  var COL_WIN = '#22863a';
+  var COL_LOSS = '#d73a49';
+  var COL_DRAW = '#666';
+  var COL_TEAL = '#1A6B5A';
+  var COL_GOLD = '#DAB82B';
+  var COL_GRID = '#e8e8e8';
+  var COL_TEXT = '#666';
+
+  var tooltip = document.getElementById('chart-tooltip');
+
+  function getGames(){
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch(e){ return []; }
+  }
+
+  function showTooltip(e, html){
+    tooltip.innerHTML = html;
+    tooltip.style.display = 'block';
+    var tx = e.clientX + 12;
+    var ty = e.clientY - 8;
+    if(tx + 220 > window.innerWidth) tx = e.clientX - 230;
+    if(ty + 80 > window.innerHeight) ty = e.clientY - 80;
+    tooltip.style.left = tx + 'px';
+    tooltip.style.top = ty + 'px';
+  }
+
+  function hideTooltip(){
+    tooltip.style.display = 'none';
+  }
+
+  // ============ MAIN ============
+  var games = getGames();
+  var root = document.getElementById('stats-root');
+
+  if(!games.length){
+    root.innerHTML = '<div class="empty-state"><span class="empty-icon">♟</span>No games synced yet.<br>Go to <a href="/dashboard">Dashboard</a> to sync your Chess.com games.</div>';
+    return;
+  }
+
+  // Sort games by date
+  games.sort(function(a,b){ return new Date(a.date) - new Date(b.date); });
+
+  var html = '<div class="stats-grid">';
+
+  // ============ 1. RATING OVER TIME ============
+  html += renderRatingChart(games);
+
+  // ============ 2. MONTHLY PERFORMANCE ============
+  html += renderMonthlyPerformance(games);
+
+  // ============ 3. WIN RATE TREND ============
+  html += renderWinRateTrend(games);
+
+  // ============ 4. PERFORMANCE BY COLOR ============
+  html += renderColorPerformance(games);
+
+  // ============ 5. GAME LENGTH DISTRIBUTION ============
+  html += renderGameLength(games);
+
+  // ============ 6. OPENING PERFORMANCE ============
+  html += renderOpeningPerformance(games);
+
+  // ============ 7. PERFORMANCE VS RATING RANGES ============
+  html += renderRatingRanges(games);
+
+  // ============ 8. STREAK ANALYSIS ============
+  html += renderStreakAnalysis(games);
+
+  html += '</div>';
+  root.innerHTML = html;
+  attachTooltipListeners();
+
+
+  // ============ CHART FUNCTIONS ============
+
+  function renderRatingChart(games){
+    var W = 700, H = 260, padL = 44, padR = 16, padT = 20, padB = 32;
+    var chartW = W - padL - padR;
+    var chartH = H - padT - padB;
+
+    var ratings = games.map(function(g){ return g.myRating || 0; });
+    var minR = Math.min.apply(null, ratings);
+    var maxR = Math.max.apply(null, ratings);
+    var peak = maxR;
+    var peakIdx = ratings.indexOf(peak);
+    var range = maxR - minR || 1;
+    // Add 5% padding
+    minR = Math.floor(minR - range * 0.05);
+    maxR = Math.ceil(maxR + range * 0.05);
+    range = maxR - minR || 1;
+
+    var points = [];
+    for(var i = 0; i < ratings.length; i++){
+      var x = padL + (i / Math.max(ratings.length - 1, 1)) * chartW;
+      var y = padT + chartH - ((ratings[i] - minR) / range) * chartH;
+      points.push({x: x, y: y, rating: ratings[i], game: games[i]});
+    }
+
+    var svg = '<svg viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg">';
+
+    // Y-axis grid
+    var ySteps = 5;
+    for(var s = 0; s <= ySteps; s++){
+      var val = Math.round(minR + (s / ySteps) * range);
+      var yPos = padT + chartH - (s / ySteps) * chartH;
+      svg += '<line x1="'+padL+'" y1="'+yPos.toFixed(1)+'" x2="'+(W-padR)+'" y2="'+yPos.toFixed(1)+'" stroke="'+COL_GRID+'" stroke-width="0.5"/>';
+      svg += '<text x="'+(padL-4)+'" y="'+(yPos+3).toFixed(1)+'" text-anchor="end" fill="'+COL_TEXT+'" font-family="IBM Plex Mono,monospace" font-size="8">'+val+'</text>';
+    }
+
+    // Peak line
+    var peakY = padT + chartH - ((peak - minR) / range) * chartH;
+    svg += '<line x1="'+padL+'" y1="'+peakY.toFixed(1)+'" x2="'+(W-padR)+'" y2="'+peakY.toFixed(1)+'" stroke="'+COL_GOLD+'" stroke-width="0.5" stroke-dasharray="4,3"/>';
+
+    // Path
+    var pathD = '';
+    for(var i = 0; i < points.length; i++){
+      pathD += (i === 0 ? 'M' : 'L') + points[i].x.toFixed(1) + ',' + points[i].y.toFixed(1);
+    }
+    svg += '<path d="'+pathD+'" fill="none" stroke="'+COL_TEAL+'" stroke-width="1.5" stroke-linejoin="round"/>';
+
+    // Dots
+    for(var i = 0; i < points.length; i++){
+      var p = points[i];
+      var col = p.game.result === 'W' ? COL_WIN : p.game.result === 'L' ? COL_LOSS : COL_DRAW;
+      svg += '<circle class="rating-dot" cx="'+p.x.toFixed(1)+'" cy="'+p.y.toFixed(1)+'" r="3" fill="'+col+'" stroke="#fff" stroke-width="0.5" data-idx="'+i+'" style="cursor:pointer;"/>';
+    }
+
+    // Peak marker
+    if(peakIdx >= 0){
+      var pp = points[peakIdx];
+      svg += '<circle cx="'+pp.x.toFixed(1)+'" cy="'+pp.y.toFixed(1)+'" r="5" fill="'+COL_GOLD+'" stroke="#fff" stroke-width="1.5"/>';
+      svg += '<text x="'+pp.x.toFixed(1)+'" y="'+(pp.y - 10).toFixed(1)+'" text-anchor="middle" fill="'+COL_GOLD+'" font-family="IBM Plex Mono,monospace" font-size="9" font-weight="700">Peak: '+peak+'</text>';
+    }
+
+    // X-axis: month labels
+    var monthLabels = getMonthLabelsForGames(games, padL, chartW);
+    for(var m = 0; m < monthLabels.length; m++){
+      svg += '<text x="'+monthLabels[m].x.toFixed(1)+'" y="'+(H-4)+'" text-anchor="middle" fill="'+COL_TEXT+'" font-family="IBM Plex Mono,monospace" font-size="8">'+monthLabels[m].label+'</text>';
+    }
+
+    svg += '</svg>';
+
+    var s = '<div class="chart-card">';
+    s += '<div class="chart-card-title">Rating Over Time</div>';
+    s += '<div class="legend-row"><span class="leg-item"><span class="leg-dot" style="background:'+COL_WIN+'"></span>Win</span><span class="leg-item"><span class="leg-dot" style="background:'+COL_LOSS+'"></span>Loss</span><span class="leg-item"><span class="leg-dot" style="background:'+COL_DRAW+'"></span>Draw</span><span class="leg-item"><span class="leg-dot" style="background:'+COL_GOLD+'"></span>Peak</span></div>';
+    s += '<div class="svg-wrap" id="rating-chart">'+svg+'</div>';
+    s += '</div>';
+    return s;
+  }
+
+  function getMonthLabelsForGames(games, padL, chartW){
+    var labels = [];
+    var seen = {};
+    var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    for(var i = 0; i < games.length; i++){
+      var d = new Date(games[i].date);
+      var key = d.getFullYear() + '-' + d.getMonth();
+      if(!seen[key]){
+        seen[key] = true;
+        var x = padL + (i / Math.max(games.length - 1, 1)) * chartW;
+        labels.push({x: x, label: months[d.getMonth()] + ' ' + String(d.getFullYear()).slice(2)});
+      }
+    }
+    // Thin labels if too many
+    if(labels.length > 8){
+      var step = Math.ceil(labels.length / 8);
+      var thinned = [];
+      for(var i = 0; i < labels.length; i += step) thinned.push(labels[i]);
+      return thinned;
+    }
+    return labels;
+  }
+
+  // ============ 2. MONTHLY PERFORMANCE ============
+  function renderMonthlyPerformance(games){
+    var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    var buckets = {};
+    for(var i = 0; i < games.length; i++){
+      var d = new Date(games[i].date);
+      var key = d.getFullYear() + '-' + String(d.getMonth()).padStart(2,'0');
+      if(!buckets[key]) buckets[key] = {wins:0,losses:0,draws:0,label:months[d.getMonth()]+' '+String(d.getFullYear()).slice(2)};
+      if(games[i].result === 'W') buckets[key].wins++;
+      else if(games[i].result === 'L') buckets[key].losses++;
+      else buckets[key].draws++;
+    }
+    var keys = Object.keys(buckets).sort();
+    if(!keys.length) return '';
+
+    var maxGames = 0;
+    for(var k = 0; k < keys.length; k++){
+      var b = buckets[keys[k]];
+      var total = b.wins + b.losses + b.draws;
+      if(total > maxGames) maxGames = total;
+    }
+
+    var W = 700, H = 220, padL = 36, padR = 16, padT = 24, padB = 36;
+    var chartW = W - padL - padR;
+    var chartH = H - padT - padB;
+    var barW = Math.min(40, (chartW / keys.length) * 0.7);
+    var gap = chartW / keys.length;
+
+    var svg = '<svg viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg">';
+
+    // Y grid
+    var ySteps = 4;
+    for(var s = 0; s <= ySteps; s++){
+      var val = Math.round((s / ySteps) * maxGames);
+      var yPos = padT + chartH - (s / ySteps) * chartH;
+      svg += '<line x1="'+padL+'" y1="'+yPos.toFixed(1)+'" x2="'+(W-padR)+'" y2="'+yPos.toFixed(1)+'" stroke="'+COL_GRID+'" stroke-width="0.5"/>';
+      svg += '<text x="'+(padL-4)+'" y="'+(yPos+3).toFixed(1)+'" text-anchor="end" fill="'+COL_TEXT+'" font-family="IBM Plex Mono,monospace" font-size="8">'+val+'</text>';
+    }
+
+    for(var k = 0; k < keys.length; k++){
+      var b = buckets[keys[k]];
+      var total = b.wins + b.losses + b.draws;
+      var cx = padL + gap * k + gap / 2;
+      var winH = (b.wins / maxGames) * chartH;
+      var lossH = (b.losses / maxGames) * chartH;
+      var drawH = (b.draws / maxGames) * chartH;
+
+      // Stacked: wins bottom, draws middle, losses top
+      var y0 = padT + chartH;
+      if(b.wins > 0){
+        svg += '<rect x="'+(cx - barW/2).toFixed(1)+'" y="'+(y0 - winH).toFixed(1)+'" width="'+barW.toFixed(1)+'" height="'+winH.toFixed(1)+'" rx="2" fill="'+COL_WIN+'" opacity="0.85"/>';
+        y0 -= winH;
+      }
+      if(b.draws > 0){
+        svg += '<rect x="'+(cx - barW/2).toFixed(1)+'" y="'+(y0 - drawH).toFixed(1)+'" width="'+barW.toFixed(1)+'" height="'+drawH.toFixed(1)+'" rx="2" fill="'+COL_DRAW+'" opacity="0.6"/>';
+        y0 -= drawH;
+      }
+      if(b.losses > 0){
+        svg += '<rect x="'+(cx - barW/2).toFixed(1)+'" y="'+(y0 - lossH).toFixed(1)+'" width="'+barW.toFixed(1)+'" height="'+lossH.toFixed(1)+'" rx="2" fill="'+COL_LOSS+'" opacity="0.85"/>';
+        y0 -= lossH;
+      }
+
+      // Win rate label
+      var wr = total > 0 ? Math.round(b.wins / total * 100) : 0;
+      var stackTop = padT + chartH - (total / maxGames) * chartH;
+      svg += '<text x="'+cx.toFixed(1)+'" y="'+(stackTop - 5).toFixed(1)+'" text-anchor="middle" fill="'+(wr >= 50 ? COL_WIN : COL_LOSS)+'" font-family="IBM Plex Mono,monospace" font-size="8" font-weight="700">'+wr+'%</text>';
+
+      // Month label
+      svg += '<text x="'+cx.toFixed(1)+'" y="'+(H - 6)+'" text-anchor="middle" fill="'+COL_TEXT+'" font-family="IBM Plex Mono,monospace" font-size="8">'+b.label+'</text>';
+    }
+
+    svg += '</svg>';
+
+    var s = '<div class="chart-card">';
+    s += '<div class="chart-card-title">Monthly Performance</div>';
+    s += '<div class="legend-row"><span class="leg-item"><span class="leg-dot" style="background:'+COL_WIN+'"></span>Wins</span><span class="leg-item"><span class="leg-dot" style="background:'+COL_LOSS+'"></span>Losses</span><span class="leg-item"><span class="leg-dot" style="background:'+COL_DRAW+'"></span>Draws</span></div>';
+    s += '<div class="svg-wrap">'+svg+'</div>';
+    s += '</div>';
+    return s;
+  }
+
+  // ============ 3. WIN RATE TREND ============
+  function renderWinRateTrend(games){
+    if(games.length < 10) return '';
+
+    var windowSize = 10;
+    var rates = [];
+    for(var i = windowSize - 1; i < games.length; i++){
+      var wins = 0;
+      for(var j = i - windowSize + 1; j <= i; j++){
+        if(games[j].result === 'W') wins++;
+      }
+      rates.push(Math.round(wins / windowSize * 100));
+    }
+
+    var W = 700, H = 200, padL = 36, padR = 16, padT = 16, padB = 28;
+    var chartW = W - padL - padR;
+    var chartH = H - padT - padB;
+
+    var svg = '<svg viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg">';
+
+    // Y grid
+    for(var s = 0; s <= 4; s++){
+      var val = s * 25;
+      var yPos = padT + chartH - (val / 100) * chartH;
+      svg += '<line x1="'+padL+'" y1="'+yPos.toFixed(1)+'" x2="'+(W-padR)+'" y2="'+yPos.toFixed(1)+'" stroke="'+COL_GRID+'" stroke-width="0.5"/>';
+      svg += '<text x="'+(padL-4)+'" y="'+(yPos+3).toFixed(1)+'" text-anchor="end" fill="'+COL_TEXT+'" font-family="IBM Plex Mono,monospace" font-size="8">'+val+'%</text>';
+    }
+
+    // 50% line
+    var y50 = padT + chartH - 0.5 * chartH;
+    svg += '<line x1="'+padL+'" y1="'+y50.toFixed(1)+'" x2="'+(W-padR)+'" y2="'+y50.toFixed(1)+'" stroke="'+COL_TEAL+'" stroke-width="1" stroke-dasharray="4,3" opacity="0.5"/>';
+
+    // Area fill above/below 50%
+    // Build path segments
+    var points = [];
+    for(var i = 0; i < rates.length; i++){
+      var x = padL + (i / Math.max(rates.length - 1, 1)) * chartW;
+      var y = padT + chartH - (rates[i] / 100) * chartH;
+      points.push({x: x, y: y, rate: rates[i]});
+    }
+
+    // Green area (above 50%)
+    var greenPath = 'M' + padL.toFixed(1) + ',' + y50.toFixed(1);
+    for(var i = 0; i < points.length; i++){
+      var clampY = Math.min(points[i].y, y50);
+      greenPath += ' L' + points[i].x.toFixed(1) + ',' + clampY.toFixed(1);
+    }
+    greenPath += ' L' + points[points.length-1].x.toFixed(1) + ',' + y50.toFixed(1) + ' Z';
+    svg += '<path d="'+greenPath+'" fill="'+COL_WIN+'" opacity="0.1"/>';
+
+    // Red area (below 50%)
+    var redPath = 'M' + padL.toFixed(1) + ',' + y50.toFixed(1);
+    for(var i = 0; i < points.length; i++){
+      var clampY = Math.max(points[i].y, y50);
+      redPath += ' L' + points[i].x.toFixed(1) + ',' + clampY.toFixed(1);
+    }
+    redPath += ' L' + points[points.length-1].x.toFixed(1) + ',' + y50.toFixed(1) + ' Z';
+    svg += '<path d="'+redPath+'" fill="'+COL_LOSS+'" opacity="0.1"/>';
+
+    // Line
+    var lineD = '';
+    for(var i = 0; i < points.length; i++){
+      lineD += (i === 0 ? 'M' : 'L') + points[i].x.toFixed(1) + ',' + points[i].y.toFixed(1);
+    }
+    svg += '<path d="'+lineD+'" fill="none" stroke="'+COL_TEAL+'" stroke-width="1.5" stroke-linejoin="round"/>';
+
+    // X-axis labels
+    var labelCount = Math.min(6, rates.length);
+    var step = Math.floor(rates.length / labelCount);
+    for(var i = 0; i < rates.length; i += step){
+      var gameNum = i + windowSize;
+      var x = padL + (i / Math.max(rates.length - 1, 1)) * chartW;
+      svg += '<text x="'+x.toFixed(1)+'" y="'+(H-4)+'" text-anchor="middle" fill="'+COL_TEXT+'" font-family="IBM Plex Mono,monospace" font-size="8">#'+gameNum+'</text>';
+    }
+
+    svg += '</svg>';
+
+    var s = '<div class="chart-card">';
+    s += '<div class="chart-card-title">Win Rate Trend</div>';
+    s += '<div class="chart-card-subtitle">Rolling '+windowSize+'-game win rate &middot; Green above 50%, red below</div>';
+    s += '<div class="svg-wrap">'+svg+'</div>';
+    s += '</div>';
+    return s;
+  }
+
+  // ============ 4. PERFORMANCE BY COLOR ============
+  function renderColorPerformance(games){
+    var white = {w:0,l:0,d:0};
+    var black = {w:0,l:0,d:0};
+    for(var i = 0; i < games.length; i++){
+      var bucket = games[i].color === 'W' ? white : black;
+      if(games[i].result === 'W') bucket.w++;
+      else if(games[i].result === 'L') bucket.l++;
+      else bucket.d++;
+    }
+
+    function donutSVG(data, label){
+      var total = data.w + data.l + data.d;
+      if(total === 0) return '<div style="color:#666;font-size:13px;">No games</div>';
+      var wr = Math.round(data.w / total * 100);
+      var size = 140, cx = size/2, cy = size/2, r = 52, strokeW = 16;
+      var svg = '<svg viewBox="0 0 '+size+' '+size+'" width="'+size+'" height="'+size+'" xmlns="http://www.w3.org/2000/svg">';
+
+      var segments = [
+        {val: data.w, col: COL_WIN},
+        {val: data.d, col: COL_DRAW},
+        {val: data.l, col: COL_LOSS}
+      ];
+      var circumference = 2 * Math.PI * r;
+      var offset = -circumference * 0.25; // Start at top
+
+      for(var s = 0; s < segments.length; s++){
+        if(segments[s].val === 0) continue;
+        var pct = segments[s].val / total;
+        var dashLen = pct * circumference;
+        var dashGap = circumference - dashLen;
+        svg += '<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="none" stroke="'+segments[s].col+'" stroke-width="'+strokeW+'" stroke-dasharray="'+dashLen.toFixed(2)+' '+dashGap.toFixed(2)+'" stroke-dashoffset="'+((-offset).toFixed(2))+'" opacity="0.85"/>';
+        offset -= dashLen;
+      }
+
+      // Center text
+      svg += '<text x="'+cx+'" y="'+(cy-2)+'" text-anchor="middle" dominant-baseline="middle" font-family="IBM Plex Mono,monospace" font-size="24" font-weight="700" fill="#1a1a1a">'+wr+'%</text>';
+      svg += '<text x="'+cx+'" y="'+(cy+14)+'" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-size="9" fill="#666">win rate</text>';
+      svg += '</svg>';
+      return svg;
+    }
+
+    var whiteTotal = white.w + white.l + white.d;
+    var blackTotal = black.w + black.l + black.d;
+
+    var s = '<div class="chart-card">';
+    s += '<div class="chart-card-title">Performance by Color</div>';
+    s += '<div class="donut-row">';
+
+    s += '<div class="donut-card">';
+    s += '<div class="donut-label">♔ White</div>';
+    s += donutSVG(white);
+    s += '<div class="donut-total">'+whiteTotal+' games &middot; '+white.w+'W '+white.l+'L '+white.d+'D</div>';
+    s += '</div>';
+
+    s += '<div class="donut-card">';
+    s += '<div class="donut-label">♚ Black</div>';
+    s += donutSVG(black);
+    s += '<div class="donut-total">'+blackTotal+' games &middot; '+black.w+'W '+black.l+'L '+black.d+'D</div>';
+    s += '</div>';
+
+    s += '</div></div>';
+    return s;
+  }
+
+  // ============ 5. GAME LENGTH DISTRIBUTION ============
+  function renderGameLength(games){
+    var buckets = [
+      {label:'1-5',min:1,max:5},{label:'6-10',min:6,max:10},{label:'11-15',min:11,max:15},
+      {label:'16-20',min:16,max:20},{label:'21-25',min:21,max:25},{label:'26-30',min:26,max:30},
+      {label:'31-40',min:31,max:40},{label:'40+',min:41,max:9999}
+    ];
+    var data = buckets.map(function(b){ return {label:b.label,wins:0,losses:0,draws:0}; });
+
+    for(var i = 0; i < games.length; i++){
+      var moves = parseInt(games[i].moves) || 0;
+      for(var j = 0; j < buckets.length; j++){
+        if(moves >= buckets[j].min && moves <= buckets[j].max){
+          if(games[i].result === 'W') data[j].wins++;
+          else if(games[i].result === 'L') data[j].losses++;
+          else data[j].draws++;
+          break;
+        }
+      }
+    }
+
+    var maxCount = 0;
+    for(var j = 0; j < data.length; j++){
+      var t = data[j].wins + data[j].losses + data[j].draws;
+      if(t > maxCount) maxCount = t;
+    }
+    if(maxCount === 0) return '';
+
+    var W = 700, H = 200, padL = 36, padR = 16, padT = 16, padB = 36;
+    var chartW = W - padL - padR;
+    var chartH = H - padT - padB;
+    var gap = chartW / data.length;
+    var barW = Math.min(50, gap * 0.65);
+
+    var svg = '<svg viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg">';
+
+    // Y grid
+    for(var s = 0; s <= 4; s++){
+      var val = Math.round((s / 4) * maxCount);
+      var yPos = padT + chartH - (s / 4) * chartH;
+      svg += '<line x1="'+padL+'" y1="'+yPos.toFixed(1)+'" x2="'+(W-padR)+'" y2="'+yPos.toFixed(1)+'" stroke="'+COL_GRID+'" stroke-width="0.5"/>';
+      svg += '<text x="'+(padL-4)+'" y="'+(yPos+3).toFixed(1)+'" text-anchor="end" fill="'+COL_TEXT+'" font-family="IBM Plex Mono,monospace" font-size="8">'+val+'</text>';
+    }
+
+    for(var j = 0; j < data.length; j++){
+      var cx = padL + gap * j + gap / 2;
+      var d = data[j];
+      var total = d.wins + d.losses + d.draws;
+      var y0 = padT + chartH;
+      var winH = (d.wins / maxCount) * chartH;
+      var lossH = (d.losses / maxCount) * chartH;
+      var drawH = (d.draws / maxCount) * chartH;
+
+      if(d.wins > 0){
+        svg += '<rect x="'+(cx - barW/2).toFixed(1)+'" y="'+(y0 - winH).toFixed(1)+'" width="'+barW.toFixed(1)+'" height="'+Math.max(winH, 1).toFixed(1)+'" rx="2" fill="'+COL_WIN+'" opacity="0.85"/>';
+        y0 -= winH;
+      }
+      if(d.draws > 0){
+        svg += '<rect x="'+(cx - barW/2).toFixed(1)+'" y="'+(y0 - drawH).toFixed(1)+'" width="'+barW.toFixed(1)+'" height="'+Math.max(drawH, 1).toFixed(1)+'" rx="2" fill="'+COL_DRAW+'" opacity="0.5"/>';
+        y0 -= drawH;
+      }
+      if(d.losses > 0){
+        svg += '<rect x="'+(cx - barW/2).toFixed(1)+'" y="'+(y0 - lossH).toFixed(1)+'" width="'+barW.toFixed(1)+'" height="'+Math.max(lossH, 1).toFixed(1)+'" rx="2" fill="'+COL_LOSS+'" opacity="0.85"/>';
+      }
+
+      // Label
+      svg += '<text x="'+cx.toFixed(1)+'" y="'+(H - 8)+'" text-anchor="middle" fill="'+COL_TEXT+'" font-family="IBM Plex Mono,monospace" font-size="8">'+d.label+'</text>';
+      svg += '<text x="'+cx.toFixed(1)+'" y="'+(H - 0)+'" text-anchor="middle" fill="#ccc" font-family="IBM Plex Mono,monospace" font-size="7">moves</text>';
+    }
+
+    svg += '</svg>';
+
+    var s = '<div class="chart-card">';
+    s += '<div class="chart-card-title">Game Length Distribution</div>';
+    s += '<div class="chart-card-subtitle">Where do your games end? Short games may indicate opening trouble</div>';
+    s += '<div class="legend-row"><span class="leg-item"><span class="leg-dot" style="background:'+COL_WIN+'"></span>Wins</span><span class="leg-item"><span class="leg-dot" style="background:'+COL_LOSS+'"></span>Losses</span><span class="leg-item"><span class="leg-dot" style="background:'+COL_DRAW+'"></span>Draws</span></div>';
+    s += '<div class="svg-wrap">'+svg+'</div>';
+    s += '</div>';
+    return s;
+  }
+
+  // ============ 6. OPENING PERFORMANCE ============
+  function renderOpeningPerformance(games){
+    var openings = {};
+    for(var i = 0; i < games.length; i++){
+      var name = detectOpening(games[i]);
+      if(!openings[name]) openings[name] = {w:0,l:0,d:0};
+      if(games[i].result === 'W') openings[name].w++;
+      else if(games[i].result === 'L') openings[name].l++;
+      else openings[name].d++;
+    }
+
+    // Sort by total games desc
+    var entries = Object.keys(openings).map(function(k){
+      var o = openings[k];
+      var total = o.w + o.l + o.d;
+      return {name: k, w: o.w, l: o.l, d: o.d, total: total, wr: total > 0 ? Math.round(o.w / total * 100) : 0};
+    }).sort(function(a,b){ return b.total - a.total; });
+
+    // Show top 10
+    entries = entries.slice(0, 10);
+    if(!entries.length) return '';
+
+    var s = '<div class="chart-card">';
+    s += '<div class="chart-card-title">Opening Performance</div>';
+    s += '<div class="chart-card-subtitle">Top openings by frequency &middot; detected from PGN first moves</div>';
+
+    for(var i = 0; i < entries.length; i++){
+      var e = entries[i];
+      var barCol = e.wr >= 55 ? COL_WIN : e.wr >= 40 ? COL_GOLD : COL_LOSS;
+      s += '<div class="opening-row">';
+      s += '<span class="opening-name" title="'+e.name+'">'+e.name+'</span>';
+      s += '<span class="opening-games">'+e.total+'</span>';
+      s += '<span class="opening-wld">'+e.w+'W '+e.l+'L '+e.d+'D</span>';
+      s += '<span class="opening-bar-wrap"><span class="opening-bar" style="width:'+e.wr+'%;background:'+barCol+';"></span></span>';
+      s += '<span class="wr '+(e.wr>=50?'hi':e.wr>=35?'md':'lo')+'" style="width:36px;text-align:center;flex-shrink:0;">'+e.wr+'%</span>';
+      s += '</div>';
+    }
+
+    s += '</div>';
+    return s;
+  }
+
+  function detectOpening(game){
+    // Try PGN Opening header first
+    if(game.pgn){
+      var m = game.pgn.match(/\[Opening\s+"([^"]+)"\]/);
+      if(m) return m[1];
+      var m2 = game.pgn.match(/\[ECOUrl\s+"[^"]*\/([^"]+)"\]/);
+      if(m2){
+        try { return decodeURIComponent(m2[1]).replace(/-/g,' '); } catch(e){}
+      }
+    }
+    // Fallback: detect from first move
+    if(game.pgn){
+      var movesMatch = game.pgn.match(/\]\s*\n\s*\n\s*1\.\s*(\S+)/);
+      if(movesMatch){
+        var firstMove = movesMatch[1];
+        if(firstMove === 'e4') return 'e4 Opening';
+        if(firstMove === 'd4') return 'd4 Opening';
+        if(firstMove === 'Nf3') return 'Nf3 Opening';
+        if(firstMove === 'c4') return 'English Opening';
+        return firstMove + ' Opening';
+      }
+    }
+    return 'Unknown';
+  }
+
+  // ============ 7. PERFORMANCE VS RATING RANGES ============
+  function renderRatingRanges(games){
+    var buckets = [
+      {label:'<200',min:0,max:199},
+      {label:'200-300',min:200,max:299},
+      {label:'300-400',min:300,max:399},
+      {label:'400-500',min:400,max:499},
+      {label:'500-600',min:500,max:599},
+      {label:'600-700',min:600,max:699},
+      {label:'700-800',min:700,max:799},
+      {label:'800-900',min:800,max:899},
+      {label:'900-1000',min:900,max:999},
+      {label:'1000+',min:1000,max:99999}
+    ];
+
+    var data = [];
+    for(var b = 0; b < buckets.length; b++){
+      var bucket = buckets[b];
+      var w = 0, l = 0, d = 0;
+      for(var i = 0; i < games.length; i++){
+        var opp = games[i].oppRating || 0;
+        if(opp >= bucket.min && opp <= bucket.max){
+          if(games[i].result === 'W') w++;
+          else if(games[i].result === 'L') l++;
+          else d++;
+        }
+      }
+      var total = w + l + d;
+      if(total > 0){
+        data.push({label: bucket.label, w: w, l: l, d: d, total: total, wr: Math.round(w / total * 100)});
+      }
+    }
+
+    if(!data.length) return '';
+
+    var W = 700, H = Math.max(140, data.length * 28 + 40), padL = 70, padR = 60, padT = 10, padB = 10;
+    var chartW = W - padL - padR;
+    var chartH = H - padT - padB;
+    var rowH = chartH / data.length;
+
+    var svg = '<svg viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg">';
+
+    for(var i = 0; i < data.length; i++){
+      var d = data[i];
+      var cy = padT + rowH * i + rowH / 2;
+      var barMaxW = chartW;
+      var barWidth = (d.wr / 100) * barMaxW;
+      var barCol = d.wr >= 55 ? COL_WIN : d.wr >= 40 ? COL_GOLD : COL_LOSS;
+
+      // Background track
+      svg += '<rect x="'+padL+'" y="'+(cy - 8)+'" width="'+barMaxW+'" height="16" rx="4" fill="#f0f0ea"/>';
+
+      // Fill bar
+      if(barWidth > 0){
+        svg += '<rect x="'+padL+'" y="'+(cy - 8)+'" width="'+barWidth.toFixed(1)+'" height="16" rx="4" fill="'+barCol+'" opacity="0.8"/>';
+      }
+
+      // 50% marker
+      var x50 = padL + barMaxW * 0.5;
+      svg += '<line x1="'+x50.toFixed(1)+'" y1="'+(cy-10)+'" x2="'+x50.toFixed(1)+'" y2="'+(cy+10)+'" stroke="#1a1a1a" stroke-width="0.5" opacity="0.3"/>';
+
+      // Label
+      svg += '<text x="'+(padL - 6)+'" y="'+(cy + 4)+'" text-anchor="end" fill="#1a1a1a" font-family="IBM Plex Mono,monospace" font-size="9" font-weight="600">'+d.label+'</text>';
+
+      // Win rate + count
+      svg += '<text x="'+(W - padR + 6)+'" y="'+(cy + 4)+'" text-anchor="start" fill="'+(d.wr >= 50 ? COL_WIN : COL_LOSS)+'" font-family="IBM Plex Mono,monospace" font-size="9" font-weight="700">'+d.wr+'%</text>';
+      svg += '<text x="'+(W - 6)+'" y="'+(cy + 4)+'" text-anchor="end" fill="'+COL_TEXT+'" font-family="IBM Plex Mono,monospace" font-size="8">('+d.total+')</text>';
+    }
+
+    svg += '</svg>';
+
+    var s = '<div class="chart-card">';
+    s += '<div class="chart-card-title">Performance vs Rating Ranges</div>';
+    s += '<div class="chart-card-subtitle">Win rate against opponents in each rating bracket &middot; 50% line shown</div>';
+    s += '<div class="svg-wrap">'+svg+'</div>';
+    s += '</div>';
+    return s;
+  }
+
+  // ============ 8. STREAK ANALYSIS ============
+  function renderStreakAnalysis(games){
+    var currentWin = 0, currentLoss = 0;
+    var longestWin = 0, longestLoss = 0;
+    var lwStart = -1, lwEnd = -1, llStart = -1, llEnd = -1;
+    var tempStart = 0;
+
+    // Current streaks (from end)
+    for(var i = games.length - 1; i >= 0; i--){
+      if(games[i].result === 'W' && currentLoss === 0) currentWin++;
+      else if(games[i].result === 'L' && currentWin === 0) currentLoss++;
+      else break;
+    }
+
+    // Longest streaks
+    var streak = 0, streakType = '', streakStart = 0;
+    for(var i = 0; i < games.length; i++){
+      var r = games[i].result;
+      if(r === streakType){
+        streak++;
+      } else {
+        // Record previous
+        if(streakType === 'W' && streak > longestWin){
+          longestWin = streak; lwStart = streakStart; lwEnd = i - 1;
+        }
+        if(streakType === 'L' && streak > longestLoss){
+          longestLoss = streak; llStart = streakStart; llEnd = i - 1;
+        }
+        streakType = r;
+        streak = 1;
+        streakStart = i;
+      }
+    }
+    // Check last streak
+    if(streakType === 'W' && streak > longestWin){
+      longestWin = streak; lwStart = streakStart; lwEnd = games.length - 1;
+    }
+    if(streakType === 'L' && streak > longestLoss){
+      longestLoss = streak; llStart = streakStart; llEnd = games.length - 1;
+    }
+
+    function fmtDate(g){
+      if(!g || !g.date) return '?';
+      var d = new Date(g.date);
+      var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      return months[d.getMonth()] + ' ' + d.getDate();
+    }
+
+    var s = '<div class="chart-card">';
+    s += '<div class="chart-card-title">Streak Analysis</div>';
+    s += '<div class="streak-grid">';
+
+    s += '<div class="streak-box win"><div class="s-val">'+currentWin+'</div><div class="s-label">Current Win Streak</div></div>';
+    s += '<div class="streak-box loss"><div class="s-val">'+currentLoss+'</div><div class="s-label">Current Loss Streak</div></div>';
+
+    s += '<div class="streak-box win"><div class="s-val">'+longestWin+'</div><div class="s-label">Longest Win Streak</div>';
+    if(lwStart >= 0) s += '<div class="s-dates">'+fmtDate(games[lwStart])+' — '+fmtDate(games[lwEnd])+'</div>';
+    s += '</div>';
+
+    s += '<div class="streak-box loss"><div class="s-val">'+longestLoss+'</div><div class="s-label">Longest Loss Streak</div>';
+    if(llStart >= 0) s += '<div class="s-dates">'+fmtDate(games[llStart])+' — '+fmtDate(games[llEnd])+'</div>';
+    s += '</div>';
+
+    s += '</div>';
+
+    // Streak timeline
+    s += '<div class="streak-timeline">';
+    s += '<div style="font-family:IBM Plex Mono,monospace;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:#666;margin:14px 0 6px;">Streak Timeline</div>';
+
+    var timeW = 700, timeH = 32;
+    var tsvg = '<svg viewBox="0 0 '+timeW+' '+timeH+'" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;">';
+    var segW = timeW / games.length;
+    for(var i = 0; i < games.length; i++){
+      var col = games[i].result === 'W' ? COL_WIN : games[i].result === 'L' ? COL_LOSS : COL_DRAW;
+      tsvg += '<rect x="'+(i * segW).toFixed(2)+'" y="0" width="'+Math.max(segW, 1).toFixed(2)+'" height="'+timeH+'" fill="'+col+'" opacity="0.7"/>';
+    }
+    tsvg += '</svg>';
+    s += tsvg;
+
+    s += '<div class="legend-row" style="margin-top:4px;"><span class="leg-item"><span class="leg-dot" style="background:'+COL_WIN+'"></span>Win</span><span class="leg-item"><span class="leg-dot" style="background:'+COL_LOSS+'"></span>Loss</span><span class="leg-item"><span class="leg-dot" style="background:'+COL_DRAW+'"></span>Draw</span></div>';
+    s += '</div>';
+
+    s += '</div>';
+    return s;
+  }
+
+  // ============ TOOLTIP LISTENERS ============
+  function attachTooltipListeners(){
+    var dots = document.querySelectorAll('.rating-dot');
+    dots.forEach(function(dot){
+      dot.addEventListener('mouseenter', function(e){
+        var idx = parseInt(dot.getAttribute('data-idx'));
+        var g = games[idx];
+        if(!g) return;
+        var d = new Date(g.date);
+        var dateStr = d.toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
+        var resultLabel = g.result === 'W' ? '<span style="color:'+COL_WIN+'">Win</span>' : g.result === 'L' ? '<span style="color:'+COL_LOSS+'">Loss</span>' : '<span style="color:'+COL_DRAW+'">Draw</span>';
+        var html = '<div style="margin-bottom:2px;"><strong>Rating: '+g.myRating+'</strong></div>';
+        html += dateStr + '<br>';
+        html += resultLabel + ' vs ' + (g.oppRating || '?') + '<br>';
+        if(g.moves) html += g.moves + ' moves<br>';
+        if(g.termination) html += '<span style="opacity:0.7;">' + g.termination + '</span>';
+        showTooltip(e, html);
+      });
+      dot.addEventListener('mousemove', function(e){ showTooltip(e, tooltip.innerHTML); });
+      dot.addEventListener('mouseleave', hideTooltip);
+    });
+  }
+
+})();
+</script>
+</body>
+</html>

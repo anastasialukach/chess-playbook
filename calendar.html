@@ -10,21 +10,21 @@
 .cal-hero{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:32px;}
 .cal-hero .stat{background:#fff;border:2px solid #e0e0e0;border-radius:10px;padding:20px 14px;text-align:center;}
 .cal-hero .stat .val{font-family:'IBM Plex Mono',monospace;font-size:36px;font-weight:700;color:#1A6B5A;line-height:1;}
-.cal-hero .stat .label{font-family:'IBM Plex Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:#999;margin-top:6px;}
+.cal-hero .stat .label{font-family:'IBM Plex Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:#666;margin-top:6px;}
 .cal-hero .stat.primary{border-color:#1A6B5A;}
 .cal-hero .stat.primary .val{font-size:48px;}
 
 .cal-section{background:#fff;border:2px solid #e0e0e0;border-radius:10px;padding:24px;margin-bottom:24px;}
-.cal-section h3{border:none;margin:0 0 16px;padding:0;font-family:'IBM Plex Mono',monospace;font-size:12px;text-transform:uppercase;letter-spacing:2px;color:#999;}
+.cal-section h3{border:none;margin:0 0 16px;padding:0;font-family:'IBM Plex Mono',monospace;font-size:12px;text-transform:uppercase;letter-spacing:2px;color:#666;}
 
 /* Heatmap */
 .heatmap-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:8px;}
 .heatmap-wrap{display:inline-flex;flex-direction:column;min-width:max-content;}
-.month-labels{display:flex;margin-left:32px;margin-bottom:4px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:#999;}
+.month-labels{display:flex;margin-left:32px;margin-bottom:4px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:#666;}
 .month-labels span{text-align:left;}
 .heatmap-grid{display:flex;gap:0;}
 .day-labels{display:flex;flex-direction:column;gap:0;margin-right:6px;padding-top:0;}
-.day-labels span{height:13px;line-height:13px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:#999;display:flex;align-items:center;}
+.day-labels span{height:13px;line-height:13px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:#666;display:flex;align-items:center;}
 .heatmap-cols{display:flex;gap:2px;}
 .heatmap-col{display:flex;flex-direction:column;gap:2px;}
 .heatmap-cell{width:13px;height:13px;border-radius:2px;cursor:default;position:relative;}
@@ -35,14 +35,14 @@
 .cal-tooltip::after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:4px solid transparent;border-top-color:#1a1a1a;}
 
 /* Legend */
-.heatmap-legend{display:flex;align-items:center;gap:4px;margin-top:12px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:#999;}
+.heatmap-legend{display:flex;align-items:center;gap:4px;margin-top:12px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:#666;}
 .heatmap-legend .swatch{width:13px;height:13px;border-radius:2px;}
 
 /* Empty state */
 .empty-state{text-align:center;padding:40px 20px;}
 .empty-state .icon{font-size:48px;margin-bottom:12px;}
 .empty-state h3{border:none;margin:0 0 8px;padding:0;font-family:'Source Serif 4',Georgia,serif;font-size:20px;font-weight:700;color:#1a1a1a;text-transform:none;letter-spacing:0;}
-.empty-state p{font-size:14px;color:#777;margin-bottom:16px;max-width:360px;margin-left:auto;margin-right:auto;}
+.empty-state p{font-size:14px;color:#555;margin-bottom:16px;max-width:360px;margin-left:auto;margin-right:auto;}
 .empty-state a{display:inline-block;background:#1a1a1a;color:#fff;padding:10px 24px;border-radius:6px;text-decoration:none;font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600;}
 .empty-state a:hover{background:#333;}
 
@@ -50,7 +50,7 @@
 .recent-list{list-style:none;margin:0;padding:0;}
 .recent-list li{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f0f0f0;font-size:14px;}
 .recent-list li:last-child{border-bottom:none;}
-.recent-list .r-date{font-family:'IBM Plex Mono',monospace;font-size:12px;color:#777;}
+.recent-list .r-date{font-family:'IBM Plex Mono',monospace;font-size:12px;color:#555;}
 .recent-list .r-count{font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:700;color:#1A6B5A;}
 
 @media(max-width:768px){

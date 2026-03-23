@@ -11,9 +11,9 @@
 .sync-big-btn{display:block;width:100%;background:#1A6B5A;color:#fff;border:none;padding:16px 24px;border-radius:8px;font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:700;cursor:pointer;transition:background .15s;letter-spacing:0.5px;}
 .sync-big-btn:hover{background:#15574A;}
 .sync-big-btn:disabled{background:#999;cursor:not-allowed;}
-.sync-meta{display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin-top:12px;font-family:'IBM Plex Mono',monospace;font-size:12px;color:#777;}
+.sync-meta{display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin-top:12px;font-family:'IBM Plex Mono',monospace;font-size:12px;color:#555;}
 .sync-meta .sync-count{color:#1a1a1a;font-weight:700;}
-.sync-meta .sync-ts{color:#999;}
+.sync-meta .sync-ts{color:#666;}
 .sync-progress-bar{font-family:'IBM Plex Mono',monospace;font-size:12px;color:#769656;margin-top:8px;min-height:20px;}
 .sync-error{font-family:'IBM Plex Mono',monospace;font-size:12px;color:#d73a49;margin-top:8px;}
 .auto-sync-row{display:flex;align-items:center;gap:12px;margin-top:14px;padding-top:14px;border-top:1px solid #eee;}
@@ -24,19 +24,19 @@
 .toggle .slider::before{content:'';position:absolute;width:18px;height:18px;left:3px;top:3px;background:#fff;border-radius:50%;transition:transform .2s;}
 .toggle input:checked+.slider{background:#1A6B5A;}
 .toggle input:checked+.slider::before{transform:translateX(20px);}
-.auto-sync-status{font-family:'IBM Plex Mono',monospace;font-size:11px;color:#999;margin-top:6px;}
+.auto-sync-status{font-family:'IBM Plex Mono',monospace;font-size:11px;color:#666;margin-top:6px;}
 
 /* Stats grid */
 .admin-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:16px;}
 .admin-stat{background:#fff;border:2px solid #e0e0e0;border-radius:10px;padding:14px;text-align:center;}
-.admin-stat .label{font-family:'IBM Plex Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:#999;margin-bottom:4px;}
+.admin-stat .label{font-family:'IBM Plex Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:#666;margin-bottom:4px;}
 .admin-stat .val{font-family:'IBM Plex Mono',monospace;font-size:26px;font-weight:700;color:#1a1a1a;}
-.admin-stat .note{font-size:12px;color:#888;margin-top:2px;font-family:'IBM Plex Mono',monospace;}
+.admin-stat .note{font-size:12px;color:#555;margin-top:2px;font-family:'IBM Plex Mono',monospace;}
 .grn{color:#22863a;}.rd{color:#d73a49;}.blu{color:#0366d6;}
 
 /* Mini rating chart */
 .chart-box{background:#fff;border:2px solid #e0e0e0;border-radius:10px;padding:16px;margin-top:14px;}
-.chart-label{font-family:'IBM Plex Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:#999;margin-bottom:10px;}
+.chart-label{font-family:'IBM Plex Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:#666;margin-bottom:10px;}
 
 /* Section Progress */
 .progress-overview{display:flex;align-items:center;gap:14px;margin-bottom:18px;}
@@ -45,14 +45,14 @@
 .progress-fill{background:#769656;height:100%;border-radius:6px;transition:width .3s;}
 .progress-group{margin-bottom:20px;}
 .progress-group:last-child{margin-bottom:0;}
-.progress-group-title{font-family:'IBM Plex Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:#999;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid #eee;}
+.progress-group-title{font-family:'IBM Plex Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:#666;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid #eee;}
 .progress-item{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #f5f5f5;}
 .progress-item:last-child{border-bottom:none;}
-.progress-item .ch-num{font-family:'IBM Plex Mono',monospace;font-size:10px;color:#bbb;min-width:24px;}
+.progress-item .ch-num{font-family:'IBM Plex Mono',monospace;font-size:10px;color:#666;min-width:24px;}
 .progress-item .ch-name{flex:1;font-size:14px;color:#1a1a1a;}
 .progress-status{display:flex;gap:4px;}
-.status-btn{font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;padding:4px 10px;border-radius:4px;border:2px solid #e0e0e0;background:#fff;cursor:pointer;color:#999;transition:all .15s;}
-.status-btn:hover{border-color:#999;}
+.status-btn{font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;padding:4px 10px;border-radius:4px;border:2px solid #e0e0e0;background:#fff;cursor:pointer;color:#666;transition:all .15s;}
+.status-btn:hover{border-color:#666;}
 .status-btn.read{border-color:#0366d6;background:#eef6ff;color:#0366d6;}
 .status-btn.learned{border-color:#22863a;background:#dcffe4;color:#22863a;}
 
@@ -133,6 +133,7 @@
   var AUTO_SYNC_KEY = 'chess-auto-sync';
   var SYNC_INTERVAL_KEY = 'chess-sync-interval';
   var USERNAME = 'happery';
+  localStorage.setItem('chess-com-username', JSON.stringify(USERNAME));
   var DEFAULT_INTERVAL = 7200000; // 2 hours
   var DRAW_RESULTS = ['stalemate','repetition','agreed','insufficient','50move','timevsinsufficient'];
 
@@ -414,7 +415,7 @@
     var grid = document.getElementById('stats-grid');
 
     if(games.length === 0){
-      grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:24px;color:#888;font-size:14px;">No games synced yet. Hit Refresh Games above.</div>';
+      grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:24px;color:#555;font-size:14px;">No games synced yet. Hit Refresh Games above.</div>';
       document.getElementById('rating-chart-box').style.display = 'none';
       return;
     }
@@ -480,7 +481,7 @@
       '<div class="admin-stat"><div class="label">Rating</div><div class="val">' + latestRating + '</div></div>' +
       '<div class="admin-stat"><div class="label">This Week</div><div class="val">' + gamesWeek + '</div></div>' +
       '<div class="admin-stat"><div class="label">This Month</div><div class="val">' + gamesMonth + '</div></div>' +
-      '<div class="admin-stat"><div class="label">Streak</div><div class="val">' + streak + ' <span style="font-size:12px;color:#888;">days</span></div></div>';
+      '<div class="admin-stat"><div class="label">Streak</div><div class="val">' + streak + ' <span style="font-size:12px;color:#555;">days</span></div></div>';
 
     // Mini rating chart (last 20 games)
     renderRatingChart(games);
@@ -523,7 +524,7 @@
       var gy = pad + (s / steps) * plotH;
       var val = Math.round(maxR - (s / steps) * range);
       svg += '<line x1="' + pad + '" y1="' + gy + '" x2="' + (w-pad) + '" y2="' + gy + '" stroke="#eee" stroke-width="1"/>';
-      svg += '<text x="' + (pad-4) + '" y="' + (gy+4) + '" text-anchor="end" font-family="IBM Plex Mono,monospace" font-size="9" fill="#999">' + val + '</text>';
+      svg += '<text x="' + (pad-4) + '" y="' + (gy+4) + '" text-anchor="end" font-family="IBM Plex Mono,monospace" font-size="9" fill="#666">' + val + '</text>';
     }
 
     // Line
@@ -538,7 +539,7 @@
     svg += '</svg>';
 
     // Legend
-    svg += '<div style="display:flex;gap:14px;margin-top:6px;font-family:IBM Plex Mono,monospace;font-size:10px;color:#888;">' +
+    svg += '<div style="display:flex;gap:14px;margin-top:6px;font-family:IBM Plex Mono,monospace;font-size:10px;color:#555;">' +
       '<span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#22863a;margin-right:3px;vertical-align:middle;"></span>Win</span>' +
       '<span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#d73a49;margin-right:3px;vertical-align:middle;"></span>Loss</span>' +
       '<span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#999;margin-right:3px;vertical-align:middle;"></span>Draw</span>' +
@@ -589,7 +590,7 @@
 
         var readCls = state === 'read' ? ' read' : '';
         var learnedCls = state === 'learned' ? ' learned' : '';
-        var visitedTag = (visited && state === 'unread') ? '<span style="font-family:IBM Plex Mono,monospace;font-size:9px;color:#999;margin-left:6px;background:#f5f5f5;padding:2px 6px;border-radius:3px;">visited</span>' : '';
+        var visitedTag = (visited && state === 'unread') ? '<span style="font-family:IBM Plex Mono,monospace;font-size:9px;color:#666;margin-left:6px;background:#f5f5f5;padding:2px 6px;border-radius:3px;">visited</span>' : '';
 
         html += '<div class="progress-item">';
         html += chSpan;

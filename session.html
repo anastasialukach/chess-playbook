@@ -8,7 +8,7 @@
 <style>
 /* Session-specific styles */
 .session-timer{font-family:'IBM Plex Mono',monospace;font-size:42px;font-weight:700;text-align:center;letter-spacing:2px;margin:8px 0;color:#1a1a1a;}
-.game-counter{font-family:'IBM Plex Mono',monospace;font-size:14px;text-align:center;color:#777;margin-bottom:16px;}
+.game-counter{font-family:'IBM Plex Mono',monospace;font-size:14px;text-align:center;color:#555;margin-bottom:16px;}
 .streak-indicator{text-align:center;font-family:'IBM Plex Mono',monospace;font-size:12px;margin-bottom:20px;}
 .streak-indicator .streak-val{font-weight:700;font-size:14px;}
 
@@ -31,7 +31,7 @@
 .ctrl-btn.start:hover{background:#5a7a44;}
 .ctrl-btn.end{background:#d73a49;}
 .ctrl-btn.end:hover{background:#c02a38;}
-.ctrl-btn.small{font-size:11px;padding:6px 12px;background:transparent;color:#999;text-decoration:underline;font-weight:400;}
+.ctrl-btn.small{font-size:11px;padding:6px 12px;background:transparent;color:#666;text-decoration:underline;font-weight:400;}
 .ctrl-btn.small:hover{color:#666;}
 .ctrl-btn.resume{background:#769656;width:100%;padding:14px;font-size:14px;}
 .ctrl-btn.resume:hover{background:#5a7a44;}
@@ -61,7 +61,7 @@
 
 /* History table */
 .history-tbl{width:100%;border-collapse:collapse;font-size:13px;margin:12px 0;}
-.history-tbl th{text-align:left;font-family:'IBM Plex Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#999;padding:8px 6px;border-bottom:2px solid #ddd;font-weight:600;}
+.history-tbl th{text-align:left;font-family:'IBM Plex Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#666;padding:8px 6px;border-bottom:2px solid #ddd;font-weight:600;}
 .history-tbl td{padding:8px 6px;border-bottom:1px solid #eee;vertical-align:middle;font-size:12px;}
 .history-tbl .result-circle{width:18px;height:18px;font-size:8px;}
 .rule-tag{font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;padding:2px 6px;border-radius:3px;}
@@ -73,11 +73,11 @@
 
 /* Section spacing */
 .section{margin-top:32px;}
-.section-title{font-family:'IBM Plex Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:2px;color:#999;margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid #e0e0e0;}
+.section-title{font-family:'IBM Plex Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:2px;color:#666;margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid #e0e0e0;}
 
 /* Tabs */
 .tab-row{display:flex;gap:0;margin-bottom:20px;border-bottom:2px solid #e0e0e0;}
-.tab-btn{font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;padding:10px 16px;background:none;border:none;border-bottom:2px solid transparent;margin-bottom:-2px;cursor:pointer;color:#999;transition:color .15s;}
+.tab-btn{font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;padding:10px 16px;background:none;border:none;border-bottom:2px solid transparent;margin-bottom:-2px;cursor:pointer;color:#666;transition:color .15s;}
 .tab-btn:hover{color:#1a1a1a;}
 .tab-btn.active{color:#1a1a1a;border-bottom-color:#1a1a1a;}
 .tab-panel{display:none;}
@@ -178,7 +178,7 @@
       <span class="mono" style="font-size:12px;color:#d73a49;">02</span> &nbsp;Stop after <strong>3 consecutive losses</strong> (mandatory 30-min break)<br>
       <span class="mono" style="font-size:12px;color:#22863a;">03</span> &nbsp;Win 3+ straight &rarr; consider stopping (suggested)<br>
       <span class="mono" style="font-size:12px;color:#d73a49;">04</span> &nbsp;Sub-10-move loss &rarr; take a break<br>
-      <span class="mono" style="font-size:12px;color:#999;">05</span> &nbsp;At least <strong>30 minutes</strong> between sessions
+      <span class="mono" style="font-size:12px;color:#666;">05</span> &nbsp;At least <strong>30 minutes</strong> between sessions
     </p>
   </div>
 </div>
@@ -192,7 +192,7 @@
         <tr><th>Date</th><th>Games</th><th>Record</th><th>WR</th><th>Duration</th><th>3-Loss?</th></tr>
       </thead>
       <tbody id="history-body">
-        <tr><td colspan="6" style="text-align:center;color:#999;padding:24px;">No sessions yet. Start your first one above.</td></tr>
+        <tr><td colspan="6" style="text-align:center;color:#666;padding:24px;">No sessions yet. Start your first one above.</td></tr>
       </tbody>
     </table>
   </div>
@@ -497,7 +497,7 @@
     var all=getSessions();
     var tbody=document.getElementById('history-body');
     if(all.length===0){
-      tbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:#999;padding:24px;">No sessions yet.</td></tr>';
+      tbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:#666;padding:24px;">No sessions yet.</td></tr>';
       return;
     }
     var html='';
