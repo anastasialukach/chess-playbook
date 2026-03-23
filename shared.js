@@ -58,41 +58,136 @@ function ad(b,pcs){return b.concat(pcs);}
 
 function renderNav(active) {
   var sections = [
-    {heading:'Playbook', items:[
-      {id:'playbook',label:'Home',href:'/'},
-      {id:'ch-reference',label:'Reference',href:'/ch-reference'},
-      {id:'ch-record',label:'Record',href:'/ch-record'},
-      {id:'ch-white',label:'White',href:'/ch-white'},
-      {id:'ch-black',label:'Black',href:'/ch-black'},
-      {id:'ch-patterns',label:'Patterns',href:'/ch-patterns'},
-      {id:'ch-openings',label:'Openings',href:'/ch-openings'},
-      {id:'ch-middle',label:'Middle',href:'/ch-middle'},
-      {id:'ch-tilt',label:'Tilt',href:'/ch-tilt'},
-      {id:'ch-practice',label:'Practice',href:'/ch-practice'},
-      {id:'ch-training',label:'Training',href:'/ch-training'}
+    {heading:'Reference', items:[
+      {id:'ch-reference',label:'Board & Notation',ch:'00'}
     ]},
-    {heading:'Stages', items:[
-      {id:'stage-1',label:'S1',href:'/stage-1'},
-      {id:'stage-2',label:'S2',href:'/stage-2'},
-      {id:'stage-3',label:'S3',href:'/stage-3'},
-      {id:'stage-4',label:'S4',href:'/stage-4'},
-      {id:'stage-5',label:'S5',href:'/stage-5'}
+    {heading:'Your 50 Games', items:[
+      {id:'ch-record',label:'Record',ch:'01'},
+      {id:'ch-white',label:'White Openings',ch:'02'},
+      {id:'ch-black',label:'Black Openings',ch:'03'}
     ]},
-    {heading:'', items:[
-      {id:'dashboard',label:'Dashboard',href:'/dashboard'}
+    {heading:'Fix These', items:[
+      {id:'ch-patterns',label:'Losing Patterns',ch:'04'},
+      {id:'ch-training',label:'More Patterns',ch:'09'}
+    ]},
+    {heading:'Level Up', items:[
+      {id:'ch-openings',label:'Openings to Try',ch:'05'},
+      {id:'ch-middle',label:'Middle Game',ch:'06'},
+      {id:'ch-tilt',label:'Tilt Control',ch:'07'},
+      {id:'ch-practice',label:'Practice Plan',ch:'08'}
+    ]},
+    {heading:'Training Program', items:[
+      {id:'stage-1',label:'S1: Stop the Bleeding'},
+      {id:'stage-2',label:'S2: Build Foundation'},
+      {id:'stage-3',label:'S3: Fight for Center'},
+      {id:'stage-4',label:'S4: Punish Mistakes'},
+      {id:'stage-5',label:'S5: Rating Push'},
+      {id:'dashboard',label:'Dashboard'}
     ]}
   ];
-  var h = '<div class="nav-inner">';
+
+  // Build sidebar HTML
+  var h = '<div class="sidebar-brand"><h2>CHESS PLAYBOOK</h2><div class="sidebar-sub">happery · 50 games</div></div>';
+  h += '<a class="nav-link' + (active === 'playbook' ? ' active' : '') + '" href="/" style="padding-left:20px;margin-bottom:4px;font-weight:600;">Home</a>';
+
   for (var s = 0; s < sections.length; s++) {
     var sec = sections[s];
-    if (sec.heading) h += '<span class="nav-sep">' + sec.heading + '</span>';
+    // Check if active page is in this section
+    var sectionActive = false;
+    for (var i = 0; i < sec.items.length; i++) {
+      if (sec.items[i].id === active) { sectionActive = true; break; }
+    }
+    h += '<div class="nav-section">';
+    h += '<div class="nav-section-header" data-section="' + s + '">' + sec.heading + ' <span class="arrow' + (sectionActive ? ' open' : '') + '">&#9654;</span></div>';
+    h += '<div class="nav-section-items' + (sectionActive ? ' open' : '') + '" data-section-items="' + s + '">';
     for (var i = 0; i < sec.items.length; i++) {
       var p = sec.items[i];
+      var href = p.id === 'dashboard' ? '/dashboard' : (p.id.indexOf('stage') === 0 ? '/' + p.id : '/' + p.id);
       var cls = 'nav-link' + (p.id === active ? ' active' : '');
-      h += '<a class="' + cls + '" href="' + p.href + '">' + p.label + '</a>';
+      var chSpan = p.ch ? '<span class="nav-ch">' + p.ch + '</span> ' : '';
+      h += '<a class="' + cls + '" href="' + href + '">' + chSpan + p.label + '</a>';
+    }
+    h += '</div></div>';
+  }
+
+  // Defer DOM manipulation until content is ready
+  function buildSidebar() {
+  var body = document.body;
+  var navEl = document.getElementById('site-nav');
+  if (!navEl) return;
+
+  // Create hamburger button
+  var burger = document.createElement('button');
+  burger.className = 'hamburger';
+  burger.setAttribute('aria-label', 'Menu');
+  burger.innerHTML = '<span></span>';
+
+  // Create overlay
+  var overlay = document.createElement('div');
+  overlay.className = 'sidebar-overlay';
+
+  // Create sidebar
+  var sidebar = document.createElement('nav');
+  sidebar.className = 'sidebar';
+  sidebar.innerHTML = h;
+
+  // Create page layout wrapper
+  var layout = document.createElement('div');
+  layout.className = 'page-layout';
+
+  // Move all body children except scripts into page-content
+  var content = document.createElement('div');
+  content.className = 'page-content';
+  var children = Array.prototype.slice.call(body.childNodes);
+  for (var c = 0; c < children.length; c++) {
+    if (children[c] !== navEl && children[c].tagName !== 'SCRIPT') {
+      content.appendChild(children[c]);
     }
   }
-  h += '</div>';
-  var el = document.getElementById('site-nav');
-  if (el) el.innerHTML = h;
+
+  // Remove old nav element
+  if (navEl.parentNode) navEl.parentNode.removeChild(navEl);
+
+  // Assemble layout
+  layout.appendChild(sidebar);
+  layout.appendChild(content);
+  body.insertBefore(burger, body.firstChild);
+  body.insertBefore(overlay, body.firstChild.nextSibling);
+  body.insertBefore(layout, overlay.nextSibling);
+
+  // Toggle sections
+  var headers = sidebar.querySelectorAll('.nav-section-header');
+  for (var h2 = 0; h2 < headers.length; h2++) {
+    headers[h2].addEventListener('click', function() {
+      var idx = this.getAttribute('data-section');
+      var items = sidebar.querySelector('[data-section-items="' + idx + '"]');
+      var arrow = this.querySelector('.arrow');
+      if (items.classList.contains('open')) {
+        items.classList.remove('open');
+        arrow.classList.remove('open');
+      } else {
+        items.classList.add('open');
+        arrow.classList.add('open');
+      }
+    });
+  }
+
+  // Mobile hamburger toggle
+  burger.addEventListener('click', function() {
+    sidebar.classList.toggle('open');
+    overlay.classList.toggle('open');
+    burger.classList.toggle('open');
+  });
+  overlay.addEventListener('click', function() {
+    sidebar.classList.remove('open');
+    overlay.classList.remove('open');
+    burger.classList.remove('open');
+  });
+  } // end buildSidebar
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', buildSidebar);
+  } else {
+    buildSidebar();
+  }
 }
