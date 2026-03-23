@@ -53,9 +53,20 @@
 .recent-list .r-date{font-family:'IBM Plex Mono',monospace;font-size:12px;color:#777;}
 .recent-list .r-count{font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:700;color:#1A6B5A;}
 
+@media(max-width:768px){
+  .cal-hero{grid-template-columns:1fr 1fr 1fr;gap:8px;}
+  .cal-hero .stat{padding:14px 10px;}
+  .cal-hero .stat .val{font-size:28px;}
+  .cal-hero .stat.primary .val{font-size:36px;}
+  .cal-section{padding:16px;}
+}
 @media(max-width:480px){
   .cal-hero{grid-template-columns:1fr;}
   .cal-hero .stat.primary .val{font-size:36px;}
+  .cal-hero .stat .val{font-size:28px;}
+  .cal-section{padding:14px;}
+  .cal-section h3{font-size:11px;}
+  .recent-list li{font-size:13px;}
 }
 </style>
 </head>
