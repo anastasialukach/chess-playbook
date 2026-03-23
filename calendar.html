@@ -7,7 +7,7 @@
 <link rel="stylesheet" href="shared.css">
 <style>
 /* Calendar-specific styles */
-.cal-hero{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:32px;}
+.cal-hero{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px;margin-bottom:32px;}
 .cal-hero .stat{background:#fff;border:2px solid #e0e0e0;border-radius:10px;padding:20px 14px;text-align:center;}
 .cal-hero .stat .val{font-family:'IBM Plex Mono',monospace;font-size:36px;font-weight:700;color:#1A6B5A;line-height:1;}
 .cal-hero .stat .label{font-family:'IBM Plex Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:#666;margin-top:6px;}
@@ -54,16 +54,16 @@
 .recent-list .r-count{font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:700;color:#1A6B5A;}
 
 @media(max-width:768px){
-  .cal-hero{grid-template-columns:1fr 1fr 1fr;gap:8px;}
+  .cal-hero{grid-template-columns:1fr 1fr;gap:8px;}
   .cal-hero .stat{padding:14px 10px;}
   .cal-hero .stat .val{font-size:28px;}
   .cal-hero .stat.primary .val{font-size:36px;}
   .cal-section{padding:16px;}
 }
 @media(max-width:480px){
-  .cal-hero{grid-template-columns:1fr;}
-  .cal-hero .stat.primary .val{font-size:36px;}
-  .cal-hero .stat .val{font-size:28px;}
+  .cal-hero{grid-template-columns:1fr 1fr;gap:8px;}
+  .cal-hero .stat.primary .val{font-size:32px;}
+  .cal-hero .stat .val{font-size:24px;}
   .cal-section{padding:14px;}
   .cal-section h3{font-size:11px;}
   .recent-list li{font-size:13px;}
@@ -85,16 +85,20 @@
 <!-- Hero stats -->
 <div class="cal-hero" id="hero-stats">
   <div class="stat primary">
-    <div class="val" id="current-streak">0</div>
-    <div class="label">Current Streak</div>
+    <div class="val" id="total-games">0</div>
+    <div class="label">Games Played</div>
   </div>
   <div class="stat">
-    <div class="val" id="longest-streak">0</div>
-    <div class="label">Longest Streak</div>
+    <div class="val" id="win-rate">0%</div>
+    <div class="label">Win Rate</div>
   </div>
   <div class="stat">
     <div class="val" id="total-days">0</div>
     <div class="label">Active Days</div>
+  </div>
+  <div class="stat">
+    <div class="val" id="current-streak">0</div>
+    <div class="label">Current Streak</div>
   </div>
 </div>
 
@@ -105,12 +109,15 @@
     <div class="heatmap-wrap" id="heatmap"></div>
   </div>
   <div class="heatmap-legend">
-    <span>Less</span>
-    <div class="swatch" style="background:#EBEDF0;"></div>
+    <span>Wins</span>
     <div class="swatch" style="background:#C6E48B;"></div>
-    <div class="swatch" style="background:#7BC96F;"></div>
     <div class="swatch" style="background:#239A3B;"></div>
-    <span>More</span>
+    <span style="margin-left:8px;">Mixed</span>
+    <div class="swatch" style="background:#FFF3BF;"></div>
+    <div class="swatch" style="background:#D4A017;"></div>
+    <span style="margin-left:8px;">Losses</span>
+    <div class="swatch" style="background:#FFD4D4;"></div>
+    <div class="swatch" style="background:#D73A49;"></div>
   </div>
 </div>
 
@@ -135,57 +142,35 @@
 
 <script>
 (function(){
-  // ---- Collect activity dates ----
-  function getActivityMap(){
-    var map = {}; // { 'YYYY-MM-DD': count }
+  var MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 
-    function inc(dateStr){
-      if(!dateStr) return;
-      // Normalize to YYYY-MM-DD
-      var d = dateStr.substring(0,10);
-      if(!/^\d{4}-\d{2}-\d{2}$/.test(d)) return;
-      map[d] = (map[d]||0) + 1;
+  // ---- Build per-day map from synced games: {date: {games,wins,losses,draws}} ----
+  function getActivityMap(){
+    var map = {};
+
+    function ensure(d){
+      if(!map[d]) map[d] = {games:0,wins:0,losses:0,draws:0};
     }
 
-    // 1. chess-synced-games — array of game objects with end_time (unix) or date (YYYY-MM-DD)
     try {
       var synced = JSON.parse(localStorage.getItem('chess-synced-games')||'[]');
       for(var i=0;i<synced.length;i++){
         var g = synced[i];
+        var dateStr = '';
         if(g.end_time){
-          var dt = new Date(g.end_time * 1000);
-          inc(dt.toISOString());
+          dateStr = new Date(g.end_time * 1000).toISOString().substring(0,10);
         } else if(g.date){
-          inc(g.date);
+          dateStr = g.date.substring(0,10);
         }
+        if(!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) continue;
+        ensure(dateStr);
+        map[dateStr].games++;
+        if(g.result === 'W') map[dateStr].wins++;
+        else if(g.result === 'L') map[dateStr].losses++;
+        else map[dateStr].draws++;
       }
     } catch(e){}
-
-    // 2. chess-played-games — array of PGN strings with [Date "YYYY.MM.DD"] header
-    try {
-      var played = JSON.parse(localStorage.getItem('chess-played-games')||'[]');
-      for(var i=0;i<played.length;i++){
-        var pgn = played[i];
-        if(typeof pgn === 'string'){
-          var m = pgn.match(/\[Date\s+"(\d{4})\.(\d{2})\.(\d{2})"\]/);
-          if(m) inc(m[1]+'-'+m[2]+'-'+m[3]);
-        } else if(pgn && pgn.date){
-          inc(pgn.date);
-        }
-      }
-    } catch(e){}
-
-    // 3. chess-sessions — array of session objects with date (ISO string)
-    try {
-      var sessions = JSON.parse(localStorage.getItem('chess-sessions')||'[]');
-      for(var i=0;i<sessions.length;i++){
-        if(sessions[i].date){
-          inc(sessions[i].date);
-        }
-      }
-    } catch(e){}
-
-    // 4. chess-trainer-scores — object {sysId: accuracy}. No timestamps, skip for date tracking.
 
     return map;
   }
@@ -202,14 +187,23 @@
     return mon;
   }
 
-  var MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  var DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
-
-  function cellColor(count){
-    if(count === 0) return '#EBEDF0';
-    if(count === 1) return '#C6E48B';
-    if(count <= 3) return '#7BC96F';
-    return '#239A3B';
+  // ---- Cell color based on win rate + intensity by game count ----
+  function cellColor(dayData){
+    if(!dayData || dayData.games === 0) return '#EBEDF0';
+    var wr = dayData.wins / dayData.games;
+    var count = dayData.games;
+    // intensity: 1=light, 2-3=medium, 4+=dark
+    var intense = count >= 4 ? 2 : (count >= 2 ? 1 : 0);
+    if(wr > 0.66){
+      // Green shades (wins)
+      return ['#C6E48B','#7BC96F','#239A3B'][intense];
+    } else if(wr >= 0.33){
+      // Yellow/amber shades (mixed)
+      return ['#FFF3BF','#F0D060','#D4A017'][intense];
+    } else {
+      // Red shades (losses)
+      return ['#FFD4D4','#F09090','#D73A49'][intense];
+    }
   }
 
   // ---- Compute streaks ----
@@ -218,13 +212,11 @@
     today.setHours(0,0,0,0);
     var todayStr = toDateStr(today);
 
-    // Sort all active dates
     var dates = Object.keys(activityMap).sort();
     var totalDays = dates.length;
 
     if(totalDays === 0) return {current:0,longest:0,total:0};
 
-    // Longest streak
     var longest = 1, run = 1;
     for(var i=1;i<dates.length;i++){
       var prev = new Date(dates[i-1]+'T00:00:00');
@@ -234,10 +226,8 @@
       else { run = 1; }
     }
 
-    // Current streak (going backwards from today or yesterday)
     var current = 0;
     var checkDate = today;
-    // If today has no activity, start from yesterday
     if(!activityMap[todayStr]){
       checkDate = addDays(today, -1);
     }
@@ -249,27 +239,38 @@
     return {current:current, longest:longest, total:totalDays};
   }
 
-  // ---- Render heatmap ----
+  // ---- Render ----
   function render(){
     var activityMap = getActivityMap();
     var streaks = computeStreaks(activityMap);
 
+    // Compute totals across all days
+    var totalGames = 0, totalWins = 0, totalLosses = 0, totalDraws = 0;
+    var keys = Object.keys(activityMap);
+    for(var i=0;i<keys.length;i++){
+      var dd = activityMap[keys[i]];
+      totalGames += dd.games;
+      totalWins += dd.wins;
+      totalLosses += dd.losses;
+      totalDraws += dd.draws;
+    }
+    var winPct = totalGames > 0 ? Math.round((totalWins / totalGames) * 100) : 0;
+
+    document.getElementById('total-games').textContent = totalGames;
+    document.getElementById('win-rate').textContent = winPct + '%';
     document.getElementById('current-streak').textContent = streaks.current;
-    document.getElementById('longest-streak').textContent = streaks.longest;
     document.getElementById('total-days').textContent = streaks.total;
 
     if(streaks.total === 0){
       document.getElementById('empty-state').style.display = '';
       document.getElementById('recent-section').style.display = 'none';
-      // Still render empty heatmap
     }
 
-    // Determine date range: 6 months back, aligned to Monday
+    // Date range: 6 months back, aligned to Monday
     var today = new Date();
     today.setHours(0,0,0,0);
     var start = new Date(today);
     start.setMonth(start.getMonth() - 6);
-    // Align to Monday
     start = getMonday(start);
     var endDate = today;
 
@@ -280,7 +281,8 @@
       var week = [];
       for(var d=0;d<7;d++){
         var ds = toDateStr(cursor);
-        week.push({date:new Date(cursor), dateStr:ds, count:activityMap[ds]||0, future:cursor>today});
+        var dayData = activityMap[ds] || null;
+        week.push({date:new Date(cursor), dateStr:ds, data:dayData, future:cursor>today});
         cursor = addDays(cursor,1);
       }
       weeks.push(week);
@@ -289,7 +291,7 @@
     // Month labels
     var monthHtml = '';
     var lastMonth = -1;
-    var colWidth = 15; // 13px cell + 2px gap
+    var colWidth = 15;
     for(var w=0;w<weeks.length;w++){
       var firstDay = weeks[w][0].date;
       var m = firstDay.getMonth();
@@ -301,7 +303,7 @@
       }
     }
 
-    // Day labels (show M, W, F)
+    // Day labels
     var dayHtml = '';
     for(var d=0;d<7;d++){
       var label = (d===0||d===2||d===4) ? DAYS[d].charAt(0) : '';
@@ -314,9 +316,18 @@
       colsHtml += '<div class="heatmap-col">';
       for(var d=0;d<7;d++){
         var cell = weeks[w][d];
-        var bg = cell.future ? '#FAFAF8' : cellColor(cell.count);
-        var title = cell.dateStr + ': ' + cell.count + ' activit' + (cell.count===1?'y':'ies');
-        colsHtml += '<div class="heatmap-cell" style="background:'+bg+';" data-tip="'+title+'" data-date="'+cell.dateStr+'" data-count="'+cell.count+'"></div>';
+        var bg = cell.future ? '#FAFAF8' : cellColor(cell.data);
+        // Tooltip text
+        var tip;
+        if(cell.data && cell.data.games > 0){
+          var dp = cell.dateStr.split('-');
+          var tipDate = MONTHS[parseInt(dp[1],10)-1]+' '+parseInt(dp[2],10);
+          tip = tipDate+': '+cell.data.games+' game'+(cell.data.games===1?'':'s')+' ('+cell.data.wins+'W '+cell.data.draws+'D '+cell.data.losses+'L)';
+        } else {
+          var dp2 = cell.dateStr.split('-');
+          tip = MONTHS[parseInt(dp2[1],10)-1]+' '+parseInt(dp2[2],10)+': No games';
+        }
+        colsHtml += '<div class="heatmap-cell" style="background:'+bg+';" data-tip="'+tip+'" data-date="'+cell.dateStr+'"></div>';
       }
       colsHtml += '</div>';
     }
@@ -329,7 +340,7 @@
 
     document.getElementById('heatmap').innerHTML = html;
 
-    // Recent activity (last 10 active days)
+    // Recent activity (last 10 active days) with W/L/D
     var dates = Object.keys(activityMap).sort().reverse().slice(0,10);
     if(dates.length > 0){
       document.getElementById('recent-section').style.display = '';
@@ -337,8 +348,9 @@
       for(var i=0;i<dates.length;i++){
         var dt = new Date(dates[i]+'T00:00:00');
         var fmtDate = MONTHS[dt.getMonth()]+' '+dt.getDate()+', '+dt.getFullYear();
-        var count = activityMap[dates[i]];
-        listHtml += '<li><span class="r-date">'+fmtDate+'</span><span class="r-count">'+count+' activit'+(count===1?'y':'ies')+'</span></li>';
+        var dd = activityMap[dates[i]];
+        var summary = dd.games+' game'+(dd.games===1?'':'s')+' \u00b7 '+dd.wins+'W '+dd.draws+'D '+dd.losses+'L';
+        listHtml += '<li><span class="r-date">'+fmtDate+'</span><span class="r-count">'+summary+'</span></li>';
       }
       document.getElementById('recent-list').innerHTML = listHtml;
     }
