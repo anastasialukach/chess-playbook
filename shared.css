@@ -97,23 +97,24 @@ p{margin-bottom:10px;}
 .nav-link .nav-ch{color:#bbb;font-size:10px;margin-right:4px;}
 
 /* Mobile hamburger */
-.hamburger{display:none;position:fixed;top:12px;left:12px;z-index:200;width:40px;height:40px;border-radius:8px;background:#fff;border:2px solid #e0e0e0;cursor:pointer;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.08);}
-.hamburger span{display:block;width:18px;height:2px;background:#1a1a1a;position:relative;transition:all .2s;}
-.hamburger span::before,.hamburger span::after{content:'';position:absolute;width:18px;height:2px;background:#1a1a1a;transition:all .2s;}
+.hamburger{display:none;position:fixed;top:0;left:0;z-index:200;width:56px;height:56px;border-radius:0 0 12px 0;background:#fff;border:none;border-right:2px solid #e8e8e8;border-bottom:2px solid #e8e8e8;cursor:pointer;align-items:center;justify-content:center;box-shadow:2px 2px 12px rgba(0,0,0,0.06);-webkit-tap-highlight-color:transparent;}
+.hamburger span{display:block;width:20px;height:2px;background:#1a1a1a;position:relative;transition:all .25s ease;}
+.hamburger span::before,.hamburger span::after{content:'';position:absolute;width:20px;height:2px;background:#1a1a1a;transition:all .25s ease;}
 .hamburger span::before{top:-6px;}
 .hamburger span::after{top:6px;}
 .hamburger.open span{background:transparent;}
 .hamburger.open span::before{top:0;transform:rotate(45deg);}
 .hamburger.open span::after{top:0;transform:rotate(-45deg);}
-.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.3);z-index:90;}
+.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.35);z-index:140;transition:opacity .25s ease;opacity:0;}
+.sidebar-overlay.open{display:block;opacity:1;}
 
 @media(max-width:768px){
   .hamburger{display:flex;}
-  .sidebar{position:fixed;left:-260px;top:0;transition:left .25s ease;z-index:150;box-shadow:4px 0 20px rgba(0,0,0,0.1);}
+  .sidebar{position:fixed;left:-280px;top:0;width:260px;min-width:260px;transition:left .3s cubic-bezier(.4,0,.2,1);z-index:150;box-shadow:4px 0 24px rgba(0,0,0,0.12);padding-top:0;}
+  .sidebar .sidebar-brand{padding-top:20px;}
   .sidebar.open{left:0;}
-  .sidebar-overlay.open{display:block;}
   .page-content{margin-left:0;}
-  .wrap{padding:60px 16px 100px;}
+  .wrap{padding:64px 16px 100px;}
   .game-log-form{grid-template-columns:1fr 1fr;}
   .game-log-form select,.game-log-form input{font-size:16px;}
 }

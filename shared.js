@@ -196,6 +196,18 @@ function renderNav(active) {
     overlay.classList.remove('open');
     burger.classList.remove('open');
   });
+
+  // Close sidebar when a nav link is tapped (mobile)
+  var navLinks = sidebar.querySelectorAll('.nav-link');
+  for (var nl = 0; nl < navLinks.length; nl++) {
+    navLinks[nl].addEventListener('click', function() {
+      if (window.innerWidth <= 768) {
+        sidebar.classList.remove('open');
+        overlay.classList.remove('open');
+        burger.classList.remove('open');
+      }
+    });
+  }
   } // end buildSidebar
 
   if (document.readyState === 'loading') {
