@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Command Center — Chess Playbook</title>
+<link rel="stylesheet" href="shared.css">
+<style>
+.admin-section{background:#fff;border:2px solid #e0e0e0;border-radius:10px;padding:24px;margin-bottom:24px;}
+.admin-section h2{font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:16px;padding-bottom:10px;border-bottom:2px solid #e8e8e8;color:#1a1a1a;}
+.sync-big-btn{display:block;width:100%;background:#1A6B5A;color:#fff;border:none;padding:16px 24px;border-radius:8px;font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:700;cursor:pointer;transition:background .15s;letter-spacing:0.5px;}
+.sync-big-btn:hover{background:#15574A;}
+.sync-big-btn:disabled{background:#999;cursor:not-allowed;}
+.sync-meta{display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin-top:12px;font-family:'IBM Plex Mono',monospace;font-size:12px;color:#777;}
+.sync-meta .sync-count{color:#1a1a1a;font-weight:700;}
+.sync-meta .sync-ts{color:#999;}
+.sync-progress-bar{font-family:'IBM Plex Mono',monospace;font-size:12px;color:#769656;margin-top:8px;min-height:20px;}
+.sync-error{font-family:'IBM Plex Mono',monospace;font-size:12px;color:#d73a49;margin-top:8px;}
+.auto-sync-row{display:flex;align-items:center;gap:12px;margin-top:14px;padding-top:14px;border-top:1px solid #eee;}
+.auto-sync-label{font-family:'IBM Plex Mono',monospace;font-size:12px;color:#555;flex:1;}
+.toggle{position:relative;width:44px;height:24px;cursor:pointer;}
+.toggle input{display:none;}
+.toggle .slider{position:absolute;inset:0;background:#ccc;border-radius:24px;transition:background .2s;}
+.toggle .slider::before{content:'';position:absolute;width:18px;height:18px;left:3px;top:3px;background:#fff;border-radius:50%;transition:transform .2s;}
+.toggle input:checked+.slider{background:#1A6B5A;}
+.toggle input:checked+.slider::before{transform:translateX(20px);}
+.auto-sync-status{font-family:'IBM Plex Mono',monospace;font-size:11px;color:#999;margin-top:6px;}
+
+/* Stats grid */
+.admin-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:16px;}
+.admin-stat{background:#fff;border:2px solid #e0e0e0;border-radius:10px;padding:14px;text-align:center;}
+.admin-stat .label{font-family:'IBM Plex Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:#999;margin-bottom:4px;}
+.admin-stat .val{font-family:'IBM Plex Mono',monospace;font-size:26px;font-weight:700;color:#1a1a1a;}
+.admin-stat .note{font-size:12px;color:#888;margin-top:2px;font-family:'IBM Plex Mono',monospace;}
+.grn{color:#22863a;}.rd{color:#d73a49;}.blu{color:#0366d6;}
+
+/* Mini rating chart */
+.chart-box{background:#fff;border:2px solid #e0e0e0;border-radius:10px;padding:16px;margin-top:14px;}
+.chart-label{font-family:'IBM Plex Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:#999;margin-bottom:10px;}
+
+/* Section Progress */
+.progress-overview{display:flex;align-items:center;gap:14px;margin-bottom:18px;}
+.progress-overview .progress-text{font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600;color:#1a1a1a;white-space:nowrap;}
+.progress-track{flex:1;background:#e0e0e0;border-radius:6px;height:14px;overflow:hidden;}
+.progress-fill{background:#769656;height:100%;border-radius:6px;transition:width .3s;}
+.progress-group{margin-bottom:20px;}
+.progress-group:last-child{margin-bottom:0;}
+.progress-group-title{font-family:'IBM Plex Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:#999;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid #eee;}
+.progress-item{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #f5f5f5;}
+.progress-item:last-child{border-bottom:none;}
+.progress-item .ch-num{font-family:'IBM Plex Mono',monospace;font-size:10px;color:#bbb;min-width:24px;}
+.progress-item .ch-name{flex:1;font-size:14px;color:#1a1a1a;}
+.progress-status{display:flex;gap:4px;}
+.status-btn{font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;padding:4px 10px;border-radius:4px;border:2px solid #e0e0e0;background:#fff;cursor:pointer;color:#999;transition:all .15s;}
+.status-btn:hover{border-color:#999;}
+.status-btn.read{border-color:#0366d6;background:#eef6ff;color:#0366d6;}
+.status-btn.learned{border-color:#22863a;background:#dcffe4;color:#22863a;}
+
+/* Mobile */
+@media(max-width:768px){
+  .admin-stats{grid-template-columns:repeat(2,1fr);}
+  .sync-meta{flex-direction:column;gap:4px;}
+  .progress-overview{flex-direction:column;align-items:stretch;gap:6px;}
+  .auto-sync-row{flex-direction:column;align-items:flex-start;gap:8px;}
+}
+@media(max-width:480px){
+  .admin-section{padding:16px;}
+  .admin-stats{grid-template-columns:repeat(2,1fr);}
+  .admin-stat .val{font-size:22px;}
+  .progress-item{flex-direction:column;align-items:flex-start;gap:6px;}
+  .progress-status{align-self:flex-end;}
+}
+</style>
+<link rel="stylesheet" href="gamification.css">
+</head>
+<body>
+<nav class="site-nav" id="site-nav"></nav>
+<script src="shared.js"></script>
+<script>renderNav("admin")</script>
+<div class="wrap">
+
+  <div class="stage-hdr">
+    <div class="stage-num">Command Center</div>
+    <h1>Admin</h1>
+    <div class="stage-meta">Sync &middot; Stats &middot; Progress</div>
+  </div>
+
+  <!-- ============ CHESS.COM SYNC ============ -->
+  <div class="admin-section">
+    <h2>Chess.com Sync</h2>
+    <button class="sync-big-btn" id="sync-btn">&#9654; Refresh Games</button>
+    <div class="sync-meta">
+      <span class="sync-count" id="sync-count"></span>
+      <span class="sync-ts" id="sync-ts"></span>
+    </div>
+    <div class="sync-progress-bar" id="sync-progress"></div>
+    <div class="sync-error" id="sync-error"></div>
+    <div class="auto-sync-row">
+      <span class="auto-sync-label">Auto-sync every 2 hours</span>
+      <label class="toggle">
+        <input type="checkbox" id="auto-sync-toggle">
+        <span class="slider"></span>
+      </label>
+    </div>
+    <div class="auto-sync-status" id="auto-sync-status"></div>
+  </div>
+
+  <!-- ============ STATS OVERVIEW ============ -->
+  <div class="admin-section">
+    <h2>Stats Overview</h2>
+    <div class="admin-stats" id="stats-grid"></div>
+    <div class="chart-box" id="rating-chart-box" style="display:none;">
+      <div class="chart-label">Rating — Last 20 Games</div>
+      <div id="rating-chart"></div>
+    </div>
+  </div>
+
+  <!-- ============ SECTION PROGRESS ============ -->
+  <div class="admin-section">
+    <h2>Section Progress</h2>
+    <div class="progress-overview" id="progress-overview"></div>
+    <div id="progress-list"></div>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  // ============ CONSTANTS ============
+  var STORAGE_KEY = 'chess-synced-games';
+  var SYNC_TS_KEY = 'chess-last-sync';
+  var PROGRESS_KEY = 'chess-progress';
+  var AUTO_SYNC_KEY = 'chess-auto-sync';
+  var SYNC_INTERVAL_KEY = 'chess-sync-interval';
+  var USERNAME = 'happery';
+  var DEFAULT_INTERVAL = 7200000; // 2 hours
+  var DRAW_RESULTS = ['stalemate','repetition','agreed','insufficient','50move','timevsinsufficient'];
+
+  // All sections grouped by category
+  var SECTION_GROUPS = [
+    {heading:'Reference', items:[
+      {id:'ch-reference',label:'Board & Notation',ch:'00'}
+    ]},
+    {heading:'Your 50 Games', items:[
+      {id:'ch-record',label:'Record',ch:'01'},
+      {id:'ch-white',label:'White Openings',ch:'02'},
+      {id:'ch-black',label:'Black Openings',ch:'03'}
+    ]},
+    {heading:'Fix These', items:[
+      {id:'ch-patterns',label:'Losing Patterns',ch:'04'},
+      {id:'ch-training',label:'More Patterns',ch:'09'}
+    ]},
+    {heading:'Level Up', items:[
+      {id:'ch-openings',label:'Openings to Try',ch:'05'},
+      {id:'ch-middle',label:'Middle Game',ch:'06'},
+      {id:'ch-tilt',label:'Tilt Control',ch:'07'},
+      {id:'ch-practice',label:'Practice Plan',ch:'08'}
+    ]},
+    {heading:'Practice', items:[
+      {id:'quiz',label:'Blunder Quiz'},
+      {id:'dynamic-quiz',label:'Dynamic Quiz'},
+      {id:'play',label:'Play & Practice'},
+      {id:'trainer',label:'Opening Trainer'},
+      {id:'session',label:'Session Manager'},
+      {id:'analysis',label:'Game Analysis'},
+      {id:'calendar',label:'Streak Calendar'},
+      {id:'badges',label:'Badges'}
+    ]},
+    {heading:'Training Program', items:[
+      {id:'stage-1',label:'S1: Stop the Bleeding'},
+      {id:'stage-2',label:'S2: Build Foundation'},
+      {id:'stage-3',label:'S3: Fight for Center'},
+      {id:'stage-4',label:'S4: Punish Mistakes'},
+      {id:'stage-5',label:'S5: Rating Push'},
+      {id:'dashboard',label:'Dashboard'}
+    ]}
+  ];
+
+  // ============ HELPERS ============
+  function getGames(){
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch(e){ return []; }
+  }
+
+  function saveGames(games){
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(games));
+  }
+
+  function getProgress(){
+    try { return JSON.parse(localStorage.getItem(PROGRESS_KEY) || '{}'); } catch(e){ return {}; }
+  }
+
+  function saveProgress(prog){
+    localStorage.setItem(PROGRESS_KEY, JSON.stringify(prog));
+  }
+
+  function timeAgo(ts){
+    var diff = Date.now() - ts;
+    if(diff < 60000) return 'just now';
+    if(diff < 3600000) return Math.floor(diff/60000) + ' min ago';
+    if(diff < 86400000) return Math.floor(diff/3600000) + ' hr ago';
+    return Math.floor(diff/86400000) + ' days ago';
+  }
+
+  function parseGameFromAPI(g){
+    var uname = USERNAME.toLowerCase();
+    var isWhite = (g.white.username || '').toLowerCase() === uname;
+    var mySide = isWhite ? g.white : g.black;
+    var oppSide = isWhite ? g.black : g.white;
+
+    var result;
+    if(mySide.result === 'win'){
+      result = 'W';
+    } else if(DRAW_RESULTS.indexOf(mySide.result) !== -1){
+      result = 'D';
+    } else {
+      result = 'L';
+    }
+
+    var moveCount = 0;
+    if(g.pgn){
+      var matches = g.pgn.match(/\d+\./g);
+      if(matches) moveCount = matches.length;
+    }
+
+    var dateStr = '';
+    if(g.end_time){
+      var d = new Date(g.end_time * 1000);
+      dateStr = d.toISOString().split('T')[0];
+    }
+
+    return {
+      date: dateStr,
+      color: isWhite ? 'W' : 'B',
+      myRating: mySide.rating || 0,
+      oppRating: oppSide.rating || 0,
+      result: result,
+      moves: moveCount,
+      termination: mySide.result || '',
+      timeControl: g.time_class || '',
+      pgn: g.pgn || '',
+      url: g.url || ''
+    };
+  }
+
+  // ============ SYNC ============
+  var syncBtn = document.getElementById('sync-btn');
+  var syncProgress = document.getElementById('sync-progress');
+  var syncError = document.getElementById('sync-error');
+  var syncCountEl = document.getElementById('sync-count');
+  var syncTsEl = document.getElementById('sync-ts');
+  var autoSyncToggle = document.getElementById('auto-sync-toggle');
+  var autoSyncStatus = document.getElementById('auto-sync-status');
+  var autoSyncTimer = null;
+
+  function showSyncMeta(){
+    var games = getGames();
+    syncCountEl.textContent = games.length + ' games synced';
+    var ts = localStorage.getItem(SYNC_TS_KEY);
+    if(ts){
+      syncTsEl.textContent = 'Last synced: ' + timeAgo(parseInt(ts));
+    } else {
+      syncTsEl.textContent = 'Never synced';
+    }
+  }
+
+  async function doSync(){
+    syncBtn.disabled = true;
+    syncBtn.textContent = 'Syncing...';
+    syncProgress.textContent = 'Fetching game archives...';
+    syncError.textContent = '';
+
+    try {
+      var archiveRes = await fetch('https://api.chess.com/pub/player/' + encodeURIComponent(USERNAME) + '/games/archives');
+      if(!archiveRes.ok) throw new Error('Could not fetch archives (HTTP ' + archiveRes.status + ').');
+      var archiveData = await archiveRes.json();
+      var urls = archiveData.archives || [];
+
+      if(urls.length === 0){
+        syncProgress.textContent = '';
+        syncError.textContent = 'No game archives found for "' + USERNAME + '".';
+        syncBtn.disabled = false;
+        syncBtn.textContent = '\u25B6 Refresh Games';
+        return;
+      }
+
+      var allNew = [];
+      var existing = getGames();
+      var existingUrls = {};
+      existing.forEach(function(g){ if(g.url) existingUrls[g.url] = true; });
+
+      for(var i = 0; i < urls.length; i++){
+        var archiveUrl = urls[i];
+        var parts = archiveUrl.split('/');
+        var monthLabel = parts[parts.length-2] + '/' + parts[parts.length-1];
+        syncProgress.textContent = 'Fetching ' + monthLabel + '... (' + (i+1) + '/' + urls.length + ')';
+
+        try {
+          var gamesRes = await fetch(archiveUrl);
+          if(!gamesRes.ok) continue;
+          var gamesData = await gamesRes.json();
+          var monthGames = gamesData.games || [];
+
+          for(var j = 0; j < monthGames.length; j++){
+            var parsed = parseGameFromAPI(monthGames[j]);
+            if(!existingUrls[parsed.url]){
+              allNew.push(parsed);
+              existingUrls[parsed.url] = true;
+            }
+          }
+
+          syncProgress.textContent = 'Fetching ' + monthLabel + '... Found ' + allNew.length + ' new games';
+        } catch(e){
+          // Skip failed month
+        }
+      }
+
+      var merged = existing.concat(allNew);
+      merged.sort(function(a,b){ return a.date < b.date ? -1 : a.date > b.date ? 1 : 0; });
+      saveGames(merged);
+      localStorage.setItem(SYNC_TS_KEY, Date.now().toString());
+
+      syncProgress.textContent = merged.length + ' total games (' + allNew.length + ' new)';
+      setTimeout(function(){ syncProgress.textContent = ''; }, 5000);
+
+      renderStats();
+      showSyncMeta();
+
+    } catch(e){
+      syncProgress.textContent = '';
+      syncError.textContent = 'Error: ' + e.message;
+    }
+
+    syncBtn.disabled = false;
+    syncBtn.textContent = '\u25B6 Refresh Games';
+  }
+
+  syncBtn.addEventListener('click', doSync);
+
+  // ============ AUTO-SYNC ============
+  function getInterval(){
+    var stored = localStorage.getItem(SYNC_INTERVAL_KEY);
+    return stored ? parseInt(stored) : DEFAULT_INTERVAL;
+  }
+
+  function isAutoSyncEnabled(){
+    return localStorage.getItem(AUTO_SYNC_KEY) === 'true';
+  }
+
+  function updateAutoSyncStatus(){
+    if(isAutoSyncEnabled()){
+      var ts = localStorage.getItem(SYNC_TS_KEY);
+      if(ts){
+        var nextSync = parseInt(ts) + getInterval();
+        var diff = nextSync - Date.now();
+        if(diff > 0){
+          var mins = Math.ceil(diff / 60000);
+          autoSyncStatus.textContent = 'Next sync in ~' + mins + ' min';
+        } else {
+          autoSyncStatus.textContent = 'Sync due — will run momentarily';
+        }
+      } else {
+        autoSyncStatus.textContent = 'Auto-sync enabled — will sync on next interval';
+      }
+    } else {
+      autoSyncStatus.textContent = 'Auto-sync disabled';
+    }
+  }
+
+  function checkAndAutoSync(){
+    if(!isAutoSyncEnabled()) return;
+    var ts = localStorage.getItem(SYNC_TS_KEY);
+    if(!ts || (Date.now() - parseInt(ts)) >= getInterval()){
+      doSync();
+    }
+  }
+
+  function startAutoSync(){
+    if(autoSyncTimer) clearInterval(autoSyncTimer);
+    autoSyncTimer = setInterval(function(){
+      checkAndAutoSync();
+      updateAutoSyncStatus();
+    }, 60000); // Check every minute
+    checkAndAutoSync();
+    updateAutoSyncStatus();
+  }
+
+  function stopAutoSync(){
+    if(autoSyncTimer){
+      clearInterval(autoSyncTimer);
+      autoSyncTimer = null;
+    }
+    updateAutoSyncStatus();
+  }
+
+  autoSyncToggle.checked = isAutoSyncEnabled();
+  autoSyncToggle.addEventListener('change', function(){
+    localStorage.setItem(AUTO_SYNC_KEY, this.checked ? 'true' : 'false');
+    if(this.checked){
+      startAutoSync();
+    } else {
+      stopAutoSync();
+    }
+  });
+
+  if(isAutoSyncEnabled()){
+    startAutoSync();
+  } else {
+    updateAutoSyncStatus();
+  }
+
+  // ============ STATS ============
+  function renderStats(){
+    var games = getGames();
+    var grid = document.getElementById('stats-grid');
+
+    if(games.length === 0){
+      grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:24px;color:#888;font-size:14px;">No games synced yet. Hit Refresh Games above.</div>';
+      document.getElementById('rating-chart-box').style.display = 'none';
+      return;
+    }
+
+    var wins = 0, losses = 0, draws = 0;
+    games.forEach(function(g){
+      if(g.result === 'W') wins++;
+      else if(g.result === 'L') losses++;
+      else draws++;
+    });
+
+    var winRate = games.length > 0 ? Math.round((wins / games.length) * 100) : 0;
+
+    // Current rating from latest game
+    var latestRating = games[games.length - 1].myRating || '--';
+
+    // Games this week / this month
+    var now = new Date();
+    var weekAgo = new Date(now); weekAgo.setDate(weekAgo.getDate() - 7);
+    var monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    var weekStr = weekAgo.toISOString().split('T')[0];
+    var monthStr = monthStart.toISOString().split('T')[0];
+    var gamesWeek = 0, gamesMonth = 0;
+    games.forEach(function(g){
+      if(g.date >= weekStr) gamesWeek++;
+      if(g.date >= monthStr) gamesMonth++;
+    });
+
+    // Current streak (consecutive days with at least one game, counting back from most recent)
+    var daySet = {};
+    games.forEach(function(g){ if(g.date) daySet[g.date] = true; });
+    var streak = 0;
+    var checkDate = new Date(now);
+    // Start from today or most recent game date
+    var todayStr = checkDate.toISOString().split('T')[0];
+    if(!daySet[todayStr]){
+      // Check yesterday
+      checkDate.setDate(checkDate.getDate() - 1);
+      todayStr = checkDate.toISOString().split('T')[0];
+      if(!daySet[todayStr]){
+        streak = 0;
+      } else {
+        streak = 1;
+        checkDate.setDate(checkDate.getDate() - 1);
+        while(daySet[checkDate.toISOString().split('T')[0]]){
+          streak++;
+          checkDate.setDate(checkDate.getDate() - 1);
+        }
+      }
+    } else {
+      streak = 1;
+      checkDate.setDate(checkDate.getDate() - 1);
+      while(daySet[checkDate.toISOString().split('T')[0]]){
+        streak++;
+        checkDate.setDate(checkDate.getDate() - 1);
+      }
+    }
+
+    grid.innerHTML =
+      '<div class="admin-stat"><div class="label">Total Games</div><div class="val">' + games.length + '</div></div>' +
+      '<div class="admin-stat"><div class="label">W / L / D</div><div class="val"><span class="grn">' + wins + '</span> / <span class="rd">' + losses + '</span> / ' + draws + '</div></div>' +
+      '<div class="admin-stat"><div class="label">Win Rate</div><div class="val">' + winRate + '%</div></div>' +
+      '<div class="admin-stat"><div class="label">Rating</div><div class="val">' + latestRating + '</div></div>' +
+      '<div class="admin-stat"><div class="label">This Week</div><div class="val">' + gamesWeek + '</div></div>' +
+      '<div class="admin-stat"><div class="label">This Month</div><div class="val">' + gamesMonth + '</div></div>' +
+      '<div class="admin-stat"><div class="label">Streak</div><div class="val">' + streak + ' <span style="font-size:12px;color:#888;">days</span></div></div>';
+
+    // Mini rating chart (last 20 games)
+    renderRatingChart(games);
+  }
+
+  function renderRatingChart(games){
+    var chartBox = document.getElementById('rating-chart-box');
+    var chartEl = document.getElementById('rating-chart');
+
+    var rated = games.filter(function(g){ return g.myRating > 0; });
+    if(rated.length < 2){
+      chartBox.style.display = 'none';
+      return;
+    }
+
+    var last20 = rated.slice(-20);
+    var ratings = last20.map(function(g){ return g.myRating; });
+    var results = last20.map(function(g){ return g.result; });
+    var minR = Math.min.apply(null, ratings) - 15;
+    var maxR = Math.max.apply(null, ratings) + 15;
+    var range = maxR - minR || 1;
+
+    var w = 520, h = 160, pad = 30;
+    var plotW = w - pad * 2;
+    var plotH = h - pad * 2;
+
+    var points = ratings.map(function(r, i){
+      var x = pad + (i / (ratings.length - 1)) * plotW;
+      var y = pad + plotH - ((r - minR) / range) * plotH;
+      return {x:x, y:y, r:r, result: results[i]};
+    });
+
+    var pathD = points.map(function(p, i){ return (i === 0 ? 'M' : 'L') + p.x.toFixed(1) + ',' + p.y.toFixed(1); }).join(' ');
+
+    var svg = '<svg viewBox="0 0 ' + w + ' ' + h + '" style="width:100%;height:auto;max-height:180px;">';
+
+    // Grid lines
+    var steps = 4;
+    for(var s = 0; s <= steps; s++){
+      var gy = pad + (s / steps) * plotH;
+      var val = Math.round(maxR - (s / steps) * range);
+      svg += '<line x1="' + pad + '" y1="' + gy + '" x2="' + (w-pad) + '" y2="' + gy + '" stroke="#eee" stroke-width="1"/>';
+      svg += '<text x="' + (pad-4) + '" y="' + (gy+4) + '" text-anchor="end" font-family="IBM Plex Mono,monospace" font-size="9" fill="#999">' + val + '</text>';
+    }
+
+    // Line
+    svg += '<path d="' + pathD + '" fill="none" stroke="#769656" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>';
+
+    // Dots
+    points.forEach(function(p){
+      var fill = p.result === 'W' ? '#22863a' : p.result === 'L' ? '#d73a49' : '#999';
+      svg += '<circle cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) + '" r="4" fill="' + fill + '" stroke="#fff" stroke-width="1.5"/>';
+    });
+
+    svg += '</svg>';
+
+    // Legend
+    svg += '<div style="display:flex;gap:14px;margin-top:6px;font-family:IBM Plex Mono,monospace;font-size:10px;color:#888;">' +
+      '<span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#22863a;margin-right:3px;vertical-align:middle;"></span>Win</span>' +
+      '<span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#d73a49;margin-right:3px;vertical-align:middle;"></span>Loss</span>' +
+      '<span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#999;margin-right:3px;vertical-align:middle;"></span>Draw</span>' +
+      '</div>';
+
+    chartEl.innerHTML = svg;
+    chartBox.style.display = 'block';
+  }
+
+  // ============ SECTION PROGRESS ============
+  function renderProgress(){
+    var progress = getProgress();
+    var totalSections = 0;
+    var completedSections = 0;
+
+    SECTION_GROUPS.forEach(function(group){
+      group.items.forEach(function(item){
+        totalSections++;
+        var state = progress[item.id];
+        if(state === 'read' || state === 'learned') completedSections++;
+      });
+    });
+
+    // Overview bar
+    var pct = totalSections > 0 ? Math.round((completedSections / totalSections) * 100) : 0;
+    var overviewEl = document.getElementById('progress-overview');
+    overviewEl.innerHTML =
+      '<span class="progress-text">' + completedSections + ' of ' + totalSections + ' sections completed</span>' +
+      '<div class="progress-track"><div class="progress-fill" style="width:' + pct + '%;"></div></div>';
+
+    // Grouped list
+    var listEl = document.getElementById('progress-list');
+    var html = '';
+
+    SECTION_GROUPS.forEach(function(group){
+      html += '<div class="progress-group">';
+      html += '<div class="progress-group-title">' + group.heading + '</div>';
+
+      group.items.forEach(function(item){
+        var state = progress[item.id] || 'unread';
+        var chSpan = item.ch ? '<span class="ch-num">' + item.ch + '</span>' : '<span class="ch-num">&nbsp;</span>';
+
+        var readCls = state === 'read' ? ' read' : '';
+        var learnedCls = state === 'learned' ? ' learned' : '';
+
+        html += '<div class="progress-item">';
+        html += chSpan;
+        html += '<span class="ch-name">' + item.label + '</span>';
+        html += '<div class="progress-status">';
+        html += '<button class="status-btn' + readCls + '" data-id="' + item.id + '" data-state="read">' + (state === 'read' ? '\u2713 ' : '') + 'Read</button>';
+        html += '<button class="status-btn' + learnedCls + '" data-id="' + item.id + '" data-state="learned">' + (state === 'learned' ? '\u2605 ' : '') + 'Learned</button>';
+        html += '</div>';
+        html += '</div>';
+      });
+
+      html += '</div>';
+    });
+
+    listEl.innerHTML = html;
+
+    // Bind status buttons
+    listEl.querySelectorAll('.status-btn').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var id = this.getAttribute('data-id');
+        var targetState = this.getAttribute('data-state');
+        var prog = getProgress();
+
+        // Toggle: if already in this state, go back to unread
+        if(prog[id] === targetState){
+          delete prog[id];
+        } else {
+          prog[id] = targetState;
+        }
+
+        saveProgress(prog);
+        renderProgress();
+      });
+    });
+  }
+
+  // ============ INIT ============
+  showSyncMeta();
+  renderStats();
+  renderProgress();
+
+  // Refresh sync meta display every minute
+  setInterval(showSyncMeta, 60000);
+
+})();
+</script>
+
+<!--
+============================================================
+BACKGROUND SYNC SNIPPET — Add to shared.js for auto-sync on all pages
+============================================================
+
+Paste this at the end of shared.js (or into any page's <script> block)
+to trigger a background sync when 2+ hours have passed since the last sync.
+It runs silently — no UI, no errors shown.
+
+(function backgroundSync(){
+  var STORAGE_KEY = 'chess-synced-games';
+  var SYNC_TS_KEY = 'chess-last-sync';
+  var AUTO_SYNC_KEY = 'chess-auto-sync';
+  var SYNC_INTERVAL_KEY = 'chess-sync-interval';
+  var USERNAME = 'happery';
+  var DEFAULT_INTERVAL = 7200000;
+  var DRAW_RESULTS = ['stalemate','repetition','agreed','insufficient','50move','timevsinsufficient'];
+
+  if(localStorage.getItem(AUTO_SYNC_KEY) !== 'true') return;
+  var ts = localStorage.getItem(SYNC_TS_KEY);
+  if(ts && (Date.now() - parseInt(ts)) < (parseInt(localStorage.getItem(SYNC_INTERVAL_KEY)) || DEFAULT_INTERVAL)) return;
+
+  // Time to sync
+  fetch('https://api.chess.com/pub/player/' + encodeURIComponent(USERNAME) + '/games/archives')
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      var urls = data.archives || [];
+      var existing = [];
+      try { existing = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch(e){}
+      var existingUrls = {};
+      existing.forEach(function(g){ if(g.url) existingUrls[g.url] = true; });
+      var chain = Promise.resolve([]);
+      urls.forEach(function(u){
+        chain = chain.then(function(acc){
+          return fetch(u).then(function(r){ return r.json(); }).then(function(d){
+            (d.games || []).forEach(function(g){
+              var uname = USERNAME.toLowerCase();
+              var isW = (g.white.username||'').toLowerCase() === uname;
+              var my = isW ? g.white : g.black;
+              var opp = isW ? g.black : g.white;
+              var res = my.result === 'win' ? 'W' : DRAW_RESULTS.indexOf(my.result) !== -1 ? 'D' : 'L';
+              var mc = 0; if(g.pgn){ var mm = g.pgn.match(/\d+\./g); if(mm) mc = mm.length; }
+              var ds = ''; if(g.end_time){ ds = new Date(g.end_time*1000).toISOString().split('T')[0]; }
+              var parsed = {date:ds,color:isW?'W':'B',myRating:my.rating||0,oppRating:opp.rating||0,result:res,moves:mc,termination:my.result||'',timeControl:g.time_class||'',pgn:g.pgn||'',url:g.url||''};
+              if(!existingUrls[parsed.url]){ acc.push(parsed); existingUrls[parsed.url] = true; }
+            });
+            return acc;
+          }).catch(function(){ return acc; });
+        });
+      });
+      return chain.then(function(newGames){
+        var merged = existing.concat(newGames);
+        merged.sort(function(a,b){ return a.date < b.date ? -1 : a.date > b.date ? 1 : 0; });
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
+        localStorage.setItem(SYNC_TS_KEY, Date.now().toString());
+      });
+    })
+    .catch(function(){});
+})();
+-->
+<script src="gamification.js"></script>
+</body>
+</html>

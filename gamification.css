@@ -1,0 +1,73 @@
+/* === Bear Mascot Widget === */
+.gami-bear{position:fixed;bottom:16px;right:16px;width:60px;height:60px;border-radius:50%;background:#fff;border:2px solid #e0e0e0;cursor:pointer;z-index:300;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 12px rgba(0,0,0,0.1);transition:transform .2s,box-shadow .2s;}
+.gami-bear:hover{transform:scale(1.1);box-shadow:0 4px 18px rgba(0,0,0,0.16);}
+.gami-bear.pulse{animation:gami-pulse 2s infinite;}
+@keyframes gami-pulse{0%,100%{box-shadow:0 2px 12px rgba(0,0,0,0.1);}50%{box-shadow:0 0 0 8px rgba(139,105,20,0.15);}}
+
+/* Speech Bubble */
+.gami-bubble{position:fixed;bottom:86px;right:16px;background:#fff;border:2px solid #e0e0e0;border-radius:12px;padding:10px 14px;max-width:220px;font-family:'IBM Plex Mono',monospace;font-size:12px;color:#1a1a1a;line-height:1.5;z-index:301;box-shadow:0 2px 10px rgba(0,0,0,0.08);opacity:0;transform:translateY(8px);transition:opacity .3s,transform .3s;pointer-events:none;}
+.gami-bubble::after{content:'';position:absolute;bottom:-8px;right:24px;width:0;height:0;border-left:8px solid transparent;border-right:8px solid transparent;border-top:8px solid #fff;}
+.gami-bubble::before{content:'';position:absolute;bottom:-10px;right:23px;width:0;height:0;border-left:9px solid transparent;border-right:9px solid transparent;border-top:9px solid #e0e0e0;}
+.gami-bubble.show{opacity:1;transform:translateY(0);pointer-events:auto;}
+
+/* === Mini Panel === */
+.gami-panel{position:fixed;bottom:86px;right:16px;width:280px;background:#fff;border:2px solid #e0e0e0;border-radius:12px;padding:20px;z-index:302;box-shadow:0 4px 24px rgba(0,0,0,0.12);opacity:0;transform:translateY(20px);transition:opacity .25s,transform .25s;pointer-events:none;}
+.gami-panel.show{opacity:1;transform:translateY(0);pointer-events:auto;}
+.gami-panel-close{position:absolute;top:8px;right:12px;background:none;border:none;font-size:18px;cursor:pointer;color:#999;line-height:1;}
+.gami-panel-close:hover{color:#1a1a1a;}
+.gami-panel-level{font-family:'IBM Plex Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:#999;margin-bottom:2px;}
+.gami-panel-streak{font-family:'IBM Plex Mono',monospace;font-size:42px;font-weight:700;color:#1a1a1a;line-height:1.1;}
+.gami-panel-streak-label{font-family:'IBM Plex Mono',monospace;font-size:11px;color:#888;margin-bottom:12px;}
+.gami-xp-bar{background:#e0e0e0;border-radius:6px;height:10px;margin:8px 0 4px;overflow:hidden;}
+.gami-xp-bar .fill{background:#769656;height:100%;border-radius:6px;transition:width .4s;}
+.gami-xp-label{display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:10px;color:#999;}
+.gami-panel-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px;}
+.gami-panel-stat{background:#f8f7f0;border-radius:6px;padding:8px;text-align:center;}
+.gami-panel-stat .val{font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:700;color:#1a1a1a;}
+.gami-panel-stat .lbl{font-family:'IBM Plex Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:1px;color:#999;margin-top:2px;}
+
+/* === Nav Progress Dots === */
+.gami-dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-left:6px;vertical-align:middle;flex-shrink:0;}
+.gami-dot.unvisited{background:#ccc;}
+.gami-dot.visited{background:#4A90D9;}
+.gami-dot.read{background:#4A90D9;}
+.gami-dot.mastered{background:#1A6B5A;}
+
+/* === "Got It" Button === */
+.gami-gotit{display:block;margin:32px auto 0;padding:12px 32px;border-radius:8px;border:2px solid #e0e0e0;background:#fff;font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:600;cursor:pointer;color:#1a1a1a;transition:all .2s;}
+.gami-gotit:hover{border-color:#1A6B5A;color:#1A6B5A;}
+.gami-gotit.read{background:#1A6B5A;color:#fff;border-color:#1A6B5A;}
+.gami-gotit.mastered{background:#059669;color:#fff;border-color:#059669;}
+.gami-gotit.pop{animation:gami-pop .35s ease;}
+@keyframes gami-pop{0%{transform:scale(1);}40%{transform:scale(0.92);}100%{transform:scale(1);}}
+
+/* === Confetti Canvas === */
+.gami-confetti{position:fixed;inset:0;z-index:9999;pointer-events:none;}
+
+/* === XP Toast === */
+.gami-toast{position:fixed;bottom:90px;right:16px;background:#1a1a1a;color:#fff;font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:700;padding:8px 16px;border-radius:8px;z-index:310;opacity:0;transform:translateY(10px);transition:opacity .25s,transform .25s;}
+.gami-toast.show{opacity:1;transform:translateY(0);}
+
+/* === Win Celebration === */
+.gami-nice{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) translateY(0);font-family:'IBM Plex Mono',monospace;font-size:28px;font-weight:700;color:#059669;z-index:400;opacity:0;pointer-events:none;}
+.gami-nice.show{animation:gami-float 1.2s ease forwards;}
+@keyframes gami-float{0%{opacity:1;transform:translate(-50%,-50%) translateY(0);}100%{opacity:0;transform:translate(-50%,-50%) translateY(-60px);}}
+
+.gami-green-pulse{position:fixed;inset:0;background:#059669;opacity:0;z-index:399;pointer-events:none;}
+.gami-green-pulse.show{animation:gami-gpulse .5s ease;}
+@keyframes gami-gpulse{0%{opacity:0;}50%{opacity:0.1;}100%{opacity:0;}}
+
+/* === Level Up Overlay === */
+.gami-levelup{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(0.7);background:#fff;border:3px solid #DAB82B;border-radius:16px;padding:32px 48px;text-align:center;z-index:500;opacity:0;pointer-events:none;box-shadow:0 0 40px rgba(218,184,43,0.3);transition:opacity .3s,transform .3s;}
+.gami-levelup.show{opacity:1;transform:translate(-50%,-50%) scale(1);}
+.gami-levelup .emoji{font-size:48px;margin-bottom:8px;}
+.gami-levelup .title{font-family:'IBM Plex Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:2px;color:#999;margin-bottom:4px;}
+.gami-levelup .name{font-family:'IBM Plex Mono',monospace;font-size:24px;font-weight:700;color:#1a1a1a;}
+
+/* === Mobile === */
+@media(max-width:768px){
+  .gami-bear{width:48px;height:48px;bottom:12px;right:12px;}
+  .gami-bubble{bottom:70px;right:12px;max-width:180px;font-size:11px;}
+  .gami-panel{bottom:70px;right:0;left:0;width:auto;border-radius:12px 12px 0 0;margin:0 8px;}
+  .gami-toast{bottom:72px;right:12px;}
+}

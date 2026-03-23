@@ -95,7 +95,8 @@ function renderNav(active) {
       {id:'stage-3',label:'S3: Fight for Center'},
       {id:'stage-4',label:'S4: Punish Mistakes'},
       {id:'stage-5',label:'S5: Rating Push'},
-      {id:'dashboard',label:'Dashboard'}
+      {id:'dashboard',label:'Dashboard'},
+      {id:'admin',label:'⚙ Admin'}
     ]}
   ];
 
