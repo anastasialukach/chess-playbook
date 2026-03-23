@@ -17,19 +17,74 @@
 <div class="ch-title">Middle Game Concepts</div>
 <div class="con"><h4>1. Piece Activity > Material</h4>
 <p>Don't grab side pawns with queen. A queen on a2 < a knight on f3 + bishop on c4 + castled king working together.</p>
-<p><strong>Rule:</strong> If winning a pawn pulls your piece from center for 2+ moves, don't take it.</p></div>
+<p><strong>Rule:</strong> If winning a pawn pulls your piece from center for 2+ moves, don't take it.</p>
+<div class="compare">
+<div class="compare-label bad">Bad: Queen chasing pawns</div>
+<div class="compare-row">
+<div class="compare-cell"><div id="b-act1"></div><div class="cap"><strong>Queen on a2</strong><br>Far from action</div></div>
+<div class="compare-cell"><div id="b-act2"></div><div class="cap"><strong>Meanwhile...</strong><br>Opponent develops</div></div>
+<div class="compare-cell"><div id="b-act3"></div><div class="cap"><strong>Better</strong><br>Pieces in center</div></div>
+</div>
+</div></div>
+
 <div class="con"><h4>2. Development Checkpoint at Move 10</h4>
-<p>Both knights out? Bishop? Castled? Yes → attack. No → develop first.</p></div>
+<p>Both knights out? Bishop? Castled? Yes → attack. No → develop first.</p>
+<div class="compare">
+<div class="compare-label bad">Fail: Move 10, still undeveloped</div>
+<div class="compare-row">
+<div class="compare-cell"><div id="b-dev1"></div><div class="cap">Only 1 piece out<br>King exposed</div></div>
+<div class="compare-cell"><div id="b-dev2"></div><div class="cap">2 knights + bishop<br>Almost ready</div></div>
+<div class="compare-cell"><div id="b-dev3"></div><div class="cap"><strong>Pass!</strong><br>All out + castled</div></div>
+</div>
+<div class="compare-label good">Step 1 → 2 → 3: develop everything, then castle</div>
+</div></div>
+
 <div class="con"><h4>3. Control the Center</h4>
 <div id="b-center"></div>
 <div class="legend"><span><span class="dot" style="background:#F7F769;"></span> d4-d5-e4-e5 — fight for these</span></div>
-<p>Knight on e4 controls 8 squares. Knight on a3 controls 4. Same piece, twice the power.</p></div>
+<p>Knight on e4 controls 8 squares. Knight on a3 controls 4. Same piece, twice the power.</p>
+<div class="compare">
+<div class="compare-row">
+<div class="compare-cell"><div id="b-ctr1"></div><div class="cap"><strong>Knight on e4</strong><br>Controls 8 squares</div></div>
+<div class="compare-cell"><div id="b-ctr2"></div><div class="cap"><strong>Knight on a3</strong><br>Controls only 4</div></div>
+<div class="compare-cell"><div id="b-ctr3"></div><div class="cap"><strong>Knight on d5</strong><br>Dominates center</div></div>
+</div>
+</div></div>
+
 <div class="con"><h4>4. CCT — Checks, Captures, Threats</h4>
-<p>Before every move: scan checks, captures, threats. "If I do nothing, what's opponent's best move?" If checkmate or queen loss — deal with THAT first.</p></div>
+<p>Before every move: scan checks, captures, threats. "If I do nothing, what's opponent's best move?" If checkmate or queen loss — deal with THAT first.</p>
+<div class="compare">
+<div class="compare-row">
+<div class="compare-cell"><div id="b-cct1"></div><div class="cap"><strong>Check?</strong><br>Can Qh7+ happen?</div></div>
+<div class="compare-cell"><div id="b-cct2"></div><div class="cap"><strong>Capture?</strong><br>Bxf7+ wins pawn</div></div>
+<div class="compare-cell"><div id="b-cct3"></div><div class="cap"><strong>Threat?</strong><br>Nf6 forks Q+R</div></div>
+</div>
+</div></div>
 </div>
 
 <script>
 brd('b-center',SP,{hl:['d4','d5','e4','e5']});
+
+// Piece Activity: bad queen vs good development
+brd('b-act1',ad(rm(SP,['d1','a7','e2','g1','f1','e1','h1']),[['wQ','a2'],['wP','e4'],['wK','g1'],['wR','f1']]),{mini:true,rd:['a2']});
+brd('b-act2',ad(rm(SP,['d1','a7','e2','g1','f1','e1','h1','g8','f8','b8','e7','d7']),[['wQ','a2'],['wP','e4'],['wK','g1'],['wR','f1'],['bN','f6'],['bB','c5'],['bN','c6'],['bP','e5'],['bP','d6'],['bK','g8'],['bR','f8']]),{mini:true,rd:['a2'],hl:['f6','c5','c6']});
+brd('b-act3',ad(rm(SP,['e2','g1','f1','b1','c1','e1','h1','d2']),[['wP','e4'],['wP','d3'],['wN','f3'],['wB','c4'],['wN','c3'],['wK','g1'],['wR','f1']]),{mini:true,hl:['f3','c4','c3','g1']});
+
+// Development checkpoint
+brd('b-dev1',ad(rm(SP,['e2','g1']),[['wP','e4'],['wN','f3']]),{mini:true,rd:['e1']});
+brd('b-dev2',ad(rm(SP,['e2','g1','b1','f1']),[['wP','e4'],['wN','f3'],['wN','c3'],['wB','c4']]),{mini:true,hl:['f3','c3','c4']});
+brd('b-dev3',ad(rm(SP,['e2','g1','b1','f1','e1','h1','d2']),[['wP','e4'],['wP','d3'],['wN','f3'],['wN','c3'],['wB','c4'],['wK','g1'],['wR','f1']]),{mini:true,hl:['f3','c3','c4','g1']});
+
+// Center control - knight placement
+var emptyish=[['wK','e1'],['wP','d4'],['wP','e4']];
+brd('b-ctr1',ad(emptyish,[['wN','e4']]),{mini:true,hl:['d2','d6','c3','c5','f2','f6','g3','g5']});
+brd('b-ctr2',ad(emptyish,[['wN','a3']]),{mini:true,hl:['b1','b5','c2','c4']});
+brd('b-ctr3',ad(emptyish,[['wN','d5']]),{mini:true,hl:['c3','c7','b4','b6','e3','e7','f4','f6']});
+
+// CCT examples
+brd('b-cct1',[['wQ','h5'],['bK','g8'],['bP','g7'],['bP','h7'],['bP','f7'],['bR','f8']],{mini:true,rd:['h7']});
+brd('b-cct2',[['wB','c4'],['bK','e8'],['bP','f7'],['bP','e6'],['bQ','d8']],{mini:true,rd:['f7']});
+brd('b-cct3',[['bN','e4'],['wQ','d1'],['wR','h1'],['wK','g1'],['wP','f2'],['wP','g2'],['wP','h2']],{mini:true,rd:['d2'],hl:['e4'],flip:true});
 </script>
 <script src="gamification.js"></script>
 </body>

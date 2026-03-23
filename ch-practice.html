@@ -15,13 +15,38 @@
 <div class="wrap">
 <div class="ch-label">Chapter 08</div>
 <div class="ch-title">Practice Plan</div>
-<div class="con"><h4>Week 1 — Defense</h4><p>→ 5 games as Black. French vs e4, d5 vs d4.<br>→ Write the killing move after each loss<br>→ 10 checkmate puzzles/day</p></div>
-<div class="con"><h4>Week 2 — Opening Consistency</h4><p>→ White: e4, Nf3, Bc4 every game<br>→ Black vs weird: Default System<br>→ Goal: zero sub-10-move losses</p></div>
+<div class="con"><h4>Week 1 — Defense</h4><p>→ 5 games as Black. French vs e4, d5 vs d4.<br>→ Write the killing move after each loss<br>→ 10 checkmate puzzles/day</p>
+<div class="compare">
+<div class="compare-row">
+<div class="compare-cell"><div id="b-w1a"></div><div class="cap"><strong>French</strong><br>vs 1.e4 → e6, d5</div></div>
+<div class="compare-cell"><div id="b-w1b"></div><div class="cap"><strong>QGD</strong><br>vs 1.d4 → d5, Nf6</div></div>
+<div class="compare-cell"><div id="b-w1c"></div><div class="cap"><strong>Default</strong><br>vs weird → e5, Nf6, Bc5</div></div>
+</div>
+</div></div>
+
+<div class="con"><h4>Week 2 — Opening Consistency</h4><p>→ White: e4, Nf3, Bc4 every game<br>→ Black vs weird: Default System<br>→ Goal: zero sub-10-move losses</p>
+<div class="compare">
+<div class="compare-row">
+<div class="compare-cell"><div id="b-w2a"></div><div class="cap"><strong>1. e4</strong><br>Center pawn</div></div>
+<div class="compare-cell"><div id="b-w2b"></div><div class="cap"><strong>2. Nf3</strong><br>Develop knight</div></div>
+<div class="compare-cell"><div id="b-w2c"></div><div class="cap"><strong>3. Bc4</strong><br>Italian setup</div></div>
+</div>
+</div></div>
+
 <div class="con"><h4>Week 3 — Middle Game</h4><p>→ CCT scan every move (5 sec)<br>→ No pawn-grabbing with queen<br>→ Reach move 25+ every game</p></div>
 <div class="con"><h4>Week 4 — Rating Push</h4><p>→ Combine everything<br>→ Target: 300+<br>→ Three-Loss Rule always</p></div>
 </div>
 
 <script>
+// Week 1 — Black openings
+brd('b-w1a',ad(rm(SP,['e2','d2','e7','d7']),[['wP','e4'],['wP','d4'],['bP','e6'],['bP','d5']]),{mini:true,hl:['e6','d5'],flip:true});
+brd('b-w1b',ad(rm(SP,['d2','c2','d7','g8']),[['wP','d4'],['wP','c4'],['bP','d5'],['bN','f6']]),{mini:true,hl:['d5','f6'],flip:true});
+brd('b-w1c',ad(rm(SP,['e7','g8','f8']),[['bP','e5'],['bN','f6'],['bB','c5']]),{mini:true,hl:['e5','f6','c5'],flip:true});
+
+// Week 2 — Italian as White
+brd('b-w2a',ad(rm(SP,['e2']),[['wP','e4']]),{mini:true,hl:['e4']});
+brd('b-w2b',ad(rm(SP,['e2','g1']),[['wP','e4'],['wN','f3']]),{mini:true,hl:['e4','f3']});
+brd('b-w2c',ad(rm(SP,['e2','g1','f1']),[['wP','e4'],['wN','f3'],['wB','c4']]),{mini:true,hl:['e4','f3','c4']});
 </script>
 <script src="gamification.js"></script>
 </body>

@@ -32,9 +32,33 @@
 </tbody></table>
 <div class="tip red"><strong>Three-Loss Rule.</strong> After 3 consecutive losses: STOP. Close app. 30 min minimum. Saves ~33 rating points from this streak alone.</div>
 <div class="tip"><strong>Session structure:</strong><br>→ Max 5 games per session<br>→ Stop after 3 losses in a row<br>→ Win 3+ straight → stop, gains locked<br>→ Sub-10-move loss → break first</div>
+
+<h3>What Tilt Looks Like on the Board</h3>
+<div class="compare">
+<div class="compare-label bad">Tilted: G33 — side pawns, mated in 6</div>
+<div class="compare-row">
+<div class="compare-cell"><div id="b-tilt1"></div><div class="cap"><strong>3...a6</strong><br>Panic pawn push</div></div>
+<div class="compare-cell"><div id="b-tilt2"></div><div class="cap"><strong>4...b5</strong><br>More panic</div></div>
+<div class="compare-cell"><div id="b-tilt3"></div><div class="cap"><strong>5.Qf3</strong><br>Threatens Qxf7#</div></div>
+</div>
+<div class="compare-label good">Calm: same position, develop instead</div>
+<div class="compare-row">
+<div class="compare-cell"><div id="b-calm1"></div><div class="cap"><strong>3...Nf6</strong><br>Develop a piece</div></div>
+<div class="compare-cell"><div id="b-calm2"></div><div class="cap"><strong>4...Bc5</strong><br>Two pieces out</div></div>
+<div class="compare-cell"><div id="b-calm3"></div><div class="cap"><strong>5...O-O</strong><br>King safe, solid</div></div>
+</div>
+</div>
 </div>
 
 <script>
+// Tilt example (G33 from patterns chapter)
+var g33=ad(rm(SP,['e2','e7','b8']),[['wP','e4'],['bP','e5'],['bN','c6']]);
+brd('b-tilt1',ad(rm(g33,['f1','a7']),[['wB','b5'],['bP','a6']]),{mini:true,rd:['a6'],flip:true});
+brd('b-tilt2',ad(rm(g33,['f1','a7','b7']),[['wB','c4'],['bP','a6'],['bP','b5']]),{mini:true,rd:['a6','b5'],flip:true});
+brd('b-tilt3',ad(rm(g33,['f1','a7','b7','d1']),[['wB','c4'],['bP','a6'],['bP','b5'],['wQ','f3']]),{mini:true,rd:['f7'],flip:true});
+brd('b-calm1',ad(rm(g33,['f1','g8']),[['wB','b5'],['bN','f6']]),{mini:true,hl:['f6'],flip:true});
+brd('b-calm2',ad(rm(g33,['f1','g8','f8']),[['wB','c4'],['bN','f6'],['bB','c5']]),{mini:true,hl:['c5','f6'],flip:true});
+brd('b-calm3',ad(rm(g33,['f1','g8','f8','e8','h8']),[['wB','c4'],['bN','f6'],['bB','c5'],['bK','g8'],['bR','f8']]),{mini:true,hl:['g8','f8'],flip:true});
 </script>
 <script src="gamification.js"></script>
 </body>

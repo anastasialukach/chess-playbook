@@ -20,17 +20,68 @@
 <div class="moves"><span class="mn">1.</span><span class="mw">d4</span> <span class="mn">2.</span><span class="mw">Bf4</span> <span class="mn">3.</span><span class="mw">e3</span> <span class="mn">4.</span><span class="mw">Nf3</span> <span class="mn">5.</span><span class="mw">Bd3</span> <span class="mn">6.</span><span class="mw">O-O</span><br><span class="mc">Same 6 moves every game.</span></div>
 <div id="b-london"></div></div>
 
+<h3>As White — The London Step by Step</h3>
+<div class="compare">
+<div class="compare-row">
+<div class="compare-cell"><div id="b-lon1"></div><div class="cap"><strong>1. d4</strong><br>Claim the center</div></div>
+<div class="compare-cell"><div id="b-lon2"></div><div class="cap"><strong>2. Bf4</strong><br>Bishop out early</div></div>
+<div class="compare-cell"><div id="b-lon3"></div><div class="cap"><strong>3-6. e3, Nf3, Bd3, O-O</strong><br>Complete setup</div></div>
+</div>
+</div>
+
 <h3>As Black — New Weapons</h3>
+
 <div class="con"><h4>Against 1.e4 — French Advance</h4>
-<div class="moves"><span class="mn">1.</span><span class="mw">e4</span> <span class="mb">e6</span> <span class="mn">2.</span><span class="mw">d4</span> <span class="mb">d5</span> <span class="mn">3.</span><span class="mw">e5</span> <span class="mb">c5</span><br><span class="mc">Counter-attack d4 immediately.</span></div></div>
+<div class="moves"><span class="mn">1.</span><span class="mw">e4</span> <span class="mb">e6</span> <span class="mn">2.</span><span class="mw">d4</span> <span class="mb">d5</span> <span class="mn">3.</span><span class="mw">e5</span> <span class="mb">c5</span><br><span class="mc">Counter-attack d4 immediately.</span></div>
+<div class="compare">
+<div class="compare-row">
+<div class="compare-cell"><div id="b-fra1"></div><div class="cap"><strong>1...e6</strong><br>Prepare d5</div></div>
+<div class="compare-cell"><div id="b-fra2"></div><div class="cap"><strong>2...d5</strong><br>Challenge center</div></div>
+<div class="compare-cell"><div id="b-fra3"></div><div class="cap"><strong>3...c5</strong><br>Attack d4 chain</div></div>
+</div>
+</div></div>
+
 <div class="con"><h4>Against 1.d4 — Slav Defense</h4>
-<div class="moves"><span class="mn">1.</span><span class="mw">d4</span> <span class="mb">d5</span> <span class="mn">2.</span><span class="mw">c4</span> <span class="mb">c6</span><br><span class="mc">Supports d5 without blocking bishop.</span></div></div>
+<div class="moves"><span class="mn">1.</span><span class="mw">d4</span> <span class="mb">d5</span> <span class="mn">2.</span><span class="mw">c4</span> <span class="mb">c6</span><br><span class="mc">Supports d5 without blocking bishop.</span></div>
+<div class="compare">
+<div class="compare-row">
+<div class="compare-cell"><div id="b-slav1"></div><div class="cap"><strong>1...d5</strong><br>Mirror center</div></div>
+<div class="compare-cell"><div id="b-slav2"></div><div class="cap"><strong>2...c6</strong><br>Support d5 pawn</div></div>
+<div class="compare-cell"><div id="b-slav3"></div><div class="cap"><strong>3...Nf6, Bf5</strong><br>Develop freely</div></div>
+</div>
+</div></div>
+
 <div class="con"><h4>Against ANYTHING weird — Default System</h4>
-<div class="moves"><span class="mb">1...e5</span> → <span class="mb">2...Nf6</span> → <span class="mb">3...Bc5</span> → <span class="mb">4...O-O</span> → <span class="mb">5...d6</span><br><span class="mc">Works against literally anything irregular.</span></div></div>
+<div class="moves"><span class="mb">1...e5</span> → <span class="mb">2...Nf6</span> → <span class="mb">3...Bc5</span> → <span class="mb">4...O-O</span> → <span class="mb">5...d6</span><br><span class="mc">Works against literally anything irregular.</span></div>
+<div class="compare">
+<div class="compare-row">
+<div class="compare-cell"><div id="b-def1"></div><div class="cap"><strong>1...e5</strong><br>Grab center</div></div>
+<div class="compare-cell"><div id="b-def2"></div><div class="cap"><strong>2-3...Nf6, Bc5</strong><br>Develop pieces</div></div>
+<div class="compare-cell"><div id="b-def3"></div><div class="cap"><strong>4-5...O-O, d6</strong><br>King safe, solid</div></div>
+</div>
+</div></div>
 </div>
 
 <script>
-brd('b-london',ad(rm(SP,['d2','e2','g1','f1','c1','d7','g8']),[['wP','d4'],['wP','e3'],['wN','f3'],['wB','f4'],['wB','d3'],['wK','g1'],['wR','f1'],['bP','d5'],['bN','f6']]),{hl:['d4','e3','f3','f4','d3','g1']});
+// London 3-step
+brd('b-lon1',ad(rm(SP,['d2']),[['wP','d4']]),{mini:true,hl:['d4']});
+brd('b-lon2',ad(rm(SP,['d2','c1']),[['wP','d4'],['wB','f4']]),{mini:true,hl:['d4','f4']});
+brd('b-lon3',ad(rm(SP,['d2','e2','g1','f1','c1','d7','g8','e1','h1']),[['wP','d4'],['wP','e3'],['wN','f3'],['wB','f4'],['wB','d3'],['wK','g1'],['wR','f1'],['bP','d5'],['bN','f6']]),{mini:true,hl:['d4','e3','f3','f4','d3','g1']});
+
+// French Advance 3-step
+brd('b-fra1',ad(rm(SP,['e2','e7']),[['wP','e4'],['bP','e6']]),{mini:true,hl:['e6'],flip:true});
+brd('b-fra2',ad(rm(SP,['e2','d2','e7','d7']),[['wP','e4'],['wP','d4'],['bP','e6'],['bP','d5']]),{mini:true,hl:['d5'],flip:true});
+brd('b-fra3',ad(rm(SP,['e2','d2','e7','d7','c7']),[['wP','e5'],['wP','d4'],['bP','e6'],['bP','d5'],['bP','c5']]),{mini:true,hl:['c5'],rd:['d4'],flip:true});
+
+// Slav 3-step
+brd('b-slav1',ad(rm(SP,['d2','d7']),[['wP','d4'],['bP','d5']]),{mini:true,hl:['d5'],flip:true});
+brd('b-slav2',ad(rm(SP,['d2','c2','d7','c7']),[['wP','d4'],['wP','c4'],['bP','d5'],['bP','c6']]),{mini:true,hl:['c6'],flip:true});
+brd('b-slav3',ad(rm(SP,['d2','c2','d7','c7','g8','c8']),[['wP','d4'],['wP','c4'],['bP','d5'],['bP','c6'],['bN','f6'],['bB','f5']]),{mini:true,hl:['f6','f5'],flip:true});
+
+// Default System 3-step
+brd('b-def1',ad(rm(SP,['e7']),[['bP','e5']]),{mini:true,hl:['e5'],flip:true});
+brd('b-def2',ad(rm(SP,['e7','g8','f8']),[['bP','e5'],['bN','f6'],['bB','c5']]),{mini:true,hl:['e5','f6','c5'],flip:true});
+brd('b-def3',ad(rm(SP,['e7','g8','f8','e8','h8','d7']),[['bP','e5'],['bN','f6'],['bB','c5'],['bK','g8'],['bR','f8'],['bP','d6']]),{mini:true,hl:['g8','d6'],flip:true});
 </script>
 <script src="gamification.js"></script>
 </body>
