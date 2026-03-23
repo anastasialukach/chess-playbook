@@ -66,27 +66,34 @@
   </div>
 
   <div class="con">
-    <h2>Game Log</h2>
-    <div class="progress-bar"><div class="fill" id="prog-fill"></div></div>
-    <p id="prog-text" class="mono"></p>
-    <form class="game-log-form" id="log-form">
-      <select id="log-result" required>
-        <option value="">Result</option>
-        <option value="W">Win</option>
-        <option value="D">Draw</option>
-        <option value="L">Loss</option>
-      </select>
-      <input type="text" id="log-rating" placeholder="Opp rating" required>
-      <input type="text" id="log-notes" placeholder="Notes (opening, blunder, etc.)">
-      <button type="submit">Log Game</button>
-    </form>
-    <table class="tbl">
-      <thead><tr><th>#</th><th>Result</th><th>Rating</th><th>Notes</th></tr></thead>
-      <tbody id="log-body"></tbody>
-    </table>
+    <h2>Progress</h2>
+    <div id="prog-text" class="mono" style="margin-bottom:8px">0 of 25 games</div>
+    <div class="progress-bar"><div class="fill" id="prog-fill" style="width:0%"></div></div>
   </div>
 
-  <div class="tip green">60%+ WR as White. 45%+ WR as Black. Sub-300 opponents beaten 65%+.</div>
+  <div class="con">
+    <h2>Success Criteria</h2>
+    <div class="criteria-list" id="criteria-list"></div>
+  </div>
+
+  <div class="con">
+    <h2>Game Log</h2>
+    <div class="auto-games">
+      <div class="auto-games-header">
+        <h3>Last 25 Games (from Chess.com)</h3>
+        <span class="auto-games-note">Auto-synced from chess.com/happery</span>
+      </div>
+      <div class="auto-games-scroll">
+        <table class="tbl" id="auto-log">
+          <thead>
+            <tr><th>#</th><th>Date</th><th>Color</th><th>Result</th><th>Opp Rating</th><th>Moves</th><th>Link</th></tr>
+          </thead>
+          <tbody id="log-body"></tbody>
+        </table>
+      </div>
+      <p id="no-games-msg" class="mono" style="display:none;color:#999;text-align:center;padding:20px 0;">No games synced yet — go to Admin to sync your Chess.com games.</p>
+    </div>
+  </div>
 
   <div class="stage-nav">
     <a href="stage-3.html">&larr; Stage 3</a>
@@ -95,36 +102,104 @@
 
 </div>
 
+<style>
+.criteria-list{display:flex;flex-direction:column;gap:0;}
+.criteria-item{display:flex;align-items:center;padding:10px 12px;border-bottom:1px solid #eee;font-size:14px;border-left:3px solid transparent;}
+.criteria-item:last-child{border-bottom:none;}
+.criteria-item.passed{border-left-color:#22863a;background:#f6fff6;}
+.criteria-item.passed .criteria-check{color:#22863a;font-weight:700;}
+.criteria-item.failed{border-left-color:#d73a49;background:#fff6f6;}
+.criteria-item.failed .criteria-check{color:#d73a49;font-weight:700;}
+.criteria-check{width:24px;font-size:16px;flex-shrink:0;}
+.criteria-text{flex:1;}
+.criteria-value{font-family:'IBM Plex Mono',monospace;font-weight:600;text-align:right;margin-left:12px;white-space:nowrap;}
+.auto-games-header{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px;margin-bottom:8px;}
+.auto-games-header h3{margin:0;font-size:16px;}
+.auto-games-note{font-size:12px;color:#999;font-family:'IBM Plex Mono',monospace;}
+.auto-games-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+</style>
 <script>
 (function(){
-  var KEY = 'chess-s4-games';
   var TARGET = 25;
-  function load(){ return JSON.parse(localStorage.getItem(KEY) || '[]'); }
-  function save(g){ localStorage.setItem(KEY, JSON.stringify(g)); }
-  function render(){
-    var games = load();
-    var tbody = document.getElementById('log-body');
+  var allGames = JSON.parse(localStorage.getItem('chess-synced-games') || '[]');
+  var games = allGames.slice(-TARGET);
+  var total = allGames.length;
+
+  // Progress
+  var count = Math.min(total, TARGET);
+  var pct = Math.min(100, Math.round(count / TARGET * 100));
+  document.getElementById('prog-fill').style.width = pct + '%';
+  document.getElementById('prog-text').textContent = count + ' of ' + TARGET + ' games';
+
+  // Success Criteria
+  var criteriaEl = document.getElementById('criteria-list');
+
+  // 1: 60%+ WR as White
+  var whiteGames = [], blackGames = [], sub300Games = [];
+  for (var i = 0; i < games.length; i++) {
+    if (games[i].color === 'W') whiteGames.push(games[i]);
+    if (games[i].color === 'B') blackGames.push(games[i]);
+    if ((games[i].oppRating || 0) < 300) sub300Games.push(games[i]);
+  }
+  var whiteWins = 0;
+  for (var i = 0; i < whiteGames.length; i++) { if (whiteGames[i].result === 'W') whiteWins++; }
+  var whiteWR = whiteGames.length > 0 ? Math.round((whiteWins / whiteGames.length) * 100) : 0;
+  var c1pass = whiteWR >= 60;
+
+  // 2: 45%+ WR as Black
+  var blackWins = 0;
+  for (var i = 0; i < blackGames.length; i++) { if (blackGames[i].result === 'W') blackWins++; }
+  var blackWR = blackGames.length > 0 ? Math.round((blackWins / blackGames.length) * 100) : 0;
+  var c2pass = blackWR >= 45;
+
+  // 3: 65%+ vs sub-300
+  var sub300Wins = 0;
+  for (var i = 0; i < sub300Games.length; i++) { if (sub300Games[i].result === 'W') sub300Wins++; }
+  var sub300WR = sub300Games.length > 0 ? Math.round((sub300Wins / sub300Games.length) * 100) : 0;
+  var c3pass = sub300WR >= 65;
+
+  criteriaEl.innerHTML =
+    '<div class="criteria-item ' + (c1pass ? 'passed' : 'failed') + '">' +
+      '<span class="criteria-check">' + (c1pass ? '&#10003;' : '&#10007;') + '</span>' +
+      '<span class="criteria-text">60%+ win rate as White</span>' +
+      '<span class="criteria-value">' + whiteWR + '% (' + whiteWins + '/' + whiteGames.length + ')</span>' +
+    '</div>' +
+    '<div class="criteria-item ' + (c2pass ? 'passed' : 'failed') + '">' +
+      '<span class="criteria-check">' + (c2pass ? '&#10003;' : '&#10007;') + '</span>' +
+      '<span class="criteria-text">45%+ win rate as Black</span>' +
+      '<span class="criteria-value">' + blackWR + '% (' + blackWins + '/' + blackGames.length + ')</span>' +
+    '</div>' +
+    '<div class="criteria-item ' + (c3pass ? 'passed' : 'failed') + '">' +
+      '<span class="criteria-check">' + (c3pass ? '&#10003;' : '&#10007;') + '</span>' +
+      '<span class="criteria-text">65%+ win rate vs sub-300 opponents</span>' +
+      '<span class="criteria-value">' + sub300WR + '% (' + sub300Wins + '/' + sub300Games.length + ')</span>' +
+    '</div>';
+
+  // Game Log Table
+  var tbody = document.getElementById('log-body');
+  var noMsg = document.getElementById('no-games-msg');
+  if (games.length === 0) {
+    noMsg.style.display = 'block';
+    document.getElementById('auto-log').style.display = 'none';
+  } else {
+    noMsg.style.display = 'none';
     tbody.innerHTML = '';
-    for(var i=0;i<games.length;i++){
+    for (var i = games.length - 1; i >= 0; i--) {
       var g = games[i];
+      var cls = g.result === 'W' ? 'grn' : g.result === 'L' ? 'rd' : 'blu';
+      var dateStr = g.date ? g.date.slice(0, 10) : '—';
       var tr = document.createElement('tr');
-      var cls = g.result==='W'?'grn':g.result==='L'?'rd':'blu';
-      tr.innerHTML = '<td class="mono">'+(i+1)+'</td><td class="mono '+cls+'">'+g.result+'</td><td class="mono">'+g.rating+'</td><td>'+g.notes+'</td>';
+      tr.innerHTML =
+        '<td class="mono">' + (i + 1) + '</td>' +
+        '<td class="mono">' + dateStr + '</td>' +
+        '<td class="mono">' + (g.color || '—') + '</td>' +
+        '<td class="mono ' + cls + '">' + g.result + '</td>' +
+        '<td class="mono">' + (g.oppRating || '—') + '</td>' +
+        '<td class="mono">' + (g.moves || '—') + '</td>' +
+        '<td>' + (g.url ? '<a href="' + g.url + '" target="_blank">&#x2197;</a>' : '—') + '</td>';
       tbody.appendChild(tr);
     }
-    var pct = Math.min(100, Math.round(games.length/TARGET*100));
-    document.getElementById('prog-fill').style.width = pct+'%';
-    document.getElementById('prog-text').textContent = games.length+' of '+TARGET+' games';
   }
-  document.getElementById('log-form').addEventListener('submit', function(e){
-    e.preventDefault();
-    var games = load();
-    games.push({result:document.getElementById('log-result').value, rating:document.getElementById('log-rating').value, notes:document.getElementById('log-notes').value});
-    save(games);
-    render();
-    this.reset();
-  });
-  render();
 })();
 </script>
 <script src="gamification.js"></script>
