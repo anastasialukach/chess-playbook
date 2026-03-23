@@ -549,8 +549,13 @@
   }
 
   // ============ SECTION PROGRESS ============
+  function getGamiProgress(){
+    try { return JSON.parse(localStorage.getItem('chess-gami-progress') || '{}'); } catch(e){ return {}; }
+  }
+
   function renderProgress(){
     var progress = getProgress();
+    var gamiProgress = getGamiProgress();
     var totalSections = 0;
     var completedSections = 0;
 
@@ -579,14 +584,16 @@
 
       group.items.forEach(function(item){
         var state = progress[item.id] || 'unread';
+        var visited = gamiProgress[item.id]; // auto-detected visits
         var chSpan = item.ch ? '<span class="ch-num">' + item.ch + '</span>' : '<span class="ch-num">&nbsp;</span>';
 
         var readCls = state === 'read' ? ' read' : '';
         var learnedCls = state === 'learned' ? ' learned' : '';
+        var visitedTag = (visited && state === 'unread') ? '<span style="font-family:IBM Plex Mono,monospace;font-size:9px;color:#999;margin-left:6px;background:#f5f5f5;padding:2px 6px;border-radius:3px;">visited</span>' : '';
 
         html += '<div class="progress-item">';
         html += chSpan;
-        html += '<span class="ch-name">' + item.label + '</span>';
+        html += '<span class="ch-name">' + item.label + visitedTag + '</span>';
         html += '<div class="progress-status">';
         html += '<button class="status-btn' + readCls + '" data-id="' + item.id + '" data-state="read">' + (state === 'read' ? '\u2713 ' : '') + 'Read</button>';
         html += '<button class="status-btn' + learnedCls + '" data-id="' + item.id + '" data-state="learned">' + (state === 'learned' ? '\u2605 ' : '') + 'Learned</button>';
