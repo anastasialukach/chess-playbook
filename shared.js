@@ -57,20 +57,40 @@ function ad(b,pcs){return b.concat(pcs);}
  
 
 function renderNav(active) {
-  var pages = [
-    {id:'playbook',label:'Playbook',href:'/'},
-    {id:'stage-1',label:'S1',href:'/stage-1'},
-    {id:'stage-2',label:'S2',href:'/stage-2'},
-    {id:'stage-3',label:'S3',href:'/stage-3'},
-    {id:'stage-4',label:'S4',href:'/stage-4'},
-    {id:'stage-5',label:'S5',href:'/stage-5'},
-    {id:'dashboard',label:'Dashboard',href:'/dashboard'}
+  var sections = [
+    {heading:'Playbook', items:[
+      {id:'playbook',label:'Home',href:'/'},
+      {id:'ch-reference',label:'Reference',href:'/ch-reference'},
+      {id:'ch-record',label:'Record',href:'/ch-record'},
+      {id:'ch-white',label:'White',href:'/ch-white'},
+      {id:'ch-black',label:'Black',href:'/ch-black'},
+      {id:'ch-patterns',label:'Patterns',href:'/ch-patterns'},
+      {id:'ch-openings',label:'Openings',href:'/ch-openings'},
+      {id:'ch-middle',label:'Middle',href:'/ch-middle'},
+      {id:'ch-tilt',label:'Tilt',href:'/ch-tilt'},
+      {id:'ch-practice',label:'Practice',href:'/ch-practice'},
+      {id:'ch-training',label:'Training',href:'/ch-training'}
+    ]},
+    {heading:'Stages', items:[
+      {id:'stage-1',label:'S1',href:'/stage-1'},
+      {id:'stage-2',label:'S2',href:'/stage-2'},
+      {id:'stage-3',label:'S3',href:'/stage-3'},
+      {id:'stage-4',label:'S4',href:'/stage-4'},
+      {id:'stage-5',label:'S5',href:'/stage-5'}
+    ]},
+    {heading:'', items:[
+      {id:'dashboard',label:'Dashboard',href:'/dashboard'}
+    ]}
   ];
   var h = '<div class="nav-inner">';
-  for (var i = 0; i < pages.length; i++) {
-    var p = pages[i];
-    var cls = 'nav-link' + (p.id === active ? ' active' : '');
-    h += '<a class="' + cls + '" href="' + p.href + '">' + p.label + '</a>';
+  for (var s = 0; s < sections.length; s++) {
+    var sec = sections[s];
+    if (sec.heading) h += '<span class="nav-sep">' + sec.heading + '</span>';
+    for (var i = 0; i < sec.items.length; i++) {
+      var p = sec.items[i];
+      var cls = 'nav-link' + (p.id === active ? ' active' : '');
+      h += '<a class="' + cls + '" href="' + p.href + '">' + p.label + '</a>';
+    }
   }
   h += '</div>';
   var el = document.getElementById('site-nav');

@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Extra Training — Chess Playbook</title>
+<link rel="stylesheet" href="shared.css">
+</head>
+<body>
+<nav class="site-nav" id="site-nav"></nav>
+<script src="shared.js"></script>
+<script>renderNav("ch-training")</script>
+
+<div class="wrap">
+<div class="ch-label">Chapter 09</div>
+<div class="ch-title">Extra Training — More Losing Patterns</div>
+
+<h3>Pattern A: Falling for Ng5→Bxf7+ (Fried Liver)</h3>
+<div class="con"><h4><span class="tag loss">LOSS</span> G8 vs vanphatne · Bxf7+ sacrifice</h4>
+<div class="moves"><span class="mn">1.</span><span class="mw">e4</span> <span class="mb">e5</span> <span class="mn">2.</span><span class="mw">Bc4</span> <span class="mb">Nf6</span> <span class="mn">3.</span><span class="mw">Nc3</span> <span class="mb">Bc5</span> <span class="mn">4.</span><span class="mw">Nf3</span> <span class="mb">O-O</span> <span class="mn">5.</span><span class="mw">Ng5</span> <span class="mb">h6??</span> <span class="mn">6.</span><span class="mw">Bxf7+!</span> <span class="mc">— rook gone, game over</span></div></div>
+
+<div class="compare">
+<div class="compare-label bad">What You Played</div>
+<div class="compare-row">
+<div class="compare-cell"><div id="cmp-fl-a1"></div><div class="cap"><strong>4...O-O</strong><br>Castles into danger</div></div>
+<div class="compare-cell"><div id="cmp-fl-a2"></div><div class="cap"><strong>5...h6??</strong><br>Doesn't stop Bxf7+</div></div>
+<div class="compare-cell"><div id="cmp-fl-a3"></div><div class="cap"><strong>6.Bxf7+!</strong><br>Rook falls, game lost</div></div>
+</div>
+<div class="compare-label good">Better Approach</div>
+<div class="compare-row">
+<div class="compare-cell"><div id="cmp-fl-b1"></div><div class="cap"><strong>4...d5!</strong><br>Counter-attack center</div></div>
+<div class="compare-cell"><div id="cmp-fl-b2"></div><div class="cap"><strong>5.exd5 Nxd5</strong><br>Active knight, f7 safe</div></div>
+<div class="compare-cell"><div id="cmp-fl-b3"></div><div class="cap"><strong>6...Be6</strong><br>Blocks diagonal, solid</div></div>
+</div>
+</div>
+
+<div class="tip red"><strong>Rule:</strong> If opponent has Bc4 + Ng5 aimed at f7, don't castle and don't play h6. Play <span class="mono">d5!</span> immediately.</div>
+
+<h3>Pattern B: Knight Retreat — Qxf2#</h3>
+<div class="con"><h4><span class="tag loss">LOSS</span> G11 vs ali_qwertyuiop · Mated in 6</h4>
+<div class="moves"><span class="mn">1.</span><span class="mw">e4</span> <span class="mb">e5</span> <span class="mn">2.</span><span class="mw">Nf3</span> <span class="mb">Bc5</span> <span class="mn">3.</span><span class="mw">Nc3</span> <span class="mb">Qf6</span> <span class="mn">4.</span><span class="mw">Bc4</span> <span class="mb">d5</span> <span class="mn">5.</span><span class="mw">exd5</span> <span class="mb">e4</span> <span class="mn">6.</span><span class="mw">Ng1??</span> <span class="mb">Qxf2#</span></div></div>
+
+<div class="compare">
+<div class="compare-label bad">What You Played</div>
+<div class="compare-row">
+<div class="compare-cell"><div id="cmp-nr-a1"></div><div class="cap"><strong>5...e4</strong><br>Pawn attacks Nf3</div></div>
+<div class="compare-cell"><div id="cmp-nr-a2"></div><div class="cap"><strong>6.Ng1??</strong><br>Retreats to back rank</div></div>
+<div class="compare-cell"><div id="cmp-nr-a3"></div><div class="cap"><strong>6...Qxf2#</strong><br>Checkmate!</div></div>
+</div>
+<div class="compare-label good">Better Approach</div>
+<div class="compare-row">
+<div class="compare-cell"><div id="cmp-nr-b1"></div><div class="cap"><strong>5...e4</strong><br>Same attack on Nf3</div></div>
+<div class="compare-cell"><div id="cmp-nr-b2"></div><div class="cap"><strong>6.Ng5!</strong><br>Knight jumps forward</div></div>
+<div class="compare-cell"><div id="cmp-nr-b3"></div><div class="cap"><strong>Threatens Nxf7</strong><br>Counter-attack, safe</div></div>
+</div>
+</div>
+
+<div class="tip red"><strong>Never retreat a knight to g1/g8 under pressure.</strong> Forward: <span class="mono">Ng5, Nd4, Ne5</span>. Going back undoes your opening.</div>
+
+<h3>Pattern C: Qxh7# Blindness</h3>
+<div class="con"><h4><span class="tag loss">LOSS</span> G31 vs MickySmithAdventure · Qxh7#</h4>
+<div class="moves"><span class="mn">13.</span><span class="mb">O-O</span> <span class="mn">14.</span><span class="mw">Qh5</span> <span class="mb">e5??</span> <span class="mn">15.</span><span class="mw">Qxh7#</span> <span class="mc">— queen takes h7, checkmate</span></div></div>
+
+<div class="compare">
+<div class="compare-label bad">What You Played</div>
+<div class="compare-row">
+<div class="compare-cell"><div id="cmp-bm-a1"></div><div class="cap"><strong>13...O-O</strong><br>Castles, h7 exposed</div></div>
+<div class="compare-cell"><div id="cmp-bm-a2"></div><div class="cap"><strong>14...e5??</strong><br>Ignores Qh5 threat</div></div>
+<div class="compare-cell"><div id="cmp-bm-a3"></div><div class="cap"><strong>15.Qxh7#</strong><br>Checkmate on h7</div></div>
+</div>
+<div class="compare-label good">Better Approach</div>
+<div class="compare-row">
+<div class="compare-cell"><div id="cmp-bm-b1"></div><div class="cap"><strong>13...O-O</strong><br>Same castle</div></div>
+<div class="compare-cell"><div id="cmp-bm-b2"></div><div class="cap"><strong>14...g6!</strong><br>Blocks Q→h7 line</div></div>
+<div class="compare-cell"><div id="cmp-bm-b3"></div><div class="cap"><strong>Nf6+g6</strong><br>King safe, develop</div></div>
+</div>
+</div>
+
+<div class="tip red"><strong>After castling kingside:</strong> If opponent's queen appears on h5/h4, play <span class="mono">g6</span> or <span class="mono">h6</span> immediately. Nothing else until that threat is gone.</div>
+
+<h3>Pattern D: Long Diagonal Mate — Qg2#</h3>
+<div class="con"><h4><span class="tag loss">LOSS</span> G21 vs ekai8 · Bb7+Q battery</h4>
+<div class="moves"><span class="mn">21.</span><span class="mw">f4??</span> <span class="mb">Bb7</span> <span class="mn">22.</span><span class="mw">f5</span> <span class="mb">Qg2#</span> <span class="mc">— bishop+queen on long diagonal</span></div></div>
+
+<div class="compare">
+<div class="compare-label bad">What You Played</div>
+<div class="compare-row">
+<div class="compare-cell"><div id="cmp-oe-a1"></div><div class="cap"><strong>f4</strong><br>Weakens g1-a7 line</div></div>
+<div class="compare-cell"><div id="cmp-oe-a2"></div><div class="cap"><strong>f5</strong><br>Ignores diagonal</div></div>
+<div class="compare-cell"><div id="cmp-oe-a3"></div><div class="cap"><strong>Qg2#</strong><br>Q+B checkmate</div></div>
+</div>
+<div class="compare-label good">Better Approach</div>
+<div class="compare-row">
+<div class="compare-cell"><div id="cmp-oe-b1"></div><div class="cap"><strong>Bf1</strong><br>Guard g2 square</div></div>
+<div class="compare-cell"><div id="cmp-oe-b2"></div><div class="cap"><strong>Qd3</strong><br>Queen covers g2</div></div>
+<div class="compare-cell"><div id="cmp-oe-b3"></div><div class="cap"><strong>Solid center</strong><br>Don't push f-pawn</div></div>
+</div>
+</div>
+
+<div class="tip"><strong>The a1-h8 diagonal is the longest on the board.</strong> If opponent has Bb7 and your g-pawn is gone: Qg2 is mate. Before pushing f4, check that diagonal.</div>
+
+<h3>Quick Reference: 6 Training Habits</h3>
+<div class="con"><h4>Before Every Move</h4>
+<p>1. <strong>CCT scan</strong> — Checks, Captures, Threats. 5 seconds.<br>
+2. <strong>Diagonal check</strong> — Anything pointing at f2/f7 or the long diagonal?<br>
+3. <strong>Opponent's last move</strong> — What changed? New attack? New line?</p></div>
+
+<div class="con"><h4>Before Every Session</h4>
+<p>4. <strong>10 rated puzzles</strong> — Not puzzle rush. Rated. Think first.<br>
+5. <strong>Review last loss</strong> — Find the ONE move that lost. Write it down.<br>
+6. <strong>Three-Loss Rule</strong> — 3 losses in a row = close app. No exceptions.</p></div>
+
+<div class="con"><h4>Opening Autopilot (memorize this)</h4>
+<p><span class="tag wt">WHITE</span> <span class="mono">e4, Nf3, Bc4, O-O, d3</span> — Italian quiet. Every game.<br>
+<span class="tag bt">BLACK vs e4</span> <span class="mono">e5, Nf6, Nc6, Bc5, O-O</span> — Mirror Italian.<br>
+<span class="tag bt">BLACK vs d4</span> <span class="mono">d5, Nf6, e6, Bd6, O-O</span> — QGD setup.<br>
+<span class="tag bt">BLACK vs weird</span> <span class="mono">e5, Nf6, Bc5, O-O, d6</span> — Default system.</p></div>
+
+<div class="tip green"><strong>Switch to 15|10 time control.</strong> The extra 10-sec increment means you can use CCT every move. At 250-350, thinking beats speed.</div>
+</div>
+
+<script>
+// Pattern A: Fried Liver (Bxf7+)
+const flBase=ad(rm(SP,['e2','f1','b1','g1','e7','g8','f8']),[['wP','e4'],['wB','c4'],['wN','c3'],['wN','f3'],['bP','e5'],['bN','f6'],['bB','c5']]);
+brd('cmp-fl-a1',ad(rm(flBase,['e8','h8']),[['bK','g8'],['bR','f8']]),{mini:true,hl:['g8','f8']});
+brd('cmp-fl-a2',ad(rm(flBase,['e8','h8','f3','h7']),[['bK','g8'],['bR','f8'],['wN','g5'],['bP','h6']]),{mini:true,rd:['h6','f7'],hl:['g5']});
+brd('cmp-fl-a3',ad(rm(flBase,['e8','h8','f3','h7','c4','f8']),[['bK','g8'],['wN','g5'],['bP','h6'],['wB','f7']]),{mini:true,rd:['f7','g8'],hl:['f7']});
+brd('cmp-fl-b1',ad(rm(flBase,['d7']),[['bP','d5']]),{mini:true,hl:['d5']});
+brd('cmp-fl-b2',ad(rm(flBase,['d7','e4','f6']),[['wP','d5'],['bN','d5']]),{mini:true,hl:['d5']});
+brd('cmp-fl-b3',ad(rm(flBase,['d7','e4','f6','c8']),[['wP','d5'],['bN','d5'],['bB','e6']]),{mini:true,hl:['d5','e6']});
+
+// Pattern B: Knight Retreat Ng1?? → Qxf2#
+const nrBase=ad(rm(SP,['e2','g1','b1','f1','e7','f8','d8','d7']),[['wP','e4'],['wN','f3'],['wN','c3'],['wB','c4'],['bP','e5'],['bB','c5'],['bQ','f6'],['wP','d5']]);
+brd('cmp-nr-a1',ad(rm(nrBase,['e4','e5']),[['bP','e4']]),{mini:true,hl:['e4'],rd:['f3']});
+brd('cmp-nr-a2',ad(rm(nrBase,['e4','e5','f3']),[['bP','e4'],['wN','g1']]),{mini:true,rd:['g1','f2'],hl:['g1']});
+brd('cmp-nr-a3',ad(rm(nrBase,['e4','e5','f3','f6']),[['bP','e4'],['wN','g1'],['bQ','f2']]),{mini:true,rd:['f2','e1']});
+brd('cmp-nr-b1',ad(rm(nrBase,['e4','e5']),[['bP','e4']]),{mini:true,hl:['e4'],rd:['f3']});
+brd('cmp-nr-b2',ad(rm(nrBase,['e4','e5','f3']),[['bP','e4'],['wN','g5']]),{mini:true,hl:['g5'],rd:['f7']});
+brd('cmp-nr-b3',ad(rm(nrBase,['e4','e5','f3']),[['bP','e4'],['wN','g5']]),{mini:true,hl:['g5','c4'],rd:['f7']});
+
+// Pattern C: Qxh7#
+const bmBase=ad(rm(SP,['d1','c1','e7','g8','e8','h8','g7']),[['wQ','h5'],['wB','h6'],['bN','f6'],['bK','g8'],['bR','f8'],['bP','g7']]);
+brd('cmp-bm-a1',bmBase,{mini:true,hl:['g8','f8'],rd:['h7']});
+brd('cmp-bm-a2',ad(rm(bmBase,['e7']),[['bP','e5']]),{mini:true,rd:['h7','h5']});
+brd('cmp-bm-a3',ad(rm(bmBase,['e7','h5','h7']),[['bP','e5'],['wQ','h7']]),{mini:true,rd:['h7','g8']});
+brd('cmp-bm-b1',bmBase,{mini:true,hl:['g8','f8'],rd:['h7']});
+brd('cmp-bm-b2',ad(rm(bmBase,['g7']),[['bP','g6']]),{mini:true,hl:['g6','f6']});
+brd('cmp-bm-b3',ad(rm(bmBase,['g7','h6']),[['bP','g6']]),{mini:true,hl:['g6','f6','g8']});
+
+// Pattern D: Long diagonal Qg2#
+const oeBase=[['wR','a1'],['wR','e5'],['wB','e2'],['wK','g1'],['wP','a3'],['wP','c3'],['wP','d4'],['wP','f2'],['wP','g2'],['wP','h2'],['bK','g8'],['bP','a7'],['bP','b6'],['bP','e6'],['bP','f7'],['bP','g7'],['bP','h7'],['bR','a8'],['bB','c8'],['bQ','c6']];
+brd('cmp-oe-a1',ad(rm(oeBase,['f2']),[['wP','f4']]),{mini:true,hl:['f4'],rd:['g2']});
+brd('cmp-oe-a2',ad(rm(oeBase,['f2','c8']),[['wP','f5'],['bB','b7']]),{mini:true,rd:['g2'],hl:['b7']});
+brd('cmp-oe-a3',ad(rm(oeBase,['f2','c8','c6']),[['wP','f5'],['bB','b7'],['bQ','g2']]),{mini:true,rd:['g2','g1']});
+brd('cmp-oe-b1',ad(rm(oeBase,['e2']),[['wB','f1']]),{mini:true,hl:['f1','g2']});
+brd('cmp-oe-b2',ad(rm(oeBase,['e2']),[['wB','f1'],['wQ','d3']]),{mini:true,hl:['f1','d3','g2']});
+brd('cmp-oe-b3',oeBase,{mini:true,hl:['f2','g2','e2']});
+</script>
+</body>
+</html>

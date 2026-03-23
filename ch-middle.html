@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Middle Game Concepts — Chess Playbook</title>
+<link rel="stylesheet" href="shared.css">
+</head>
+<body>
+<nav class="site-nav" id="site-nav"></nav>
+<script src="shared.js"></script>
+<script>renderNav("ch-middle")</script>
+
+<div class="wrap">
+<div class="ch-label">Chapter 06</div>
+<div class="ch-title">Middle Game Concepts</div>
+<div class="con"><h4>1. Piece Activity > Material</h4>
+<p>Don't grab side pawns with queen. A queen on a2 < a knight on f3 + bishop on c4 + castled king working together.</p>
+<p><strong>Rule:</strong> If winning a pawn pulls your piece from center for 2+ moves, don't take it.</p></div>
+<div class="con"><h4>2. Development Checkpoint at Move 10</h4>
+<p>Both knights out? Bishop? Castled? Yes → attack. No → develop first.</p></div>
+<div class="con"><h4>3. Control the Center</h4>
+<div id="b-center"></div>
+<div class="legend"><span><span class="dot" style="background:#F7F769;"></span> d4-d5-e4-e5 — fight for these</span></div>
+<p>Knight on e4 controls 8 squares. Knight on a3 controls 4. Same piece, twice the power.</p></div>
+<div class="con"><h4>4. CCT — Checks, Captures, Threats</h4>
+<p>Before every move: scan checks, captures, threats. "If I do nothing, what's opponent's best move?" If checkmate or queen loss — deal with THAT first.</p></div>
+</div>
+
+<script>
+brd('b-center',SP,{hl:['d4','d5','e4','e5']});
+</script>
+</body>
+</html>

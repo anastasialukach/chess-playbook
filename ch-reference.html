@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Board Reference & Notation — Chess Playbook</title>
+<link rel="stylesheet" href="shared.css">
+</head>
+<body>
+<nav class="site-nav" id="site-nav"></nav>
+<script src="shared.js"></script>
+<script>renderNav("ch-reference")</script>
+
+<div class="wrap">
+<div class="ch-label">Chapter 00</div>
+<div class="ch-title">Board Reference & Notation</div>
+<h3>Starting Position</h3>
+<div id="b-start"></div>
+<div class="flabs"><div class="fl"><strong>a</strong>Rook</div><div class="fl"><strong>b</strong>Knight</div><div class="fl"><strong>c</strong>Bishop</div><div class="fl"><strong>d</strong>Queen</div><div class="fl"><strong>e</strong>King</div><div class="fl"><strong>f</strong>Bishop</div><div class="fl"><strong>g</strong>Knight</div><div class="fl"><strong>h</strong>Rook</div></div>
+
+<h3>Notation Cheat Sheet</h3>
+<div class="ref-row"><span class="sym">K</span><span>King</span></div>
+<div class="ref-row"><span class="sym">Q</span><span>Queen</span></div>
+<div class="ref-row"><span class="sym">R</span><span>Rook (the tower)</span></div>
+<div class="ref-row"><span class="sym">B</span><span>Bishop (diagonal mover)</span></div>
+<div class="ref-row"><span class="sym">N</span><span>Knight (the horse — K was taken)</span></div>
+<div class="ref-row"><span class="sym">(none)</span><span>Pawn — no letter, just a square</span></div>
+<div class="ref-row"><span class="sym">x</span><span>Captures a piece</span></div>
+<div class="ref-row"><span class="sym">O-O</span><span>Castle short side (kingside)</span></div>
+<div class="ref-row"><span class="sym">O-O-O</span><span>Castle long side (queenside)</span></div>
+<div class="ref-row"><span class="sym">+</span><span>Check (king under attack)</span></div>
+<div class="ref-row"><span class="sym">#</span><span>Checkmate — game over</span></div>
+<div class="ref-row"><span class="sym">1. _ _</span><span>Move 1: White then Black</span></div>
+
+<h3>Files — Vertical Columns (a → h)</h3>
+<table class="tbl"><thead><tr><th>File</th><th>Named After</th><th>Starts There</th></tr></thead><tbody>
+<tr><td class="mono">a</td><td>Queen's Rook file</td><td class="dim">Rooks (a1, a8)</td></tr>
+<tr><td class="mono">b</td><td>Queen's Knight file</td><td class="dim">Knights (b1, b8)</td></tr>
+<tr><td class="mono">c</td><td>Queen's Bishop file</td><td class="dim">Bishops (c1, c8)</td></tr>
+<tr><td class="mono">d</td><td>Queen's file</td><td class="dim">Queens (d1, d8)</td></tr>
+<tr><td class="mono">e</td><td>King's file</td><td class="dim">Kings (e1, e8)</td></tr>
+<tr><td class="mono">f</td><td>King's Bishop file</td><td class="dim">Bishops (f1, f8)</td></tr>
+<tr><td class="mono">g</td><td>King's Knight file</td><td class="dim">Knights (g1, g8)</td></tr>
+<tr><td class="mono">h</td><td>King's Rook file</td><td class="dim">Rooks (h1, h8)</td></tr>
+</tbody></table>
+<div class="tip"><strong>Memory trick:</strong> Queen starts on d (Dame in French). King starts on e. Everything mirrors outward from there.</div>
+
+<h3>Ranks — Horizontal Rows (1 → 8)</h3>
+<table class="tbl"><thead><tr><th>Rank</th><th>What's There</th></tr></thead><tbody>
+<tr><td class="mono">1</td><td>White's back row — R N B Q K B N R</td></tr>
+<tr><td class="mono">2</td><td>White's pawns</td></tr>
+<tr><td class="mono">3–4</td><td>White's territory — development zone</td></tr>
+<tr><td class="mono">4–5</td><td>The center — controls the game</td></tr>
+<tr><td class="mono">5–6</td><td>Black's territory</td></tr>
+<tr><td class="mono">7</td><td>Black's pawns</td></tr>
+<tr><td class="mono">8</td><td>Black's back row</td></tr>
+</tbody></table>
+<div class="tip"><strong>The 4 center squares</strong> — d4, d5, e4, e5 — are the most important on the board.</div>
+
+<h3>Key Squares</h3>
+<table class="tbl"><thead><tr><th>Square</th><th>Why</th></tr></thead><tbody>
+<tr><td class="mono">e4, d4</td><td>Most common White first moves</td></tr>
+<tr><td class="mono">e5, d5</td><td>Most common Black responses</td></tr>
+<tr><td class="mono">f2, f7</td><td>Weakest squares — only king defends</td></tr>
+<tr><td class="mono">f3, f6</td><td>Best knight squares</td></tr>
+<tr><td class="mono">c4</td><td>Italian bishop — aims at f7</td></tr>
+<tr><td class="mono">g1, g8</td><td>Where king lands after O-O</td></tr>
+</tbody></table>
+
+<h3>Key Diagonals</h3>
+<div id="b-diags"></div>
+<div class="legend"><span><span class="dot" style="background:#FFE17A;"></span> Long light diagonal (a1–h8)</span><span><span class="dot" style="background:#A8E0F7;"></span> Long dark diagonal (a8–h1)</span></div>
+<div class="tip"><strong>Bishops are color-locked.</strong> A bishop on a light square will NEVER reach a dark square.</div>
+
+<h3>Reading Any Move</h3>
+<table class="tbl"><thead><tr><th>You See</th><th>Meaning</th></tr></thead><tbody>
+<tr><td class="mono">e4</td><td>Pawn to e4</td></tr><tr><td class="mono">Nf3</td><td>Knight to f3</td></tr>
+<tr><td class="mono">Bc4</td><td>Bishop to c4</td></tr><tr><td class="mono">Bxf7</td><td>Bishop TAKES on f7</td></tr>
+<tr><td class="mono">exd5</td><td>e-pawn TAKES on d5</td></tr><tr><td class="mono">Qh5+</td><td>Queen to h5, CHECK</td></tr>
+<tr><td class="mono">Rd1#</td><td>Rook to d1, CHECKMATE</td></tr><tr><td class="mono">O-O</td><td>Castle kingside</td></tr>
+<tr><td class="mono">O-O-O</td><td>Castle queenside</td></tr>
+</tbody></table>
+
+<h3>Your Openings — Translated</h3>
+<table class="tbl"><thead><tr><th>Name</th><th>Moves</th><th>In Words</th></tr></thead><tbody>
+<tr><td><strong>Petrov</strong><br><span class="dim">5-0</span></td><td class="mono" style="font-size:12px;">1.e4 e5<br>2.Nf3 Nf6</td><td>Both king pawns 2 squares. Both develop kingside knights. You crush it.</td></tr>
+<tr><td><strong>French</strong><br><span class="dim">5-4-1</span></td><td class="mono" style="font-size:12px;">1.e4 e6</td><td>White king pawn 2. Black only 1 — preparing d5.</td></tr>
+<tr><td><strong>Scandinavian</strong><br><span class="dim">3-1</span></td><td class="mono" style="font-size:12px;">1.e4 d5</td><td>Black immediately challenges with queen's pawn.</td></tr>
+<tr><td><strong>Italian</strong><br><span class="dim">2-1</span></td><td class="mono" style="font-size:12px;">1.e4 e5<br>2.Nf3 Nc6<br>3.Bc4</td><td>Knights out, bishop to c4 aiming at f7.</td></tr>
+<tr><td><strong>e3 trap</strong><br><span class="dim">0-3</span></td><td class="mono" style="font-size:12px;">1.e3</td><td>Weird passive. You lose every time.</td></tr>
+</tbody></table>
+</div>
+
+<script>
+brd('b-start',SP);
+brd('b-diags',[],{gd:['a1','b2','c3','d4','e5','f6','g7','h8'],sk:['a8','b7','c6','d5','e4','f3','g2','h1']});
+</script>
+</body>
+</html>

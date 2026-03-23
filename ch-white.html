@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Openings as White — Chess Playbook</title>
+<link rel="stylesheet" href="shared.css">
+</head>
+<body>
+<nav class="site-nav" id="site-nav"></nav>
+<script src="shared.js"></script>
+<script>renderNav("ch-white")</script>
+
+<div class="wrap">
+<div class="ch-label">Chapter 02</div>
+<div class="ch-title">Your Openings as White</div>
+<p>24 games as White. You almost always open <span class="mono">1.e4</span>. Good — stick with it.</p>
+<h3>What Works</h3>
+<div class="con"><h4><span class="tag wt">WHITE</span> Petrov · <span class="wr hi">5-0 (100%)</span></h4>
+<div class="moves"><span class="mn">1.</span> <span class="mw">e4</span> <span class="mb">e5</span> <span class="mn">2.</span> <span class="mw">Nf3</span> <span class="mb">Nf6</span> <span class="mc">— mirror knights, you dominate</span></div>
+<div id="b-petrov"></div></div>
+
+<div class="con"><h4><span class="tag wt">WHITE</span> Scandinavian · <span class="wr hi">3-1 (75%)</span></h4>
+<div class="moves"><span class="mn">1.</span> <span class="mw">e4</span> <span class="mb">d5</span> <span class="mc">— you take, they bring queen out, you punish</span></div></div>
+
+<div class="con"><h4><span class="tag wt">WHITE</span> Italian · <span class="wr md">2-1 (67%)</span></h4>
+<div class="moves"><span class="mn">1.</span> <span class="mw">e4</span> <span class="mb">e5</span> <span class="mn">2.</span> <span class="mw">Nf3</span> <span class="mb">Nc6</span> <span class="mn">3.</span> <span class="mw">Bc4</span> <span class="mc">— bishop aims at f7</span></div>
+<div id="b-italian"></div></div>
+
+<h3>What's Not Working</h3>
+<div class="con"><h4><span class="tag wt">WHITE</span> vs Alekhine · <span class="wr lo">1-2 (33%)</span></h4>
+<div class="moves"><span class="mn">1.</span> <span class="mw">e4</span> <span class="mb">Nf6</span> <span class="mc">— knight attacks your e4 pawn</span></div>
+<p>In both losses you played Nc3/Nf3 and lost the thread.</p></div>
+<div class="tip green"><strong>Fix:</strong> Play <span class="mono">2.e5</span> — chase the knight. Then: <span class="mono">d4, Nf3, Bc4</span>.</div>
+<div id="b-alekhine"></div>
+
+<div class="con"><h4><span class="tag wt">WHITE</span> vs Random e5 · <span class="wr lo">2-5 (29%)</span></h4>
+<p>When Black plays something odd after <span class="mono">1...e5</span>, you lose. No plan.</p></div>
+<div class="tip green"><strong>Universal plan:</strong> After <span class="mono">1.e4 e5</span>, always: <span class="mono">2.Nf3</span> → <span class="mono">3.Bc4</span> → <span class="mono">4.O-O</span>. Don't deviate.</div>
+</div>
+
+<script>
+brd('b-petrov',ad(rm(SP,['e2','g1','e7','g8']),[['wP','e4'],['wN','f3'],['bP','e5'],['bN','f6']]),{hl:['e4','f3','e5','f6']});
+brd('b-italian',ad(rm(SP,['e2','g1','f1','e7','b8']),[['wP','e4'],['wN','f3'],['wB','c4'],['bP','e5'],['bN','c6']]),{hl:['e4','f3','c4','e5','c6']});
+brd('b-alekhine',ad(rm(SP,['e2','g8']),[['wP','e5'],['bN','d5']]),{hl:['e5','d5']});
+</script>
+</body>
+</html>

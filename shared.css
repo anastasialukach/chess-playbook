@@ -83,7 +83,8 @@ p{margin-bottom:10px;}
 .nav-link{font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:#888;text-decoration:none;padding:12px 14px;border-bottom:3px solid transparent;transition:color .2s,border-color .2s;flex-shrink:0;}
 .nav-link:hover{color:#1a1a1a;}
 .nav-link.active{color:#1a1a1a;border-bottom-color:#769656;}
-@media(max-width:640px){.nav-link{padding:10px 8px;font-size:10px;}}
+.nav-sep{font-family:'IBM Plex Mono',monospace;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#bbb;padding:14px 10px 14px 14px;flex-shrink:0;align-self:center;}
+@media(max-width:640px){.nav-link{padding:10px 8px;font-size:10px;}.nav-sep{padding:10px 6px 10px 10px;font-size:8px;}}
 
 /* Stage pages */
 .stage-hdr{text-align:center;padding:32px 0 24px;border-bottom:3px solid #1a1a1a;margin-bottom:32px;}

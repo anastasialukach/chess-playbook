@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fixing Your Losing Patterns — Chess Playbook</title>
+<link rel="stylesheet" href="shared.css">
+</head>
+<body>
+<nav class="site-nav" id="site-nav"></nav>
+<script src="shared.js"></script>
+<script>renderNav("ch-patterns")</script>
+
+<div class="wrap">
+<div class="ch-label">Chapter 04</div>
+<div class="ch-title">Fixing Your Losing Patterns</div>
+
+<h3>Pattern 1: f2 Blindness — Game 11 (Mated in 6)</h3>
+<div class="con"><h4><span class="tag loss">LOSS</span> G11 · Opponent aimed Q + B at f2</h4>
+<div class="moves"><span class="mn">1.</span><span class="mw">e4</span> <span class="mb">e5</span> <span class="mn">2.</span><span class="mw">Nf3</span> <span class="mb">Bc5</span> <span class="mn">3.</span><span class="mw">Nc3</span> <span class="mb">Qf6</span> <span class="mc">→ checkmate via f2</span></div></div>
+
+<div class="compare">
+<div class="compare-label bad">What You Played</div>
+<div class="compare-row">
+<div class="compare-cell"><div id="cmp-11a1"></div><div class="cap"><strong>3.Nc3</strong><br>Ignores Bc5→f2</div></div>
+<div class="compare-cell"><div id="cmp-11a2"></div><div class="cap"><strong>3...Qf6</strong><br>Q+B target f2!</div></div>
+<div class="compare-cell"><div id="cmp-11a3"></div><div class="cap"><strong>5...e4</strong><br>Lines open, dead</div></div>
+</div>
+<div class="compare-label good">Better Approach</div>
+<div class="compare-row">
+<div class="compare-cell"><div id="cmp-11b1"></div><div class="cap"><strong>3.Bc4</strong><br>Contest diagonal</div></div>
+<div class="compare-cell"><div id="cmp-11b2"></div><div class="cap"><strong>4.d3</strong><br>Blocks f2 line</div></div>
+<div class="compare-cell"><div id="cmp-11b3"></div><div class="cap"><strong>5.O-O</strong><br>King safe, f1 rook</div></div>
+</div>
+</div>
+
+<h3>Pattern 2: Side Pawns — Game 33 (Mated in 6)</h3>
+<div class="con"><h4><span class="tag loss">LOSS</span> G33 · Chased bishop with a6/b5 instead of developing</h4>
+<div class="moves"><span class="mn">1.</span><span class="mw">e3</span> <span class="mb">e5</span> <span class="mn">2.</span><span class="mw">e4</span> <span class="mb">Nc6</span> <span class="mn">3.</span><span class="mw">Bb5</span> <span class="mb">a6</span> <span class="mn">4.</span><span class="mw">Bc4</span> <span class="mb">b5</span> <span class="mn">5.</span><span class="mw">Qf3</span> <span class="mc">→ threatens Qxf7#</span></div></div>
+
+<div class="compare">
+<div class="compare-label bad">What You Played</div>
+<div class="compare-row">
+<div class="compare-cell"><div id="cmp-33a1"></div><div class="cap"><strong>3...a6</strong><br>Side pawn, no dev</div></div>
+<div class="compare-cell"><div id="cmp-33a2"></div><div class="cap"><strong>4...b5</strong><br>Another side pawn</div></div>
+<div class="compare-cell"><div id="cmp-33a3"></div><div class="cap"><strong>5.Qf3</strong><br>Threatens Qxf7#</div></div>
+</div>
+<div class="compare-label good">Better Approach</div>
+<div class="compare-row">
+<div class="compare-cell"><div id="cmp-33b1"></div><div class="cap"><strong>3...Nf6</strong><br>Develop + attack e4</div></div>
+<div class="compare-cell"><div id="cmp-33b2"></div><div class="cap"><strong>4...Bc5</strong><br>Two pieces out</div></div>
+<div class="compare-cell"><div id="cmp-33b3"></div><div class="cap"><strong>5...O-O</strong><br>King safe, solid</div></div>
+</div>
+</div>
+
+<div class="tip"><strong>First 10 moves — every move must:</strong><br>1. Push a CENTER pawn (e or d)<br>2. Develop a knight or bishop<br>3. Castle<br>If it doesn't fit, it's wrong.</div>
+
+<h3>Pattern 3: f2/f7 Weakness</h3>
+<div id="b-f2f7"></div>
+<div class="legend"><span><span class="dot" style="background:#F7A8A8;"></span> f2 — White's weakest</span><span><span class="dot" style="background:#A8D8F7;"></span> f7 — Black's weakest</span></div>
+<div class="tip green"><strong>Habit:</strong> After every opponent move, glance at f2/f7. Anything new pointing at it?</div>
+
+<h3>Pattern 4: Black vs 300+</h3>
+<table class="tbl"><thead><tr><th>Situation</th><th>Record</th><th>WR</th></tr></thead><tbody>
+<tr><td>Black vs 300+</td><td>1W-7L</td><td><span class="wr lo">13%</span></td></tr>
+<tr><td>Black vs sub-300</td><td>9W-8L-1D</td><td><span class="wr md">50%</span></td></tr>
+<tr><td>White vs 300+</td><td>4W-4L</td><td><span class="wr md">50%</span></td></tr>
+<tr><td>White vs sub-300</td><td>10W-6L</td><td><span class="wr hi">63%</span></td></tr>
+</tbody></table>
+</div>
+
+<script>
+// G11 comparisons
+const g11=ad(rm(SP,['e2','g1','e7','f8']),[['wP','e4'],['wN','f3'],['bP','e5'],['bB','c5']]);
+brd('cmp-11a1',ad(rm(g11,['b1']),[['wN','c3']]),{mini:true,hl:['c3']});
+brd('cmp-11a2',ad(rm(g11,['b1','d8']),[['wN','c3'],['bQ','f6']]),{mini:true,hl:['f6'],rd:['f2']});
+brd('cmp-11a3',ad(rm(g11,['b1','d8','f1','d7','e5']),[['wN','c3'],['bQ','f6'],['wB','c4'],['wP','d5'],['bP','e4']]),{mini:true,rd:['f2','e4']});
+brd('cmp-11b1',ad(rm(g11,['f1']),[['wB','c4']]),{mini:true,hl:['c4']});
+brd('cmp-11b2',ad(rm(g11,['f1','d2','d8']),[['wB','c4'],['wP','d3'],['bQ','f6']]),{mini:true,hl:['d3']});
+brd('cmp-11b3',ad(rm(g11,['f1','d2','d8','e1','h1']),[['wB','c4'],['wP','d3'],['bQ','f6'],['wK','g1'],['wR','f1']]),{mini:true,hl:['g1','f1']});
+
+// G33 comparisons
+const g33=ad(rm(SP,['e2','e7','b8']),[['wP','e4'],['bP','e5'],['bN','c6']]);
+brd('cmp-33a1',ad(rm(g33,['f1','a7']),[['wB','b5'],['bP','a6']]),{mini:true,rd:['a6']});
+brd('cmp-33a2',ad(rm(g33,['f1','a7','b7']),[['wB','c4'],['bP','a6'],['bP','b5']]),{mini:true,rd:['a6','b5']});
+brd('cmp-33a3',ad(rm(g33,['f1','a7','b7','d1']),[['wB','c4'],['bP','a6'],['bP','b5'],['wQ','f3']]),{mini:true,rd:['f7']});
+brd('cmp-33b1',ad(rm(g33,['f1','g8']),[['wB','b5'],['bN','f6']]),{mini:true,hl:['f6']});
+brd('cmp-33b2',ad(rm(g33,['f1','g8','f8']),[['wB','c4'],['bN','f6'],['bB','c5']]),{mini:true,hl:['c5','f6']});
+brd('cmp-33b3',ad(rm(g33,['f1','g8','f8','e8','h8']),[['wB','c4'],['bN','f6'],['bB','c5'],['bK','g8'],['bR','f8']]),{mini:true,hl:['g8','f8']});
+
+// f2/f7
+brd('b-f2f7',SP,{rd:['f2'],bl:['f7']});
+</script>
+</body>
+</html>

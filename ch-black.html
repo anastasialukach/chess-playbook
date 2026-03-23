@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Openings as Black — Chess Playbook</title>
+<link rel="stylesheet" href="shared.css">
+</head>
+<body>
+<nav class="site-nav" id="site-nav"></nav>
+<script src="shared.js"></script>
+<script>renderNav("ch-black")</script>
+
+<div class="wrap">
+<div class="ch-label">Chapter 03</div>
+<div class="ch-title">Your Openings as Black</div>
+<p>26 games. 38% win rate. Biggest improvement zone.</p>
+<h3>What Works</h3>
+<div class="con"><h4><span class="tag bt">BLACK</span> French · <span class="wr md">5-4-1 (50%)</span></h4>
+<div class="moves"><span class="mn">1.</span> <span class="mw">e4</span> <span class="mb">e6</span> <span class="mc">— prepares d5</span></div>
+<div id="b-french"></div></div>
+
+<h3>What's Killing You</h3>
+<div class="con"><h4><span class="tag bt">BLACK</span> vs 1.e3 · <span class="wr lo">0-3 (0%)</span></h4>
+<div class="moves"><span class="mn">1.</span> <span class="mw">e3</span> <span class="mc">— passive, weird, you panic</span></div></div>
+<div class="tip red"><strong>Why you lose:</strong> Not a good move, but throws you off. Fix: <span class="mono">1...e5, 2...Nf6, 3...Bc5, 4...O-O</span>. Normal development.</div>
+
+<div class="con"><h4><span class="tag bt">BLACK</span> vs 1.d4 · <span class="wr lo">1-3 (25%)</span></h4>
+<p>No system. Different every time.</p></div>
+<div class="tip green"><strong>Always play <span class="mono">1...d5</span>.</strong> Then: <span class="mono">Nf6, e6, Bd6/Be7, O-O</span>. Queen's Gambit Declined.</div>
+<div id="b-qgd"></div>
+
+<div class="con"><h4><span class="tag bt">BLACK</span> vs Early Queens · <span class="wr md">8-9-1 (44%)</span></h4>
+<p><span class="mono">Qh5?</span> → <span class="mono">Nf6</span> · <span class="mono">Qf3?</span> → <span class="mono">Nf6</span> · <span class="mono">Qh5+Bc4?</span> → <span class="mono">g6</span> then <span class="mono">Nf6</span></p></div>
+</div>
+
+<script>
+brd('b-french',ad(rm(SP,['e2','d2','e7','d7']),[['wP','e4'],['wP','d4'],['bP','e6'],['bP','d5']]),{hl:['e4','d4','e6','d5']});
+brd('b-qgd',ad(rm(SP,['d2','c2','b1','c1','d7','e7','g8','f8']),[['wP','d4'],['wP','c4'],['wN','c3'],['wB','g5'],['bP','d5'],['bP','e6'],['bN','f6'],['bB','e7']]),{hl:['d5','e6','f6','e7']});
+</script>
+</body>
+</html>
