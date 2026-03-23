@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Streak Calendar — Chess Playbook</title>
+<link rel="stylesheet" href="shared.css">
+<style>
+/* Calendar-specific styles */
+.cal-hero{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:32px;}
+.cal-hero .stat{background:#fff;border:2px solid #e0e0e0;border-radius:10px;padding:20px 14px;text-align:center;}
+.cal-hero .stat .val{font-family:'IBM Plex Mono',monospace;font-size:36px;font-weight:700;color:#1A6B5A;line-height:1;}
+.cal-hero .stat .label{font-family:'IBM Plex Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:#999;margin-top:6px;}
+.cal-hero .stat.primary{border-color:#1A6B5A;}
+.cal-hero .stat.primary .val{font-size:48px;}
+
+.cal-section{background:#fff;border:2px solid #e0e0e0;border-radius:10px;padding:24px;margin-bottom:24px;}
+.cal-section h3{border:none;margin:0 0 16px;padding:0;font-family:'IBM Plex Mono',monospace;font-size:12px;text-transform:uppercase;letter-spacing:2px;color:#999;}
+
+/* Heatmap */
+.heatmap-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:8px;}
+.heatmap-wrap{display:inline-flex;flex-direction:column;min-width:max-content;}
+.month-labels{display:flex;margin-left:32px;margin-bottom:4px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:#999;}
+.month-labels span{text-align:left;}
+.heatmap-grid{display:flex;gap:0;}
+.day-labels{display:flex;flex-direction:column;gap:0;margin-right:6px;padding-top:0;}
+.day-labels span{height:13px;line-height:13px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:#999;display:flex;align-items:center;}
+.heatmap-cols{display:flex;gap:2px;}
+.heatmap-col{display:flex;flex-direction:column;gap:2px;}
+.heatmap-cell{width:13px;height:13px;border-radius:2px;cursor:default;position:relative;}
+.heatmap-cell:hover{outline:1px solid #1a1a1a;outline-offset:-1px;}
+
+/* Tooltip */
+.cal-tooltip{position:fixed;background:#1a1a1a;color:#fff;font-family:'IBM Plex Mono',monospace;font-size:11px;padding:6px 10px;border-radius:4px;pointer-events:none;z-index:1000;white-space:nowrap;display:none;}
+.cal-tooltip::after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:4px solid transparent;border-top-color:#1a1a1a;}
+
+/* Legend */
+.heatmap-legend{display:flex;align-items:center;gap:4px;margin-top:12px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:#999;}
+.heatmap-legend .swatch{width:13px;height:13px;border-radius:2px;}
+
+/* Empty state */
+.empty-state{text-align:center;padding:40px 20px;}
+.empty-state .icon{font-size:48px;margin-bottom:12px;}
+.empty-state h3{border:none;margin:0 0 8px;padding:0;font-family:'Source Serif 4',Georgia,serif;font-size:20px;font-weight:700;color:#1a1a1a;text-transform:none;letter-spacing:0;}
+.empty-state p{font-size:14px;color:#777;margin-bottom:16px;max-width:360px;margin-left:auto;margin-right:auto;}
+.empty-state a{display:inline-block;background:#1a1a1a;color:#fff;padding:10px 24px;border-radius:6px;text-decoration:none;font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600;}
+.empty-state a:hover{background:#333;}
+
+/* Recent activity list */
+.recent-list{list-style:none;margin:0;padding:0;}
+.recent-list li{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f0f0f0;font-size:14px;}
+.recent-list li:last-child{border-bottom:none;}
+.recent-list .r-date{font-family:'IBM Plex Mono',monospace;font-size:12px;color:#777;}
+.recent-list .r-count{font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:700;color:#1A6B5A;}
+
+@media(max-width:480px){
+  .cal-hero{grid-template-columns:1fr;}
+  .cal-hero .stat.primary .val{font-size:36px;}
+}
+</style>
+</head>
+<body>
+<nav class="site-nav" id="site-nav"></nav>
+<script src="shared.js"></script>
+<script>renderNav("calendar")</script>
+<div class="wrap">
+
+<div class="hdr">
+  <h1>STREAK CALENDAR</h1>
+  <div class="sub">practice consistency heatmap</div>
+</div>
+
+<!-- Hero stats -->
+<div class="cal-hero" id="hero-stats">
+  <div class="stat primary">
+    <div class="val" id="current-streak">0</div>
+    <div class="label">Current Streak</div>
+  </div>
+  <div class="stat">
+    <div class="val" id="longest-streak">0</div>
+    <div class="label">Longest Streak</div>
+  </div>
+  <div class="stat">
+    <div class="val" id="total-days">0</div>
+    <div class="label">Active Days</div>
+  </div>
+</div>
+
+<!-- Heatmap -->
+<div class="cal-section">
+  <h3>Last 6 Months</h3>
+  <div class="heatmap-scroll">
+    <div class="heatmap-wrap" id="heatmap"></div>
+  </div>
+  <div class="heatmap-legend">
+    <span>Less</span>
+    <div class="swatch" style="background:#EBEDF0;"></div>
+    <div class="swatch" style="background:#C6E48B;"></div>
+    <div class="swatch" style="background:#7BC96F;"></div>
+    <div class="swatch" style="background:#239A3B;"></div>
+    <span>More</span>
+  </div>
+</div>
+
+<!-- Empty state (hidden by default) -->
+<div class="cal-section" id="empty-state" style="display:none;">
+  <div class="empty-state">
+    <div class="icon">&#9813;</div>
+    <h3>No activity yet</h3>
+    <p>Play some games, run training sessions, or practice openings. Your streak starts with the first move.</p>
+    <a href="/play">Start Playing</a>
+  </div>
+</div>
+
+<!-- Recent activity -->
+<div class="cal-section" id="recent-section" style="display:none;">
+  <h3>Recent Activity</h3>
+  <ul class="recent-list" id="recent-list"></ul>
+</div>
+
+<!-- Tooltip -->
+<div class="cal-tooltip" id="tooltip"></div>
+
+<script>
+(function(){
+  // ---- Collect activity dates ----
+  function getActivityMap(){
+    var map = {}; // { 'YYYY-MM-DD': count }
+
+    function inc(dateStr){
+      if(!dateStr) return;
+      // Normalize to YYYY-MM-DD
+      var d = dateStr.substring(0,10);
+      if(!/^\d{4}-\d{2}-\d{2}$/.test(d)) return;
+      map[d] = (map[d]||0) + 1;
+    }
+
+    // 1. chess-synced-games — array of game objects with end_time (unix) or date (YYYY-MM-DD)
+    try {
+      var synced = JSON.parse(localStorage.getItem('chess-synced-games')||'[]');
+      for(var i=0;i<synced.length;i++){
+        var g = synced[i];
+        if(g.end_time){
+          var dt = new Date(g.end_time * 1000);
+          inc(dt.toISOString());
+        } else if(g.date){
+          inc(g.date);
+        }
+      }
+    } catch(e){}
+
+    // 2. chess-played-games — array of PGN strings with [Date "YYYY.MM.DD"] header
+    try {
+      var played = JSON.parse(localStorage.getItem('chess-played-games')||'[]');
+      for(var i=0;i<played.length;i++){
+        var pgn = played[i];
+        if(typeof pgn === 'string'){
+          var m = pgn.match(/\[Date\s+"(\d{4})\.(\d{2})\.(\d{2})"\]/);
+          if(m) inc(m[1]+'-'+m[2]+'-'+m[3]);
+        } else if(pgn && pgn.date){
+          inc(pgn.date);
+        }
+      }
+    } catch(e){}
+
+    // 3. chess-sessions — array of session objects with date (ISO string)
+    try {
+      var sessions = JSON.parse(localStorage.getItem('chess-sessions')||'[]');
+      for(var i=0;i<sessions.length;i++){
+        if(sessions[i].date){
+          inc(sessions[i].date);
+        }
+      }
+    } catch(e){}
+
+    // 4. chess-trainer-scores — object {sysId: accuracy}. No timestamps, skip for date tracking.
+
+    return map;
+  }
+
+  // ---- Date helpers ----
+  function toDateStr(d){ return d.toISOString().substring(0,10); }
+  function addDays(d,n){ var r=new Date(d); r.setDate(r.getDate()+n); return r; }
+  function getMonday(d){
+    var day = d.getDay();
+    var diff = (day === 0 ? -6 : 1 - day);
+    var mon = new Date(d);
+    mon.setDate(mon.getDate() + diff);
+    mon.setHours(0,0,0,0);
+    return mon;
+  }
+
+  var MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+
+  function cellColor(count){
+    if(count === 0) return '#EBEDF0';
+    if(count === 1) return '#C6E48B';
+    if(count <= 3) return '#7BC96F';
+    return '#239A3B';
+  }
+
+  // ---- Compute streaks ----
+  function computeStreaks(activityMap){
+    var today = new Date();
+    today.setHours(0,0,0,0);
+    var todayStr = toDateStr(today);
+
+    // Sort all active dates
+    var dates = Object.keys(activityMap).sort();
+    var totalDays = dates.length;
+
+    if(totalDays === 0) return {current:0,longest:0,total:0};
+
+    // Longest streak
+    var longest = 1, run = 1;
+    for(var i=1;i<dates.length;i++){
+      var prev = new Date(dates[i-1]+'T00:00:00');
+      var curr = new Date(dates[i]+'T00:00:00');
+      var diff = Math.round((curr - prev) / 86400000);
+      if(diff === 1){ run++; if(run > longest) longest = run; }
+      else { run = 1; }
+    }
+
+    // Current streak (going backwards from today or yesterday)
+    var current = 0;
+    var checkDate = today;
+    // If today has no activity, start from yesterday
+    if(!activityMap[todayStr]){
+      checkDate = addDays(today, -1);
+    }
+    while(activityMap[toDateStr(checkDate)]){
+      current++;
+      checkDate = addDays(checkDate, -1);
+    }
+
+    return {current:current, longest:longest, total:totalDays};
+  }
+
+  // ---- Render heatmap ----
+  function render(){
+    var activityMap = getActivityMap();
+    var streaks = computeStreaks(activityMap);
+
+    document.getElementById('current-streak').textContent = streaks.current;
+    document.getElementById('longest-streak').textContent = streaks.longest;
+    document.getElementById('total-days').textContent = streaks.total;
+
+    if(streaks.total === 0){
+      document.getElementById('empty-state').style.display = '';
+      document.getElementById('recent-section').style.display = 'none';
+      // Still render empty heatmap
+    }
+
+    // Determine date range: 6 months back, aligned to Monday
+    var today = new Date();
+    today.setHours(0,0,0,0);
+    var start = new Date(today);
+    start.setMonth(start.getMonth() - 6);
+    // Align to Monday
+    start = getMonday(start);
+    var endDate = today;
+
+    // Build week columns
+    var weeks = [];
+    var cursor = new Date(start);
+    while(cursor <= endDate){
+      var week = [];
+      for(var d=0;d<7;d++){
+        var ds = toDateStr(cursor);
+        week.push({date:new Date(cursor), dateStr:ds, count:activityMap[ds]||0, future:cursor>today});
+        cursor = addDays(cursor,1);
+      }
+      weeks.push(week);
+    }
+
+    // Month labels
+    var monthHtml = '';
+    var lastMonth = -1;
+    var colWidth = 15; // 13px cell + 2px gap
+    for(var w=0;w<weeks.length;w++){
+      var firstDay = weeks[w][0].date;
+      var m = firstDay.getMonth();
+      if(m !== lastMonth){
+        monthHtml += '<span style="width:'+colWidth+'px;min-width:'+colWidth+'px;">'+MONTHS[m]+'</span>';
+        lastMonth = m;
+      } else {
+        monthHtml += '<span style="width:'+colWidth+'px;min-width:'+colWidth+'px;"></span>';
+      }
+    }
+
+    // Day labels (show M, W, F)
+    var dayHtml = '';
+    for(var d=0;d<7;d++){
+      var label = (d===0||d===2||d===4) ? DAYS[d].charAt(0) : '';
+      dayHtml += '<span>'+label+'</span>';
+    }
+
+    // Grid cells
+    var colsHtml = '';
+    for(var w=0;w<weeks.length;w++){
+      colsHtml += '<div class="heatmap-col">';
+      for(var d=0;d<7;d++){
+        var cell = weeks[w][d];
+        var bg = cell.future ? '#FAFAF8' : cellColor(cell.count);
+        var title = cell.dateStr + ': ' + cell.count + ' activit' + (cell.count===1?'y':'ies');
+        colsHtml += '<div class="heatmap-cell" style="background:'+bg+';" data-tip="'+title+'" data-date="'+cell.dateStr+'" data-count="'+cell.count+'"></div>';
+      }
+      colsHtml += '</div>';
+    }
+
+    var html = '<div class="month-labels">'+monthHtml+'</div>';
+    html += '<div class="heatmap-grid">';
+    html += '<div class="day-labels">'+dayHtml+'</div>';
+    html += '<div class="heatmap-cols">'+colsHtml+'</div>';
+    html += '</div>';
+
+    document.getElementById('heatmap').innerHTML = html;
+
+    // Recent activity (last 10 active days)
+    var dates = Object.keys(activityMap).sort().reverse().slice(0,10);
+    if(dates.length > 0){
+      document.getElementById('recent-section').style.display = '';
+      var listHtml = '';
+      for(var i=0;i<dates.length;i++){
+        var dt = new Date(dates[i]+'T00:00:00');
+        var fmtDate = MONTHS[dt.getMonth()]+' '+dt.getDate()+', '+dt.getFullYear();
+        var count = activityMap[dates[i]];
+        listHtml += '<li><span class="r-date">'+fmtDate+'</span><span class="r-count">'+count+' activit'+(count===1?'y':'ies')+'</span></li>';
+      }
+      document.getElementById('recent-list').innerHTML = listHtml;
+    }
+
+    // Tooltip behavior
+    var tooltip = document.getElementById('tooltip');
+    var cells = document.querySelectorAll('.heatmap-cell');
+    cells.forEach(function(cell){
+      cell.addEventListener('mouseenter', function(e){
+        tooltip.textContent = cell.getAttribute('data-tip');
+        tooltip.style.display = 'block';
+        var rect = cell.getBoundingClientRect();
+        tooltip.style.left = (rect.left + rect.width/2 - tooltip.offsetWidth/2) + 'px';
+        tooltip.style.top = (rect.top - tooltip.offsetHeight - 8) + 'px';
+      });
+      cell.addEventListener('mouseleave', function(){
+        tooltip.style.display = 'none';
+      });
+    });
+  }
+
+  render();
+})();
+</script>
+
+</div>
+</body>
+</html>

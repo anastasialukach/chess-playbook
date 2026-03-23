@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Session Manager — Chess Playbook</title>
+<link rel="stylesheet" href="shared.css">
+<style>
+/* Session-specific styles */
+.session-timer{font-family:'IBM Plex Mono',monospace;font-size:42px;font-weight:700;text-align:center;letter-spacing:2px;margin:8px 0;color:#1a1a1a;}
+.game-counter{font-family:'IBM Plex Mono',monospace;font-size:14px;text-align:center;color:#777;margin-bottom:16px;}
+.streak-indicator{text-align:center;font-family:'IBM Plex Mono',monospace;font-size:12px;margin-bottom:20px;}
+.streak-indicator .streak-val{font-weight:700;font-size:14px;}
+
+/* W/L/D Buttons */
+.wld-buttons{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin:16px 0;}
+.wld-btn{border:none;border-radius:8px;font-family:'IBM Plex Mono',monospace;font-size:16px;font-weight:700;min-height:60px;cursor:pointer;transition:opacity .15s,transform .1s;color:#fff;letter-spacing:1px;}
+.wld-btn:active{transform:scale(0.96);}
+.wld-btn:disabled{opacity:0.3;cursor:not-allowed;transform:none;}
+.wld-btn.win-btn{background:#22863a;}
+.wld-btn.win-btn:hover:not(:disabled){background:#1a7030;}
+.wld-btn.loss-btn{background:#d73a49;}
+.wld-btn.loss-btn:hover:not(:disabled){background:#c02a38;}
+.wld-btn.draw-btn{background:#0366d6;}
+.wld-btn.draw-btn:hover:not(:disabled){background:#0255b3;}
+
+/* Control buttons */
+.ctrl-btn{background:#1a1a1a;color:#fff;border:none;padding:10px 16px;border-radius:6px;font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600;cursor:pointer;transition:background .15s;}
+.ctrl-btn:hover{background:#333;}
+.ctrl-btn.start{background:#769656;font-size:16px;padding:16px 32px;width:100%;}
+.ctrl-btn.start:hover{background:#5a7a44;}
+.ctrl-btn.end{background:#d73a49;}
+.ctrl-btn.end:hover{background:#c02a38;}
+.ctrl-btn.small{font-size:11px;padding:6px 12px;background:transparent;color:#999;text-decoration:underline;font-weight:400;}
+.ctrl-btn.small:hover{color:#666;}
+.ctrl-btn.resume{background:#769656;width:100%;padding:14px;font-size:14px;}
+.ctrl-btn.resume:hover{background:#5a7a44;}
+
+/* Result circles timeline */
+.result-timeline{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0;align-items:center;}
+.result-circle{width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;color:#fff;flex-shrink:0;}
+.result-circle.W{background:#22863a;}
+.result-circle.L{background:#d73a49;}
+.result-circle.D{background:#0366d6;}
+
+/* Warning overlay */
+.warning-overlay{position:fixed;inset:0;background:rgba(215,58,73,0.95);z-index:300;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px;text-align:center;color:#fff;}
+.warning-overlay h2{font-family:'IBM Plex Mono',monospace;font-size:28px;font-weight:700;letter-spacing:2px;margin-bottom:16px;text-transform:uppercase;}
+.warning-overlay p{font-size:18px;max-width:400px;line-height:1.6;margin-bottom:24px;opacity:0.9;}
+.warning-overlay .cooldown-timer{font-family:'IBM Plex Mono',monospace;font-size:64px;font-weight:700;margin:20px 0;}
+.warning-overlay .cooldown-label{font-family:'IBM Plex Mono',monospace;font-size:12px;text-transform:uppercase;letter-spacing:2px;opacity:0.7;margin-bottom:32px;}
+
+/* Win streak banner */
+.win-banner{background:#f6fff6;border:2px solid #22863a;border-radius:10px;padding:14px 18px;margin:14px 0;text-align:center;font-size:14px;color:#22863a;font-weight:600;}
+
+/* Session summary overlay */
+.summary-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:250;display:flex;align-items:center;justify-content:center;padding:16px;}
+.summary-card{background:#fff;border-radius:12px;padding:32px;max-width:420px;width:100%;text-align:center;box-shadow:0 8px 40px rgba(0,0,0,0.2);}
+.summary-card h2{font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:700;margin-bottom:20px;}
+.summary-card .summary-msg{font-size:15px;color:#555;margin-bottom:16px;line-height:1.6;}
+
+/* History table */
+.history-tbl{width:100%;border-collapse:collapse;font-size:13px;margin:12px 0;}
+.history-tbl th{text-align:left;font-family:'IBM Plex Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#999;padding:8px 6px;border-bottom:2px solid #ddd;font-weight:600;}
+.history-tbl td{padding:8px 6px;border-bottom:1px solid #eee;vertical-align:middle;font-size:12px;}
+.history-tbl .result-circle{width:18px;height:18px;font-size:8px;}
+.rule-tag{font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;padding:2px 6px;border-radius:3px;}
+.rule-tag.yes{background:#ffe3e6;color:#d73a49;}
+.rule-tag.no{background:#dcffe4;color:#22863a;}
+
+/* Controls row */
+.controls-row{display:flex;gap:10px;justify-content:center;margin:16px 0;}
+
+/* Section spacing */
+.section{margin-top:32px;}
+.section-title{font-family:'IBM Plex Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:2px;color:#999;margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid #e0e0e0;}
+
+/* Tabs */
+.tab-row{display:flex;gap:0;margin-bottom:20px;border-bottom:2px solid #e0e0e0;}
+.tab-btn{font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;padding:10px 16px;background:none;border:none;border-bottom:2px solid transparent;margin-bottom:-2px;cursor:pointer;color:#999;transition:color .15s;}
+.tab-btn:hover{color:#1a1a1a;}
+.tab-btn.active{color:#1a1a1a;border-bottom-color:#1a1a1a;}
+.tab-panel{display:none;}
+.tab-panel.active{display:block;}
+
+@media(max-width:480px){
+  .session-timer{font-size:32px;}
+  .wld-buttons{grid-template-columns:1fr;gap:8px;}
+  .wld-btn{min-height:54px;}
+  .warning-overlay h2{font-size:22px;}
+  .warning-overlay .cooldown-timer{font-size:48px;}
+  .history-tbl{font-size:11px;}
+  .history-tbl th,.history-tbl td{padding:6px 3px;}
+  .summary-card{padding:24px 16px;}
+}
+</style>
+</head>
+<body>
+<nav class="site-nav" id="site-nav"></nav>
+<script src="shared.js"></script>
+<script>renderNav("session")</script>
+<div class="wrap">
+
+<div class="stage-hdr">
+  <div class="stage-num">Session Manager</div>
+  <h1>Three-Loss Rule</h1>
+  <div class="stage-meta">Track sessions &middot; Enforce discipline &middot; Improve consistently</div>
+</div>
+
+<!-- Tabs -->
+<div class="tab-row">
+  <button class="tab-btn active" data-tab="session-tab" onclick="switchTab('session-tab')">Session</button>
+  <button class="tab-btn" data-tab="history-tab" onclick="switchTab('history-tab')">History</button>
+  <button class="tab-btn" data-tab="stats-tab" onclick="switchTab('stats-tab')">Stats</button>
+</div>
+
+<!-- SESSION TAB -->
+<div class="tab-panel active" id="session-tab">
+
+  <!-- Aggregate stats -->
+  <div class="stats" id="quick-stats">
+    <div class="stat"><div class="label">Sessions</div><div class="val mono" id="qs-total">0</div></div>
+    <div class="stat"><div class="label">Avg WR</div><div class="val mono" id="qs-wr">—</div></div>
+    <div class="stat"><div class="label">Avg Games</div><div class="val mono" id="qs-avg">—</div></div>
+    <div class="stat"><div class="label">3-Loss %</div><div class="val mono" id="qs-rule">0%</div></div>
+  </div>
+
+  <!-- Pre-session state -->
+  <div id="pre-session">
+    <div style="text-align:center;margin:32px 0;">
+      <button class="ctrl-btn start" onclick="startSession()">Start Session</button>
+    </div>
+  </div>
+
+  <!-- Active session state -->
+  <div id="active-session" style="display:none;">
+    <div class="session-timer" id="session-timer">00:00</div>
+    <div class="game-counter" id="game-counter">Game 1 of 5</div>
+    <div class="streak-indicator" id="streak-indicator"></div>
+
+    <div id="win-banner-slot"></div>
+
+    <div class="wld-buttons" id="wld-buttons">
+      <button class="wld-btn win-btn" onclick="logResult('W')">WIN</button>
+      <button class="wld-btn loss-btn" onclick="logResult('L')">LOSS</button>
+      <button class="wld-btn draw-btn" onclick="logResult('D')">DRAW</button>
+    </div>
+
+    <div class="controls-row">
+      <button class="ctrl-btn end" onclick="endSession()">End Session</button>
+    </div>
+
+    <!-- Current session log -->
+    <div class="section">
+      <div class="section-title">Session Log</div>
+      <div class="result-timeline" id="result-timeline"></div>
+      <div class="stats" id="session-stats" style="display:none;">
+        <div class="stat"><div class="label">Wins</div><div class="val mono grn" id="ss-w">0</div></div>
+        <div class="stat"><div class="label">Losses</div><div class="val mono rd" id="ss-l">0</div></div>
+        <div class="stat"><div class="label">Draws</div><div class="val mono blu" id="ss-d">0</div></div>
+        <div class="stat"><div class="label">Win Rate</div><div class="val mono" id="ss-wr">0%</div></div>
+        <div class="stat"><div class="label">Best Streak</div><div class="val mono grn" id="ss-streak">0</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Rules sidebar -->
+  <div class="con" style="margin-top:24px;">
+    <h4>Session Rules</h4>
+    <p style="font-size:13px;color:#555;line-height:1.7;margin:0;">
+      <span class="mono" style="font-size:12px;color:#d73a49;">01</span> &nbsp;Max <strong>5 games</strong> per session<br>
+      <span class="mono" style="font-size:12px;color:#d73a49;">02</span> &nbsp;Stop after <strong>3 consecutive losses</strong> (mandatory 30-min break)<br>
+      <span class="mono" style="font-size:12px;color:#22863a;">03</span> &nbsp;Win 3+ straight &rarr; consider stopping (suggested)<br>
+      <span class="mono" style="font-size:12px;color:#d73a49;">04</span> &nbsp;Sub-10-move loss &rarr; take a break<br>
+      <span class="mono" style="font-size:12px;color:#999;">05</span> &nbsp;At least <strong>30 minutes</strong> between sessions
+    </p>
+  </div>
+</div>
+
+<!-- HISTORY TAB -->
+<div class="tab-panel" id="history-tab">
+  <div class="section-title">Last 10 Sessions</div>
+  <div style="overflow-x:auto;">
+    <table class="history-tbl" id="history-table">
+      <thead>
+        <tr><th>Date</th><th>Games</th><th>Record</th><th>WR</th><th>Duration</th><th>3-Loss?</th></tr>
+      </thead>
+      <tbody id="history-body">
+        <tr><td colspan="6" style="text-align:center;color:#999;padding:24px;">No sessions yet. Start your first one above.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- STATS TAB -->
+<div class="tab-panel" id="stats-tab">
+  <div class="stats" id="agg-stats">
+    <div class="stat"><div class="label">Total Sessions</div><div class="val mono" id="ag-total">0</div></div>
+    <div class="stat"><div class="label">Avg Games/Session</div><div class="val mono" id="ag-avg">—</div></div>
+    <div class="stat"><div class="label">Overall Win Rate</div><div class="val mono" id="ag-wr">—</div></div>
+    <div class="stat"><div class="label">3-Loss Triggered</div><div class="val mono rd" id="ag-rule">0%</div></div>
+    <div class="stat"><div class="label">Best Session</div><div class="val mono grn" id="ag-best">—</div></div>
+    <div class="stat"><div class="label">Day Streak</div><div class="val mono" id="ag-streak">0</div></div>
+  </div>
+  <div class="tip" style="margin-top:16px;">
+    <strong>Best session</strong> = highest win rate among sessions with 3+ games.
+    <strong>Day streak</strong> = consecutive days with at least 1 session (from today backwards).
+  </div>
+</div>
+
+</div><!-- .wrap -->
+
+<!-- Warning overlay (hidden) -->
+<div class="warning-overlay" id="warning-overlay" style="display:none;">
+  <h2>Three-Loss Rule</h2>
+  <p>You've lost 3 in a row. Take a break. Come back with a clear head.</p>
+  <div class="cooldown-timer" id="cooldown-timer">30:00</div>
+  <div class="cooldown-label">Cooldown remaining</div>
+  <div id="cooldown-actions"></div>
+</div>
+
+<!-- Summary overlay (hidden) -->
+<div class="summary-overlay" id="summary-overlay" style="display:none;">
+  <div class="summary-card" id="summary-card"></div>
+</div>
+
+<script>
+(function(){
+  // ---- State ----
+  var session = null; // {startTime, games[], timerInterval, stoppedOnRule}
+  var cooldownInterval = null;
+  var cooldownEnd = null;
+
+  // ---- localStorage helpers ----
+  function getSessions(){ try{return JSON.parse(localStorage.getItem('chess-sessions'))||[];}catch(e){return [];} }
+  function saveSessions(s){ localStorage.setItem('chess-sessions',JSON.stringify(s)); }
+
+  // ---- Tab switching ----
+  window.switchTab = function(id){
+    document.querySelectorAll('.tab-panel').forEach(function(p){p.classList.remove('active');});
+    document.querySelectorAll('.tab-btn').forEach(function(b){b.classList.remove('active');});
+    document.getElementById(id).classList.add('active');
+    document.querySelector('[data-tab="'+id+'"]').classList.add('active');
+    if(id==='history-tab') renderHistory();
+    if(id==='stats-tab') renderAggStats();
+  };
+
+  // ---- Format helpers ----
+  function pad(n){return n<10?'0'+n:''+n;}
+  function fmtDuration(secs){
+    var m=Math.floor(secs/60), s=secs%60;
+    return pad(m)+':'+pad(s);
+  }
+  function fmtDurationLong(secs){
+    if(secs<60) return secs+'s';
+    var m=Math.floor(secs/60), s=secs%60;
+    return m+'m'+(s>0?' '+s+'s':'');
+  }
+
+  // ---- Quick stats (top of session tab) ----
+  function renderQuickStats(){
+    var all=getSessions();
+    document.getElementById('qs-total').textContent=all.length;
+    if(all.length===0){
+      document.getElementById('qs-wr').textContent='—';
+      document.getElementById('qs-avg').textContent='—';
+      document.getElementById('qs-rule').textContent='0%';
+      return;
+    }
+    var totalG=0,totalW=0,ruleCount=0;
+    for(var i=0;i<all.length;i++){
+      totalG+=all[i].games.length;
+      for(var j=0;j<all[i].games.length;j++) if(all[i].games[j]==='W') totalW++;
+      if(all[i].stoppedOnRule) ruleCount++;
+    }
+    document.getElementById('qs-wr').textContent=totalG?Math.round(totalW/totalG*100)+'%':'—';
+    document.getElementById('qs-avg').textContent=(totalG/all.length).toFixed(1);
+    document.getElementById('qs-rule').textContent=Math.round(ruleCount/all.length*100)+'%';
+  }
+
+  // ---- Start Session ----
+  window.startSession = function(){
+    session={startTime:Date.now(),games:[],timerInterval:null,stoppedOnRule:false};
+    document.getElementById('pre-session').style.display='none';
+    document.getElementById('active-session').style.display='block';
+    document.getElementById('result-timeline').innerHTML='';
+    document.getElementById('session-stats').style.display='none';
+    document.getElementById('win-banner-slot').innerHTML='';
+    updateGameCounter();
+    updateStreak();
+    enableButtons(true);
+    // Start timer
+    session.timerInterval=setInterval(updateTimer,1000);
+    updateTimer();
+  };
+
+  function updateTimer(){
+    if(!session) return;
+    var elapsed=Math.floor((Date.now()-session.startTime)/1000);
+    document.getElementById('session-timer').textContent=fmtDuration(elapsed);
+  }
+
+  function updateGameCounter(){
+    var n=session?session.games.length+1:1;
+    document.getElementById('game-counter').textContent='Game '+Math.min(n,5)+' of 5';
+  }
+
+  function updateStreak(){
+    if(!session||session.games.length===0){
+      document.getElementById('streak-indicator').innerHTML='';
+      return;
+    }
+    var g=session.games, last=g[g.length-1], count=1;
+    for(var i=g.length-2;i>=0;i--){if(g[i]===last)count++;else break;}
+    var cls=last==='W'?'grn':last==='L'?'rd':'blu';
+    var label=last==='W'?'win':last==='L'?'loss':'draw';
+    document.getElementById('streak-indicator').innerHTML='Current: <span class="streak-val '+cls+'">'+count+' '+label+(count>1?'s':'')+'</span>';
+  }
+
+  function enableButtons(on){
+    var btns=document.querySelectorAll('#wld-buttons .wld-btn');
+    for(var i=0;i<btns.length;i++) btns[i].disabled=!on;
+  }
+
+  // ---- Log Result ----
+  window.logResult = function(result){
+    if(!session) return;
+    session.games.push(result);
+
+    // Render timeline
+    var tl=document.getElementById('result-timeline');
+    var c=document.createElement('div');
+    c.className='result-circle '+result;
+    c.textContent=result;
+    tl.appendChild(c);
+
+    // Update stats
+    renderSessionStats();
+    updateGameCounter();
+    updateStreak();
+
+    // Check three-loss rule
+    var g=session.games, consLoss=0;
+    for(var i=g.length-1;i>=0;i--){if(g[i]==='L')consLoss++;else break;}
+    if(consLoss>=3){
+      session.stoppedOnRule=true;
+      triggerThreeLossRule();
+      return;
+    }
+
+    // Check win streak
+    var consWin=0;
+    for(var i=g.length-1;i>=0;i--){if(g[i]==='W')consWin++;else break;}
+    if(consWin>=3){
+      document.getElementById('win-banner-slot').innerHTML='<div class="win-banner">'+consWin+'-game win streak! Consider stopping &mdash; lock in your gains.</div>';
+    } else {
+      document.getElementById('win-banner-slot').innerHTML='';
+    }
+
+    // Max 5 games
+    if(session.games.length>=5){
+      enableButtons(false);
+      endSession();
+    }
+  };
+
+  function renderSessionStats(){
+    if(!session||session.games.length===0) return;
+    document.getElementById('session-stats').style.display='';
+    var g=session.games,w=0,l=0,d=0,best=0,cur=0;
+    for(var i=0;i<g.length;i++){
+      if(g[i]==='W'){w++;cur++;if(cur>best)best=cur;}
+      else{cur=0;if(g[i]==='L')l++;else d++;}
+    }
+    document.getElementById('ss-w').textContent=w;
+    document.getElementById('ss-l').textContent=l;
+    document.getElementById('ss-d').textContent=d;
+    document.getElementById('ss-wr').textContent=g.length?Math.round(w/g.length*100)+'%':'0%';
+    document.getElementById('ss-streak').textContent=best;
+  }
+
+  // ---- Three-Loss Rule ----
+  function triggerThreeLossRule(){
+    enableButtons(false);
+    var overlay=document.getElementById('warning-overlay');
+    overlay.style.display='flex';
+    cooldownEnd=Date.now()+30*60*1000; // 30 minutes
+    document.getElementById('cooldown-actions').innerHTML='<button class="ctrl-btn small" onclick="overrideCooldown()">Override (emergency)</button>';
+    cooldownInterval=setInterval(updateCooldown,1000);
+    updateCooldown();
+  }
+
+  function updateCooldown(){
+    var remaining=Math.max(0,Math.floor((cooldownEnd-Date.now())/1000));
+    document.getElementById('cooldown-timer').textContent=fmtDuration(remaining);
+    if(remaining<=0){
+      clearInterval(cooldownInterval);
+      cooldownInterval=null;
+      document.getElementById('cooldown-actions').innerHTML=
+        '<button class="ctrl-btn resume" onclick="resumeAfterCooldown()">Resume Playing</button>'+
+        '<div style="margin-top:12px;"><button class="ctrl-btn" onclick="endSessionFromCooldown()" style="background:#555;">End Session Instead</button></div>';
+    }
+  }
+
+  window.overrideCooldown = function(){
+    if(!confirm('Are you sure? The Three-Loss Rule exists to protect your rating.')) return;
+    clearInterval(cooldownInterval);
+    cooldownInterval=null;
+    document.getElementById('warning-overlay').style.display='none';
+    enableButtons(true);
+    updateGameCounter();
+  };
+
+  window.resumeAfterCooldown = function(){
+    document.getElementById('warning-overlay').style.display='none';
+    if(session&&session.games.length<5){
+      enableButtons(true);
+      updateGameCounter();
+    } else {
+      endSession();
+    }
+  };
+
+  window.endSessionFromCooldown = function(){
+    document.getElementById('warning-overlay').style.display='none';
+    endSession();
+  };
+
+  // ---- End Session ----
+  window.endSession = function(){
+    if(!session) return;
+    clearInterval(session.timerInterval);
+    enableButtons(false);
+
+    var elapsed=Math.floor((Date.now()-session.startTime)/1000);
+    var g=session.games,w=0,l=0,d=0;
+    for(var i=0;i<g.length;i++){if(g[i]==='W')w++;else if(g[i]==='L')l++;else d++;}
+    var wr=g.length?Math.round(w/g.length*100):0;
+
+    // Save to history
+    var record={
+      date:new Date(session.startTime).toISOString(),
+      games:g.slice(),
+      duration:elapsed,
+      stoppedOnRule:session.stoppedOnRule
+    };
+    var all=getSessions();
+    all.unshift(record);
+    if(all.length>50) all=all.slice(0,50);
+    saveSessions(all);
+
+    // Build summary
+    var msg='';
+    if(session.stoppedOnRule){
+      msg='<span class="rd" style="font-size:18px;font-weight:700;">Three-Loss Rule triggered.</span><br><span style="color:#555;">Good discipline stopping when you did.</span>';
+    } else if(wr>=60&&g.length>=3){
+      msg='<span class="grn" style="font-size:18px;font-weight:700;">Great session!</span><br><span style="color:#555;">'+wr+'% win rate across '+g.length+' games. Keep it up.</span>';
+    } else {
+      msg='<span style="font-size:18px;font-weight:700;">Session complete.</span><br><span style="color:#555;">Every game is practice. Review your losses.</span>';
+    }
+
+    // Render result circles for summary
+    var circles='';
+    for(var i=0;i<g.length;i++) circles+='<div class="result-circle '+g[i]+'" style="width:32px;height:32px;font-size:13px;">'+g[i]+'</div>';
+
+    document.getElementById('summary-card').innerHTML=
+      '<h2>Session Summary</h2>'+
+      '<div class="result-timeline" style="justify-content:center;margin:16px 0;">'+circles+'</div>'+
+      '<div class="stats" style="margin:16px 0;">'+
+        '<div class="stat"><div class="label">Games</div><div class="val mono">'+g.length+'</div></div>'+
+        '<div class="stat"><div class="label">Record</div><div class="val mono"><span class="grn">'+w+'</span>-<span class="rd">'+l+'</span>-<span class="blu">'+d+'</span></div></div>'+
+        '<div class="stat"><div class="label">Win Rate</div><div class="val mono">'+wr+'%</div></div>'+
+        '<div class="stat"><div class="label">Duration</div><div class="val mono" style="font-size:18px;">'+fmtDurationLong(elapsed)+'</div></div>'+
+      '</div>'+
+      '<div class="summary-msg">'+msg+'</div>'+
+      '<button class="ctrl-btn start" onclick="closeSummary()" style="margin-top:16px;">Done</button>';
+
+    document.getElementById('summary-overlay').style.display='flex';
+    session=null;
+    renderQuickStats();
+  };
+
+  window.closeSummary = function(){
+    document.getElementById('summary-overlay').style.display='none';
+    document.getElementById('active-session').style.display='none';
+    document.getElementById('pre-session').style.display='block';
+  };
+
+  // ---- History ----
+  function renderHistory(){
+    var all=getSessions();
+    var tbody=document.getElementById('history-body');
+    if(all.length===0){
+      tbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:#999;padding:24px;">No sessions yet.</td></tr>';
+      return;
+    }
+    var html='';
+    var show=all.slice(0,10);
+    for(var i=0;i<show.length;i++){
+      var s=show[i], g=s.games, w=0,l=0,d=0;
+      for(var j=0;j<g.length;j++){if(g[j]==='W')w++;else if(g[j]==='L')l++;else d++;}
+      var wr=g.length?Math.round(w/g.length*100):0;
+      var dt=new Date(s.date);
+      var dateStr=pad(dt.getMonth()+1)+'/'+pad(dt.getDate())+' '+pad(dt.getHours())+':'+pad(dt.getMinutes());
+      // mini circles
+      var circles='';
+      for(var j=0;j<g.length;j++) circles+='<div class="result-circle '+g[j]+'">'+g[j]+'</div>';
+      var ruleTag=s.stoppedOnRule?'<span class="rule-tag yes">YES</span>':'<span class="rule-tag no">NO</span>';
+      html+='<tr>'+
+        '<td class="mono" style="white-space:nowrap;">'+dateStr+'</td>'+
+        '<td><div class="result-timeline" style="gap:3px;margin:0;">'+circles+'</div></td>'+
+        '<td class="mono"><span class="grn">'+w+'</span>-<span class="rd">'+l+'</span>-<span class="blu">'+d+'</span></td>'+
+        '<td class="mono">'+wr+'%</td>'+
+        '<td class="mono">'+fmtDurationLong(s.duration)+'</td>'+
+        '<td>'+ruleTag+'</td>'+
+      '</tr>';
+    }
+    tbody.innerHTML=html;
+  }
+
+  // ---- Aggregate Stats ----
+  function renderAggStats(){
+    var all=getSessions();
+    document.getElementById('ag-total').textContent=all.length;
+    if(all.length===0){
+      document.getElementById('ag-avg').textContent='—';
+      document.getElementById('ag-wr').textContent='—';
+      document.getElementById('ag-rule').textContent='0%';
+      document.getElementById('ag-best').textContent='—';
+      document.getElementById('ag-streak').textContent='0';
+      return;
+    }
+    var totalG=0,totalW=0,ruleCount=0,bestWR=0,bestLabel='—';
+    for(var i=0;i<all.length;i++){
+      var s=all[i],g=s.games,w=0;
+      totalG+=g.length;
+      for(var j=0;j<g.length;j++) if(g[j]==='W') w++;
+      totalW+=w;
+      if(s.stoppedOnRule) ruleCount++;
+      if(g.length>=3){
+        var wr=Math.round(w/g.length*100);
+        if(wr>bestWR){bestWR=wr;bestLabel=wr+'% ('+g.length+'g)';}
+      }
+    }
+    document.getElementById('ag-avg').textContent=(totalG/all.length).toFixed(1);
+    document.getElementById('ag-wr').textContent=Math.round(totalW/totalG*100)+'%';
+    document.getElementById('ag-rule').textContent=Math.round(ruleCount/all.length*100)+'%';
+    document.getElementById('ag-best').textContent=bestLabel;
+
+    // Day streak
+    var daySet={};
+    for(var i=0;i<all.length;i++){
+      var d=new Date(all[i].date);
+      daySet[d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())]=true;
+    }
+    var streak=0, now=new Date();
+    for(var i=0;i<365;i++){
+      var check=new Date(now);
+      check.setDate(check.getDate()-i);
+      var key=check.getFullYear()+'-'+pad(check.getMonth()+1)+'-'+pad(check.getDate());
+      if(daySet[key]) streak++;
+      else break;
+    }
+    document.getElementById('ag-streak').textContent=streak;
+  }
+
+  // ---- Init ----
+  renderQuickStats();
+})();
+</script>
+</body>
+</html>

@@ -81,7 +81,13 @@ function renderNav(active) {
     ]},
     {heading:'Practice', items:[
       {id:'quiz',label:'Blunder Quiz'},
-      {id:'play',label:'Play & Practice'}
+      {id:'dynamic-quiz',label:'Dynamic Quiz'},
+      {id:'play',label:'Play & Practice'},
+      {id:'trainer',label:'Opening Trainer'},
+      {id:'session',label:'Session Manager'},
+      {id:'analysis',label:'Game Analysis'},
+      {id:'calendar',label:'Streak Calendar'},
+      {id:'badges',label:'Badges'}
     ]},
     {heading:'Training Program', items:[
       {id:'stage-1',label:'S1: Stop the Bleeding'},

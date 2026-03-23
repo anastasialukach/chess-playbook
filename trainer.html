@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Opening Trainer — Chess Playbook</title>
+<link rel="stylesheet" href="shared.css">
+<style>
+.system-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:20px 0;}
+.sys-card{background:#fff;border:2px solid #e0e0e0;border-radius:10px;padding:16px;cursor:pointer;transition:border-color .15s,background .15s;text-align:center;}
+.sys-card:hover{border-color:#769656;background:#f8f7f0;}
+.sys-card.active{border-color:#769656;background:#f0efe6;}
+.sys-card .sys-name{font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:700;margin-bottom:4px;}
+.sys-card .sys-moves{font-family:'IBM Plex Mono',monospace;font-size:11px;color:#888;margin-top:6px;}
+.drill-wrap{max-width:420px;margin:0 auto;}
+.trainer-board{display:grid;grid-template-columns:repeat(8,1fr);border-radius:4px;overflow:hidden;width:100%;max-width:420px;margin:0 auto;user-select:none;}
+.t-sq{aspect-ratio:1;position:relative;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .15s;}
+.t-sq.lt{background:#EEEED2;}.t-sq.dk{background:#769656;}
+.t-sq.sel.lt,.t-sq.sel.dk{outline:3px solid #4a90d9;outline-offset:-3px;z-index:1;}
+.t-sq .t-pc{width:85%;height:85%;object-fit:contain;pointer-events:none;image-rendering:auto;z-index:1;position:relative;}
+.t-sq .t-pc.pawn{width:70%;height:70%;}
+.t-sq .crd{position:absolute;font-family:'IBM Plex Mono',monospace;font-weight:700;line-height:1;pointer-events:none;opacity:0.45;}
+.t-sq .crd-f{bottom:1px;right:3px;font-size:clamp(6px,1.4vw,9px);}
+.t-sq .crd-r{top:1px;left:3px;font-size:clamp(6px,1.4vw,9px);}
+.t-sq.dk .crd{color:#EEEED2;}.t-sq.lt .crd{color:#769656;}
+.drill-status{text-align:center;margin:12px 0;font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:600;min-height:24px;}
+.drill-status .turn-label{color:#769656;}
+.drill-status .hint{color:#d73a49;font-size:12px;font-weight:400;display:block;margin-top:4px;}
+.move-seq{background:#f8f7f0;border:1px solid #e0e0e0;border-radius:8px;padding:12px 16px;margin:12px 0;font-family:'IBM Plex Mono',monospace;font-size:13px;line-height:2;}
+.move-seq .mn{color:#aaa;font-size:11px;margin-right:2px;}
+.move-seq .done{color:#22863a;font-weight:700;}
+.move-seq .cur{background:#e8e6d0;border-radius:3px;padding:1px 4px;font-weight:700;}
+.move-seq .fut{color:#bbb;}
+.drill-btns{display:flex;gap:8px;margin:16px 0;justify-content:center;}
+.drill-btns button{background:#1a1a1a;color:#fff;border:none;padding:10px 20px;border-radius:6px;font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600;cursor:pointer;transition:background .15s;}
+.drill-btns button:hover{background:#333;}
+.drill-btns button.green{background:#769656;}.drill-btns button.green:hover{background:#5a7a44;}
+.result-card{background:#fff;border:2px solid #769656;border-radius:10px;padding:24px;margin:16px 0;text-align:center;}
+.result-card h3{font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:700;margin:0 0 8px;border:none;padding:0;text-transform:none;letter-spacing:0;}
+.result-card .result-msg{font-size:15px;color:#555;margin-bottom:14px;}
+.drill-all-btn{display:block;width:100%;background:#1a1a1a;color:#fff;border:none;padding:14px;border-radius:8px;font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:700;cursor:pointer;margin:16px 0;transition:background .15s;letter-spacing:0.5px;}
+.drill-all-btn:hover{background:#333;}
+.best-scores{margin:16px 0;}
+.best-scores h3{font-family:'IBM Plex Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:2px;color:#999;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid #ddd;}
+.score-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #f0f0f0;font-size:14px;}
+.score-row:last-child{border-bottom:none;}
+.score-row .score-name{font-weight:600;}
+.score-row .score-val{font-family:'IBM Plex Mono',monospace;font-weight:700;}
+@media(max-width:480px){
+  .system-grid{grid-template-columns:1fr 1fr;gap:8px;}
+  .sys-card{padding:12px 8px;}
+  .sys-card .sys-name{font-size:12px;}
+}
+</style>
+</head>
+<body>
+<nav class="site-nav" id="site-nav"></nav>
+<script src="shared.js"></script>
+<script>renderNav("trainer")</script>
+<div class="wrap">
+
+<div class="stage-hdr">
+  <div class="stage-num">Practice</div>
+  <h1>Opening Trainer</h1>
+  <div class="stage-meta">Drill your 4 opening systems until they're automatic</div>
+</div>
+
+<!-- System selector -->
+<div id="selector">
+  <div class="system-grid" id="sys-grid"></div>
+  <button class="drill-all-btn" id="drill-all-btn">DRILL ALL 4 SYSTEMS</button>
+  <div class="best-scores" id="best-scores"></div>
+</div>
+
+<!-- Drill view -->
+<div id="drill-view" style="display:none;">
+  <div class="drill-wrap">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+      <span class="mono" id="drill-title" style="font-size:14px;"></span>
+      <span class="mono dim" id="drill-progress" style="font-size:12px;"></span>
+    </div>
+    <div class="progress-bar"><div class="fill" id="drill-fill" style="width:0%"></div></div>
+    <div style="margin:12px 0;">
+      <div class="trainer-board" id="t-board"></div>
+    </div>
+    <div class="drill-status" id="drill-status"></div>
+    <div class="move-seq" id="move-seq"></div>
+    <div class="stats" id="drill-stats">
+      <div class="stat"><div class="label">Attempts</div><div class="val" id="stat-attempts">0</div></div>
+      <div class="stat"><div class="label">Accuracy</div><div class="val" id="stat-accuracy">—</div></div>
+    </div>
+    <div class="drill-btns" id="drill-btns" style="display:none;"></div>
+  </div>
+</div>
+
+<!-- Drill-all result -->
+<div id="drillall-result" style="display:none;"></div>
+
+</div>
+
+<script>
+(function(){
+  var COLS='abcdefgh';
+
+  // ---- SYSTEM DEFINITIONS ----
+  var SYSTEMS=[
+    {
+      id:'italian', name:'Italian (White)', tag:'WHITE', tagClass:'wt',
+      desc:'e4 Nf3 Bc4 d3 O-O', flip:false,
+      moves:[
+        {uFrom:'e2',uTo:'e4',aFrom:'e7',aTo:'e5',uPiece:'wP',aPiece:'bP'},
+        {uFrom:'g1',uTo:'f3',aFrom:'b8',aTo:'c6',uPiece:'wN',aPiece:'bN'},
+        {uFrom:'f1',uTo:'c4',aFrom:'f8',aTo:'c5',uPiece:'wB',aPiece:'bB'},
+        {uFrom:'d2',uTo:'d3',aFrom:'g8',aTo:'f6',uPiece:'wN',aPiece:'bN'},
+        {uFrom:'e1',uTo:'g1',aFrom:null,aTo:null,uPiece:'wK',aPiece:null,castle:{rFrom:'h1',rTo:'f1',rPiece:'wR'}}
+      ],
+      moveLabels:['e4','Nf3','Bc4','d3','O-O'],
+      autoLabels:['e5','Nc6','Bc5','Nf6','']
+    },
+    {
+      id:'french', name:'French Defense (Black)', tag:'BLACK vs e4', tagClass:'bt',
+      desc:'e6 d5 c5 Nc6 Nf6', flip:true,
+      moves:[
+        {aFrom:'e2',aTo:'e4',uFrom:'e7',uTo:'e6',aPiece:'wP',uPiece:'bP'},
+        {aFrom:'d2',aTo:'d4',uFrom:'d7',uTo:'d5',aPiece:'wP',uPiece:'bP'},
+        {aFrom:'e4',aTo:'e5',uFrom:'c7',uTo:'c5',aPiece:'wP',uPiece:'bP'},
+        {aFrom:'c2',aTo:'c3',uFrom:'b8',uTo:'c6',aPiece:'wP',uPiece:'bN'},
+        {aFrom:'g1',aTo:'f3',uFrom:'g8',uTo:'f6',aPiece:'wN',uPiece:'bN'}
+      ],
+      moveLabels:['e6','d5','c5','Nc6','Nf6'],
+      autoLabels:['e4','d4','e5','c3','Nf3']
+    },
+    {
+      id:'qgd', name:'QGD (Black)', tag:'BLACK vs d4', tagClass:'bt',
+      desc:'d5 Nf6 e6 Be7 O-O', flip:true,
+      moves:[
+        {aFrom:'d2',aTo:'d4',uFrom:'d7',uTo:'d5',aPiece:'wP',uPiece:'bP'},
+        {aFrom:'c2',aTo:'c4',uFrom:'g8',uTo:'f6',aPiece:'wP',uPiece:'bN'},
+        {aFrom:'b1',aTo:'c3',uFrom:'e7',uTo:'e6',aPiece:'wN',uPiece:'bP'},
+        {aFrom:'c1',aTo:'g5',uFrom:'f8',uTo:'e7',aPiece:'wB',uPiece:'bB'},
+        {aFrom:'g1',aTo:'f3',uFrom:'e8',uTo:'g8',aPiece:'wN',uPiece:'bK',castle:{rFrom:'h8',rTo:'f8',rPiece:'bR'}}
+      ],
+      moveLabels:['d5','Nf6','e6','Be7','O-O'],
+      autoLabels:['d4','c4','Nc3','Bg5','Nf3']
+    },
+    {
+      id:'default', name:'Default System (Black)', tag:'BLACK vs weird', tagClass:'bt',
+      desc:'e5 Nf6 Bc5 O-O d6', flip:true,
+      moves:[
+        {aFrom:'e2',aTo:'e3',uFrom:'e7',uTo:'e5',aPiece:'wP',uPiece:'bP'},
+        {aFrom:'b2',aTo:'b3',uFrom:'g8',uTo:'f6',aPiece:'wP',uPiece:'bN'},
+        {aFrom:'c1',aTo:'b2',uFrom:'f8',uTo:'c5',aPiece:'wB',uPiece:'bB'},
+        {aFrom:'g1',aTo:'f3',uFrom:'e8',uTo:'g8',aPiece:'wN',uPiece:'bK',castle:{rFrom:'h8',rTo:'f8',rPiece:'bR'}},
+        {aFrom:'f1',aTo:'e2',uFrom:'d7',uTo:'d6',aPiece:'wB',uPiece:'bP'}
+      ],
+      moveLabels:['e5','Nf6','Bc5','O-O','d6'],
+      autoLabels:['e3','b3','Bb2','Nf3','Be2']
+    }
+  ];
+
+  // ---- STATE ----
+  var currentSystem=null, stepIdx=0, board=[], misses=0, totalClicks=0;
+  var correctClicks=0, selectedSq=null, drillLocked=false;
+  var drillAllMode=false, drillAllIdx=0, drillAllResults=[];
+
+  // ---- SCORES ----
+  function loadScores(){try{return JSON.parse(localStorage.getItem('chess-trainer-scores'))||{};}catch(e){return {};}}
+  function saveScore(sysId,acc){var s=loadScores();if(!s[sysId]||acc>s[sysId])s[sysId]=acc;localStorage.setItem('chess-trainer-scores',JSON.stringify(s));}
+
+  // ---- RENDER SYSTEM SELECTOR ----
+  function renderSelector(){
+    var grid=document.getElementById('sys-grid');
+    grid.innerHTML='';
+    SYSTEMS.forEach(function(sys){
+      var card=document.createElement('div');
+      card.className='sys-card';
+      card.innerHTML='<div><span class="tag '+sys.tagClass+'">'+sys.tag+'</span></div><div class="sys-name">'+sys.name+'</div><div class="sys-moves">'+sys.desc+'</div>';
+      card.onclick=function(){startDrill(sys);};
+      grid.appendChild(card);
+    });
+    renderBestScores();
+  }
+
+  function renderBestScores(){
+    var el=document.getElementById('best-scores');
+    var scores=loadScores();
+    var hasAny=false;
+    var html='<h3>Best Scores</h3>';
+    SYSTEMS.forEach(function(sys){
+      var val=scores[sys.id];
+      if(val!==undefined)hasAny=true;
+      var cls=val===undefined?'':val===100?'grn':val>=60?'':'rd';
+      html+='<div class="score-row"><span class="score-name">'+sys.name+'</span><span class="score-val '+cls+'">'+(val!==undefined?val+'%':'—')+'</span></div>';
+    });
+    el.innerHTML=html;
+  }
+
+  // ---- BOARD RENDERING ----
+  function cloneBoard(b){return b.map(function(p){return [p[0],p[1]]});}
+
+  function getPieceAt(b,sq){
+    for(var i=0;i<b.length;i++){if(b[i][1]===sq)return b[i];}
+    return null;
+  }
+
+  function movePiece(b,from,to){
+    // remove any piece on destination first (capture)
+    var nb=b.filter(function(p){return p[1]!==to;});
+    for(var i=0;i<nb.length;i++){
+      if(nb[i][1]===from){nb[i]=[nb[i][0],to];break;}
+    }
+    return nb;
+  }
+
+  function renderBoard(b,flip){
+    var el=document.getElementById('t-board');
+    el.innerHTML='';
+    var map={};
+    b.forEach(function(p){map[p[1]]=p[0];});
+    for(var row=0;row<8;row++){
+      for(var col=0;col<8;col++){
+        var r=flip?row:7-row;
+        var c=flip?7-col:col;
+        var sq=COLS[c]+(r+1);
+        var isLight=(r+c)%2===0;
+        var div=document.createElement('div');
+        div.className='t-sq '+(isLight?'lt':'dk');
+        div.dataset.sq=sq;
+        // coords
+        if(col===0){
+          var rl=document.createElement('span');
+          rl.className='crd crd-r';
+          rl.textContent=r+1;
+          div.appendChild(rl);
+        }
+        if(row===7){
+          var fl=document.createElement('span');
+          fl.className='crd crd-f';
+          fl.textContent=COLS[c];
+          div.appendChild(fl);
+        }
+        // piece
+        if(map[sq]){
+          var img=document.createElement('img');
+          img.src=P[map[sq]];
+          img.className='t-pc'+(map[sq][1]==='P'?' pawn':'');
+          div.appendChild(img);
+        }
+        div.onclick=onSquareClick;
+        el.appendChild(div);
+      }
+    }
+  }
+
+  function flashSquare(sq,color){
+    var els=document.querySelectorAll('#t-board .t-sq');
+    els.forEach(function(el){
+      if(el.dataset.sq===sq){
+        var orig=el.style.background;
+        el.style.background=color;
+        setTimeout(function(){el.style.background='';},400);
+      }
+    });
+  }
+
+  function highlightSquare(sq,on){
+    var els=document.querySelectorAll('#t-board .t-sq');
+    els.forEach(function(el){
+      if(el.dataset.sq===sq){
+        if(on)el.classList.add('sel');
+        else el.classList.remove('sel');
+      }
+    });
+  }
+
+  // ---- DRILL LOGIC ----
+  function startDrill(sys){
+    currentSystem=sys;
+    stepIdx=0;
+    misses=0;
+    totalClicks=0;
+    correctClicks=0;
+    selectedSq=null;
+    drillLocked=false;
+    board=cloneBoard(SP);
+
+    document.getElementById('selector').style.display='none';
+    document.getElementById('drill-view').style.display='';
+    document.getElementById('drillall-result').style.display='none';
+    document.getElementById('drill-title').textContent=sys.name;
+    document.getElementById('drill-btns').style.display='none';
+
+    // For black systems, auto-play White's first move before user acts
+    if(sys.flip){
+      renderBoard(board,sys.flip);
+      updateDrillUI();
+      drillLocked=true;
+      setTimeout(function(){
+        var mv=sys.moves[stepIdx];
+        board=movePiece(board,mv.aFrom,mv.aTo);
+        renderBoard(board,sys.flip);
+        drillLocked=false;
+        updateDrillUI();
+      },500);
+    } else {
+      renderBoard(board,sys.flip);
+      updateDrillUI();
+    }
+  }
+
+  function updateDrillUI(){
+    var sys=currentSystem;
+    var total=sys.moves.length;
+    var pct=Math.round((stepIdx/total)*100);
+    document.getElementById('drill-progress').textContent='Move '+(stepIdx+1)+'/'+total;
+    document.getElementById('drill-fill').style.width=pct+'%';
+
+    // status
+    var statusEl=document.getElementById('drill-status');
+    if(stepIdx<total){
+      var label=sys.moveLabels[stepIdx];
+      var hintText=misses>=3?'<span class="hint">Hint: play '+label+'</span>':'';
+      statusEl.innerHTML='<span class="turn-label">Your move</span>'+hintText;
+    }
+
+    // move sequence
+    renderMoveSeq();
+
+    // stats
+    document.getElementById('stat-attempts').textContent=totalClicks;
+    document.getElementById('stat-accuracy').textContent=totalClicks>0?Math.round((correctClicks/totalClicks)*100)+'%':'—';
+  }
+
+  function renderMoveSeq(){
+    var sys=currentSystem;
+    var html='';
+    for(var i=0;i<sys.moves.length;i++){
+      var mn=(i+1)+'.';
+      var uLabel=sys.moveLabels[i];
+      var aLabel=sys.autoLabels[i];
+      var uClass=i<stepIdx?'done':i===stepIdx?'cur':'fut';
+      var aClass=i<stepIdx?'done':'fut';
+
+      if(!sys.flip){
+        // White system: user=white, auto=black
+        html+='<span class="mn">'+mn+'</span> ';
+        html+='<span class="'+uClass+'">'+uLabel+'</span> ';
+        if(aLabel)html+='<span class="'+aClass+'">'+aLabel+'</span> ';
+      } else {
+        // Black system: auto=white, user=black
+        html+='<span class="mn">'+mn+'</span> ';
+        html+='<span class="'+aClass+'">'+aLabel+'</span> ';
+        html+='<span class="'+uClass+'">'+uLabel+'</span> ';
+      }
+    }
+    document.getElementById('move-seq').innerHTML=html;
+  }
+
+  function onSquareClick(e){
+    if(drillLocked)return;
+    if(!currentSystem||stepIdx>=currentSystem.moves.length)return;
+
+    var sq=this.dataset.sq;
+    var mv=currentSystem.moves[stepIdx];
+    var needPieceSelect=mv.uPiece[1]!=='P'; // non-pawn needs piece selection
+
+    if(mv.castle){
+      // castling: just click the king's destination
+      if(sq===mv.uTo){
+        totalClicks++;correctClicks++;
+        flashSquare(sq,'#dcffe4');
+        executeUserMove(mv);
+      } else {
+        totalClicks++;misses++;
+        flashSquare(sq,'#ffe3e6');
+        updateDrillUI();
+      }
+      return;
+    }
+
+    if(needPieceSelect && !selectedSq){
+      // need to select the piece first
+      var pieceAtSq=getPieceAt(board,sq);
+      if(pieceAtSq && pieceAtSq[0]===mv.uPiece && sq===mv.uFrom){
+        selectedSq=sq;
+        highlightSquare(sq,true);
+      } else {
+        // check if they clicked destination directly — if piece is unambiguous, accept it
+        if(sq===mv.uTo){
+          totalClicks++;correctClicks++;
+          flashSquare(sq,'#dcffe4');
+          executeUserMove(mv);
+        } else {
+          totalClicks++;misses++;
+          flashSquare(sq,'#ffe3e6');
+          updateDrillUI();
+        }
+      }
+      return;
+    }
+
+    if(needPieceSelect && selectedSq){
+      highlightSquare(selectedSq,false);
+      selectedSq=null;
+      if(sq===mv.uTo){
+        totalClicks++;correctClicks++;
+        flashSquare(sq,'#dcffe4');
+        executeUserMove(mv);
+      } else {
+        totalClicks++;misses++;
+        flashSquare(sq,'#ffe3e6');
+        updateDrillUI();
+      }
+      return;
+    }
+
+    // pawn move — just click destination
+    if(sq===mv.uTo){
+      totalClicks++;correctClicks++;
+      flashSquare(sq,'#dcffe4');
+      executeUserMove(mv);
+    } else {
+      totalClicks++;misses++;
+      flashSquare(sq,'#ffe3e6');
+      updateDrillUI();
+    }
+  }
+
+  function executeUserMove(mv){
+    drillLocked=true;
+    var sys=currentSystem;
+
+    // move user's piece
+    board=movePiece(board,mv.uFrom,mv.uTo);
+    if(mv.castle){
+      board=movePiece(board,mv.castle.rFrom,mv.castle.rTo);
+    }
+    renderBoard(board,sys.flip);
+
+    stepIdx++;
+    misses=0;
+
+    if(stepIdx>=sys.moves.length){
+      // drill complete
+      setTimeout(function(){finishDrill();},400);
+      return;
+    }
+
+    // auto-response
+    var nextMv=sys.moves[stepIdx];
+    if(!sys.flip){
+      // White system: after user (white) moves, auto-play black
+      if(mv.aFrom && mv.aTo){
+        setTimeout(function(){
+          board=movePiece(board,mv.aFrom,mv.aTo);
+          renderBoard(board,sys.flip);
+          drillLocked=false;
+          updateDrillUI();
+        },500);
+      } else {
+        drillLocked=false;
+        updateDrillUI();
+      }
+    } else {
+      // Black system: after user (black) moves, auto-play white's next move
+      if(nextMv.aFrom && nextMv.aTo){
+        setTimeout(function(){
+          board=movePiece(board,nextMv.aFrom,nextMv.aTo);
+          renderBoard(board,sys.flip);
+          drillLocked=false;
+          updateDrillUI();
+        },500);
+      } else {
+        drillLocked=false;
+        updateDrillUI();
+      }
+    }
+  }
+
+  function finishDrill(){
+    var sys=currentSystem;
+    var acc=totalClicks>0?Math.round((correctClicks/totalClicks)*100):100;
+    saveScore(sys.id,acc);
+
+    // update progress bar to 100
+    document.getElementById('drill-fill').style.width='100%';
+    document.getElementById('drill-progress').textContent='Complete!';
+    document.getElementById('drill-status').innerHTML='';
+
+    var totalMisses=totalClicks-correctClicks;
+    var msg,cls;
+    if(totalMisses===0){msg='Perfect!';cls='grn';}
+    else if(totalMisses<=2){msg='Good!';cls='';}
+    else{msg='Keep practicing!';cls='rd';}
+
+    var btns=document.getElementById('drill-btns');
+    btns.style.display='flex';
+
+    if(drillAllMode){
+      drillAllResults.push({name:sys.name,acc:acc,misses:totalMisses});
+      btns.innerHTML='<button class="green" onclick="window._trainerNext()">Next System →</button>';
+      if(drillAllIdx>=SYSTEMS.length-1){
+        btns.innerHTML='<button class="green" onclick="window._trainerFinishAll()">See Results</button>';
+      }
+    } else {
+      var nextIdx=(SYSTEMS.indexOf(sys)+1)%SYSTEMS.length;
+      btns.innerHTML='<button onclick="window._trainerRestart()">Drill Again</button><button class="green" onclick="window._trainerNextSys('+nextIdx+')">Next System →</button><button onclick="window._trainerBack()" style="background:transparent;color:#1a1a1a;border:2px solid #e0e0e0;">Back</button>';
+    }
+
+    // show result inline
+    document.getElementById('stat-accuracy').textContent=acc+'%';
+    document.getElementById('stat-accuracy').className='val '+(acc===100?'grn':acc>=60?'':'rd');
+
+    updateDrillUI();
+  }
+
+  // ---- DRILL ALL ----
+  function startDrillAll(){
+    drillAllMode=true;
+    drillAllIdx=0;
+    drillAllResults=[];
+    startDrill(SYSTEMS[0]);
+  }
+
+  window._trainerNext=function(){
+    drillAllIdx++;
+    if(drillAllIdx<SYSTEMS.length){
+      startDrill(SYSTEMS[drillAllIdx]);
+    }
+  };
+
+  window._trainerFinishAll=function(){
+    document.getElementById('drill-view').style.display='none';
+    var el=document.getElementById('drillall-result');
+    el.style.display='';
+    var totalAcc=0;
+    var html='<div class="result-card"><h3>All 4 Systems Complete</h3>';
+    drillAllResults.forEach(function(r){
+      totalAcc+=r.acc;
+      var cls=r.acc===100?'grn':r.acc>=60?'':'rd';
+      html+='<div class="score-row" style="justify-content:space-between;padding:8px 0;"><span class="score-name">'+r.name+'</span><span class="score-val '+cls+'">'+r.acc+'%</span></div>';
+    });
+    var avg=Math.round(totalAcc/drillAllResults.length);
+    html+='<div style="margin-top:12px;padding-top:12px;border-top:2px solid #e0e0e0;"><span class="mono" style="font-size:18px;">Combined: <span class="'+(avg===100?'grn':avg>=60?'':'rd')+'">'+avg+'%</span></span></div>';
+    html+='<div style="margin-top:16px;"><button class="drill-all-btn" onclick="window._trainerDrillAllAgain()">Drill All Again</button>';
+    html+='<button onclick="window._trainerBack()" style="background:transparent;color:#1a1a1a;border:2px solid #e0e0e0;padding:10px 20px;border-radius:6px;font-family:IBM Plex Mono,monospace;font-size:13px;font-weight:600;cursor:pointer;margin-top:8px;width:100%;">Back to Menu</button></div>';
+    html+='</div>';
+    el.innerHTML=html;
+  };
+
+  window._trainerRestart=function(){
+    startDrill(currentSystem);
+  };
+
+  window._trainerNextSys=function(idx){
+    drillAllMode=false;
+    startDrill(SYSTEMS[idx]);
+  };
+
+  window._trainerBack=function(){
+    drillAllMode=false;
+    document.getElementById('drill-view').style.display='none';
+    document.getElementById('drillall-result').style.display='none';
+    document.getElementById('selector').style.display='';
+    renderBestScores();
+  };
+
+  window._trainerDrillAllAgain=function(){
+    startDrillAll();
+  };
+
+  // ---- INIT ----
+  document.getElementById('drill-all-btn').onclick=startDrillAll;
+  renderSelector();
+
+})();
+</script>
+</body>
+</html>

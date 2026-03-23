@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dynamic Quiz — Chess Playbook</title>
+<link rel="stylesheet" href="shared.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+<style>
+.quiz-ctx{font-family:'IBM Plex Mono',monospace;font-size:12px;color:#888;margin-bottom:8px;letter-spacing:0.5px;}
+.quiz-ctx .quiz-color{font-weight:700;color:#1a1a1a;}
+.quiz-prompt{font-size:18px;font-weight:700;margin-bottom:16px;line-height:1.3;}
+.quiz-moves{font-family:'IBM Plex Mono',monospace;font-size:13px;color:#555;margin-bottom:12px;background:#f8f7f0;border:1px solid #e0e0e0;border-radius:8px;padding:10px 14px;}
+.answer-grid{display:flex;flex-direction:column;gap:8px;margin:20px 0;}
+.answer-btn{display:block;width:100%;text-align:left;padding:14px 18px;background:#fff;border:2px solid #e0e0e0;border-radius:8px;font-family:'IBM Plex Mono',monospace;font-size:16px;font-weight:600;cursor:pointer;transition:border-color .15s,background .15s;color:#1a1a1a;}
+.answer-btn:hover:not(.locked){border-color:#769656;background:#f8f7f0;}
+.answer-btn.locked{cursor:default;}
+.answer-btn.correct{background:#dcffe4;border-color:#22863a;color:#22863a;}
+.answer-btn.wrong{background:#ffe3e6;border-color:#d73a49;color:#d73a49;}
+.next-btn{display:inline-block;margin-top:16px;background:#1a1a1a;color:#fff;border:none;padding:12px 28px;border-radius:6px;font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:600;cursor:pointer;text-decoration:none;}
+.next-btn:hover{background:#333;}
+.result-verdict{font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:700;margin-bottom:6px;letter-spacing:0.5px;}
+.result-verdict.grn{color:#22863a;}
+.result-verdict.rd{color:#d73a49;}
+.end-screen{text-align:center;padding:40px 0;}
+.end-score{font-family:'IBM Plex Mono',monospace;font-size:64px;font-weight:700;color:#1a1a1a;line-height:1;}
+.end-denom{font-family:'IBM Plex Mono',monospace;font-size:24px;color:#888;margin-bottom:8px;}
+.end-msg{font-size:20px;font-weight:700;margin:12px 0 24px;color:#1a1a1a;}
+.hidden{display:none;}
+.no-games{text-align:center;padding:48px 24px;}
+.no-games h2{font-family:'IBM Plex Mono',monospace;font-size:18px;margin-bottom:12px;}
+.no-games p{font-size:15px;color:#555;margin-bottom:20px;line-height:1.6;}
+.no-games a{display:inline-block;background:#769656;color:#fff;padding:12px 28px;border-radius:6px;text-decoration:none;font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:600;}
+.no-games a:hover{background:#5a7a44;}
+.pattern-tag{display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;padding:3px 8px;border-radius:4px;letter-spacing:0.5px;margin-right:4px;background:#f0f0ea;color:#555;border:1px solid #ddd;}
+.generating-msg{text-align:center;padding:40px;font-family:'IBM Plex Mono',monospace;font-size:14px;color:#888;}
+.generating-msg .spinner{display:inline-block;width:20px;height:20px;border:3px solid #e0e0e0;border-top-color:#769656;border-radius:50%;animation:spin 0.8s linear infinite;margin-bottom:12px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+@media(max-width:480px){
+  .quiz-prompt{font-size:16px;}
+  .quiz-moves{font-size:12px;padding:8px 12px;}
+  .answer-btn{padding:12px 14px;font-size:14px;}
+  .next-btn{padding:10px 22px;font-size:13px;}
+  .end-score{font-size:48px;}
+  .end-denom{font-size:20px;}
+  .end-msg{font-size:17px;}
+}
+</style>
+</head>
+<body>
+<nav class="site-nav" id="site-nav"></nav>
+<script src="shared.js"></script>
+<script>renderNav("dynamic-quiz")</script>
+<div class="wrap">
+
+<div class="stage-hdr">
+  <div class="stage-num">Your Games</div>
+  <h1>Dynamic Blunder Quiz</h1>
+  <div class="stage-meta">Auto-generated positions from your Chess.com games</div>
+</div>
+
+<!-- No games message -->
+<div id="no-games" class="no-games hidden">
+  <h2>No synced games found</h2>
+  <p>Sync your Chess.com games from the Dashboard first, then come back here for personalized quiz positions generated from your actual games.</p>
+  <a href="/dashboard">Go to Dashboard &rarr;</a>
+</div>
+
+<!-- Generating -->
+<div id="generating" class="generating-msg hidden">
+  <div class="spinner"></div>
+  <div>Analyzing your games for blunder patterns...</div>
+</div>
+
+<!-- No patterns found -->
+<div id="no-patterns" class="no-games hidden">
+  <h2>No blunder patterns detected</h2>
+  <p>Your synced games didn't produce enough quiz-worthy positions. Play more games on Chess.com, re-sync, and try again.</p>
+  <a href="/dashboard">Back to Dashboard &rarr;</a>
+</div>
+
+<!-- Score bar -->
+<div class="stats hidden" id="score-bar">
+  <div class="stat"><div class="label">Position</div><div class="val" id="pos-num">1/6</div></div>
+  <div class="stat"><div class="label">Score</div><div class="val grn" id="score-val">0</div></div>
+</div>
+
+<!-- Quiz area -->
+<div id="quiz-area" class="hidden">
+  <div class="quiz-ctx" id="quiz-ctx"></div>
+  <div class="quiz-moves" id="quiz-moves"></div>
+  <div class="quiz-prompt" id="quiz-prompt"></div>
+  <div id="quiz-board"></div>
+  <div class="answer-grid" id="answer-grid"></div>
+  <div id="feedback" class="hidden"></div>
+  <div id="next-wrap" class="hidden" style="text-align:center;">
+    <button class="next-btn" id="next-btn">Next &rarr;</button>
+  </div>
+</div>
+
+<!-- End screen -->
+<div id="end-screen" class="end-screen hidden">
+  <div class="end-score" id="end-score-val"></div>
+  <div class="end-denom" id="end-denom"></div>
+  <div class="end-msg" id="end-msg"></div>
+  <div class="stats" id="end-stats"></div>
+  <button class="next-btn" id="retry-btn" style="margin-top:12px;">Try Again</button>
+  <div class="cta-card" style="margin-top:28px;">
+    <h3>Keep Improving</h3>
+    <p>Review the patterns behind these blunders.</p>
+    <a href="ch-patterns.html">Pattern Recognition &rarr;</a>
+  </div>
+</div>
+
+</div>
+
+<script>
+(function(){
+
+/* ── Helpers ── */
+function shuffle(arr) {
+  var a = arr.slice();
+  for (var i = a.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+
+/* Convert chess.js board (from .board()) to the brd() piece array format */
+function chessToBrdPieces(chess) {
+  var pieces = [];
+  var board = chess.board();
+  for (var r = 0; r < 8; r++) {
+    for (var c = 0; c < 8; c++) {
+      var sq = board[r][c];
+      if (sq) {
+        var colorPrefix = sq.color === 'w' ? 'w' : 'b';
+        var pieceMap = {p:'P', n:'N', b:'B', r:'R', q:'Q', k:'K'};
+        var pieceName = colorPrefix + pieceMap[sq.type];
+        var file = 'abcdefgh'[c];
+        var rank = 8 - r;
+        pieces.push([pieceName, file + rank]);
+      }
+    }
+  }
+  return pieces;
+}
+
+/* Parse PGN moves text to get move list without annotations */
+function extractMoves(pgn) {
+  // Remove headers
+  var body = pgn.replace(/\[.*?\]\s*/g, '').trim();
+  // Remove comments
+  body = body.replace(/\{[^}]*\}/g, '');
+  // Remove variations
+  body = body.replace(/\([^)]*\)/g, '');
+  // Remove result
+  body = body.replace(/\s*(1-0|0-1|1\/2-1\/2|\*)\s*$/, '');
+  // Extract individual moves
+  var tokens = body.split(/\s+/);
+  var moves = [];
+  for (var i = 0; i < tokens.length; i++) {
+    var t = tokens[i].replace(/^\d+\.+/, '');
+    if (t && t !== '' && !t.match(/^\d+$/)) {
+      moves.push(t);
+    }
+  }
+  return moves;
+}
+
+/* ── Pattern Detectors ── */
+/* Each returns an array of quiz objects or empty array */
+
+function detectShortLoss(game, chess, moves, userColor) {
+  // Games lost in under 20 moves
+  if (moves.length > 40) return []; // >20 full moves
+  var result = game.result;
+  var userLost = (userColor === 'w' && result === '0-1') || (userColor === 'b' && result === '1-0');
+  if (!userLost) return [];
+  if (moves.length < 6) return []; // too short to be meaningful
+
+  // Find a position around move 8-12 or midpoint where things went wrong
+  var targetPly = Math.min(Math.floor(moves.length * 0.6), moves.length - 2);
+  if (targetPly < 4) targetPly = 4;
+
+  var probe = new Chess();
+  for (var i = 0; i < targetPly; i++) {
+    var m = probe.move(moves[i], {sloppy: true});
+    if (!m) return [];
+  }
+
+  var turn = probe.turn(); // whose move is it
+  if (turn !== userColor) {
+    // Back up one move so it's the user's turn
+    if (targetPly > 1) {
+      probe = new Chess();
+      for (var i = 0; i < targetPly - 1; i++) {
+        probe.move(moves[i], {sloppy: true});
+      }
+      targetPly = targetPly - 1;
+      turn = probe.turn();
+    }
+    if (turn !== userColor) return [];
+  }
+
+  var legalMoves = probe.moves();
+  if (legalMoves.length < 3) return [];
+
+  // The actual move played
+  var playedMove = moves[targetPly];
+  // Try to find a "better" move — any move that isn't what was played
+  var correctMove = null;
+  var wrongMoves = [];
+
+  // Heuristic: prefer developing moves, castling, center control
+  var priorities = legalMoves.filter(function(m) {
+    return m === 'O-O' || m === 'O-O-O' || m.match(/^[NBRQ][a-h]?[1-8]?x?[cdef][3456]/) || m.match(/^[cdef][45]/);
+  });
+
+  if (priorities.length > 0) {
+    correctMove = priorities[Math.floor(Math.random() * priorities.length)];
+  } else {
+    // Pick a random legal move that isn't the played move
+    var others = legalMoves.filter(function(m) { return m !== playedMove; });
+    correctMove = others[Math.floor(Math.random() * others.length)];
+  }
+  if (!correctMove || correctMove === playedMove) return [];
+
+  // Build wrong answers: the played move + another random
+  wrongMoves.push(playedMove);
+  var remaining = legalMoves.filter(function(m) { return m !== correctMove && m !== playedMove; });
+  if (remaining.length > 0) {
+    wrongMoves.push(remaining[Math.floor(Math.random() * remaining.length)]);
+  } else {
+    return []; // not enough choices
+  }
+
+  var moveNum = Math.floor(targetPly / 2) + 1;
+  var movesText = '';
+  var probeShow = new Chess();
+  var limit = Math.min(targetPly, 10);
+  for (var i = 0; i < limit; i++) {
+    if (i % 2 === 0) movesText += (Math.floor(i/2)+1) + '.';
+    probeShow.move(moves[i], {sloppy: true});
+    movesText += moves[i] + ' ';
+  }
+  if (targetPly > 10) movesText += '...';
+
+  return [{
+    pattern: 'Short Loss',
+    ctx: (userColor === 'w' ? 'White' : 'Black') + ' — lost in ' + Math.ceil(moves.length/2) + ' moves',
+    movesText: movesText.trim(),
+    color: userColor === 'w' ? 'WHITE' : 'BLACK',
+    flip: userColor === 'b',
+    pieces: chessToBrdPieces(probe),
+    right: correctMove,
+    wrongs: wrongMoves,
+    explanation: 'You lost this game in only ' + Math.ceil(moves.length/2) + ' moves. At move ' + moveNum + ', ' + correctMove + ' was a stronger choice than ' + playedMove + '.',
+    gameUrl: game.url || ''
+  }];
+}
+
+function detectPreCheckmate(game, chess, moves, userColor) {
+  // Find positions 1-2 moves before checkmate where user was mated
+  var result = game.result;
+  var userLost = (userColor === 'w' && result === '0-1') || (userColor === 'b' && result === '1-0');
+  if (!userLost) return [];
+
+  // Replay to 2 moves before the end to find a critical defensive position
+  if (moves.length < 4) return [];
+  var targetPly = moves.length - 3;
+  if (targetPly < 2) targetPly = 2;
+
+  var probe = new Chess();
+  for (var i = 0; i < targetPly; i++) {
+    var m = probe.move(moves[i], {sloppy: true});
+    if (!m) return [];
+  }
+
+  // Make sure it's the user's turn
+  if (probe.turn() !== userColor) {
+    targetPly--;
+    if (targetPly < 2) return [];
+    probe = new Chess();
+    for (var i = 0; i < targetPly; i++) {
+      probe.move(moves[i], {sloppy: true});
+    }
+    if (probe.turn() !== userColor) return [];
+  }
+
+  if (probe.in_check()) {
+    // User was in check — find a move that blocks/escapes
+    var legalMoves = probe.moves();
+    if (legalMoves.length < 3) return [];
+
+    var playedMove = moves[targetPly];
+    // Any move is legal here, pick one that isn't the played move as "better"
+    var others = legalMoves.filter(function(m) { return m !== playedMove; });
+    if (others.length < 1) return [];
+
+    var correctMove = others[0];
+    var wrongMoves = [playedMove];
+    if (others.length > 1) wrongMoves.push(others[1]);
+    else {
+      var rest = legalMoves.filter(function(m) { return m !== correctMove && m !== playedMove; });
+      if (rest.length > 0) wrongMoves.push(rest[0]); else return [];
+    }
+
+    return [{
+      pattern: 'Pre-Checkmate',
+      ctx: (userColor === 'w' ? 'White' : 'Black') + ' — facing checkmate threat',
+      movesText: 'Position before checkmate — find the defensive move',
+      color: userColor === 'w' ? 'WHITE' : 'BLACK',
+      flip: userColor === 'b',
+      pieces: chessToBrdPieces(probe),
+      right: correctMove,
+      wrongs: wrongMoves,
+      explanation: 'You were checkmated shortly after this position. ' + correctMove + ' would have prolonged the game by dealing with the immediate threat.',
+      gameUrl: game.url || ''
+    }];
+  }
+  return [];
+}
+
+function detectEarlyQueenMove(game, chess, moves, userColor) {
+  // Check if user moved queen before move 5
+  var quizzes = [];
+  var probe = new Chess();
+  for (var i = 0; i < Math.min(moves.length, 8); i++) {
+    var m = probe.move(moves[i], {sloppy: true});
+    if (!m) break;
+
+    var isUserMove = (i % 2 === 0 && userColor === 'w') || (i % 2 === 1 && userColor === 'b');
+    if (isUserMove && m.piece === 'q' && i < 8) {
+      // Found early queen move — rewind to before it
+      var pre = new Chess();
+      for (var j = 0; j < i; j++) {
+        pre.move(moves[j], {sloppy: true});
+      }
+      var legalMoves = pre.moves();
+      if (legalMoves.length < 3) continue;
+
+      var playedMove = moves[i];
+      // Better moves: develop knights/bishops
+      var devMoves = legalMoves.filter(function(mv) {
+        return mv.match(/^[NB]/) || mv === 'O-O' || mv === 'O-O-O' || mv.match(/^[cde][45]/);
+      });
+      if (devMoves.length === 0) continue;
+
+      var correctMove = devMoves[Math.floor(Math.random() * devMoves.length)];
+      if (correctMove === playedMove) continue;
+
+      var wrongMoves = [playedMove];
+      var otherWrong = legalMoves.filter(function(mv) { return mv !== correctMove && mv !== playedMove; });
+      if (otherWrong.length > 0) wrongMoves.push(otherWrong[Math.floor(Math.random() * otherWrong.length)]);
+      else continue;
+
+      var moveNum = Math.floor(i / 2) + 1;
+      quizzes.push({
+        pattern: 'Early Queen',
+        ctx: (userColor === 'w' ? 'White' : 'Black') + ' — move ' + moveNum,
+        movesText: 'You played ' + playedMove + ' on move ' + moveNum + ' — developing the queen too early',
+        color: userColor === 'w' ? 'WHITE' : 'BLACK',
+        flip: userColor === 'b',
+        pieces: chessToBrdPieces(pre),
+        right: correctMove,
+        wrongs: wrongMoves,
+        explanation: 'Moving the queen out early (move ' + moveNum + ') exposes it to attack and wastes tempo. ' + correctMove + ' develops a minor piece instead.',
+        gameUrl: game.url || ''
+      });
+      break; // one per game
+    }
+  }
+  return quizzes;
+}
+
+function detectMissingCastling(game, chess, moves, userColor) {
+  // Games over 15 moves where user never castled
+  if (moves.length < 30) return []; // at least 15 full moves
+
+  var probe = new Chess();
+  var castled = false;
+  var castleAvailPly = -1;
+
+  for (var i = 0; i < moves.length; i++) {
+    var m = probe.move(moves[i], {sloppy: true});
+    if (!m) break;
+    var isUserMove = (i % 2 === 0 && userColor === 'w') || (i % 2 === 1 && userColor === 'b');
+    if (isUserMove && (m.san === 'O-O' || m.san === 'O-O-O')) {
+      castled = true;
+      break;
+    }
+    // Check if castling becomes available
+    if (isUserMove && castleAvailPly === -1) {
+      var nextMoves = probe.moves();
+      if (nextMoves.indexOf('O-O') !== -1 || nextMoves.indexOf('O-O-O') !== -1) {
+        // Rewind — we need the position BEFORE this move
+        // Actually, after this move the opponent moves, then user can castle
+        // Let's just record the ply
+      }
+    }
+  }
+
+  if (castled) return [];
+
+  // Find the first position where castling was available but user didn't
+  probe = new Chess();
+  for (var i = 0; i < Math.min(moves.length, 20); i++) {
+    var m = probe.move(moves[i], {sloppy: true});
+    if (!m) break;
+    var isUserTurnNext = (probe.turn() === userColor);
+    if (isUserTurnNext) {
+      var nextMoves = probe.moves();
+      var canCastle = nextMoves.indexOf('O-O') !== -1 || nextMoves.indexOf('O-O-O') !== -1;
+      if (canCastle) {
+        // Next move was moves[i+1] — the user's move
+        var userPlayed = moves[i + 1];
+        if (userPlayed && userPlayed !== 'O-O' && userPlayed !== 'O-O-O') {
+          var correctMove = nextMoves.indexOf('O-O') !== -1 ? 'O-O' : 'O-O-O';
+          var wrongMoves = [userPlayed];
+          var others = nextMoves.filter(function(mv) { return mv !== correctMove && mv !== userPlayed; });
+          if (others.length > 0) {
+            wrongMoves.push(others[Math.floor(Math.random() * others.length)]);
+          } else {
+            return [];
+          }
+
+          var moveNum = Math.floor((i + 1) / 2) + 1;
+          return [{
+            pattern: 'Never Castled',
+            ctx: (userColor === 'w' ? 'White' : 'Black') + ' — castling was available at move ' + moveNum,
+            movesText: 'Castling was available but you played ' + userPlayed + ' instead. You never castled this game.',
+            color: userColor === 'w' ? 'WHITE' : 'BLACK',
+            flip: userColor === 'b',
+            pieces: chessToBrdPieces(probe),
+            right: correctMove,
+            wrongs: wrongMoves,
+            explanation: 'You never castled this entire game. At move ' + moveNum + ', castling (' + correctMove + ') was available and would have secured your king. ' + userPlayed + ' left your king in the center.',
+            gameUrl: game.url || ''
+          }];
+        }
+      }
+    }
+  }
+  return [];
+}
+
+function detectSidePawnPush(game, chess, moves, userColor) {
+  // a or h pawn moved before move 6
+  var probe = new Chess();
+  for (var i = 0; i < Math.min(moves.length, 10); i++) {
+    var m = probe.move(moves[i], {sloppy: true});
+    if (!m) break;
+    var isUserMove = (i % 2 === 0 && userColor === 'w') || (i % 2 === 1 && userColor === 'b');
+    var moveNum = Math.floor(i / 2) + 1;
+
+    if (isUserMove && moveNum <= 5 && m.piece === 'p') {
+      var file = m.to[0];
+      if (file === 'a' || file === 'h') {
+        // Found a side pawn push — go back to before it
+        var pre = new Chess();
+        for (var j = 0; j < i; j++) {
+          pre.move(moves[j], {sloppy: true});
+        }
+        var legalMoves = pre.moves();
+        if (legalMoves.length < 3) continue;
+
+        var playedMove = moves[i];
+        // Better: develop center pawns or pieces
+        var betterMoves = legalMoves.filter(function(mv) {
+          return mv.match(/^[NB]/) || mv.match(/^[cde][45]/) || mv === 'O-O';
+        });
+        if (betterMoves.length === 0) continue;
+
+        var correctMove = betterMoves[Math.floor(Math.random() * betterMoves.length)];
+        if (correctMove === playedMove) continue;
+
+        var wrongMoves = [playedMove];
+        var otherWrong = legalMoves.filter(function(mv) { return mv !== correctMove && mv !== playedMove; });
+        if (otherWrong.length > 0) wrongMoves.push(otherWrong[Math.floor(Math.random() * otherWrong.length)]);
+        else continue;
+
+        return [{
+          pattern: 'Side Pawn Push',
+          ctx: (userColor === 'w' ? 'White' : 'Black') + ' — move ' + moveNum,
+          movesText: 'You pushed the ' + file + '-pawn on move ' + moveNum + ' — a side pawn before developing pieces',
+          color: userColor === 'w' ? 'WHITE' : 'BLACK',
+          flip: userColor === 'b',
+          pieces: chessToBrdPieces(pre),
+          right: correctMove,
+          wrongs: wrongMoves,
+          explanation: 'Pushing side pawns (a/h) in the opening wastes tempo. On move ' + moveNum + ', ' + correctMove + ' develops toward the center. ' + playedMove + ' doesn\'t help your position.',
+          gameUrl: game.url || ''
+        }];
+      }
+    }
+  }
+  return [];
+}
+
+
+/* ── Main Quiz Generator ── */
+function generateQuizzes(games) {
+  var allQuizzes = [];
+
+  for (var g = 0; g < games.length; g++) {
+    var game = games[g];
+    if (!game.pgn) continue;
+
+    var chess = new Chess();
+    var loaded = chess.load_pgn(game.pgn, {sloppy: true});
+    if (!loaded) continue;
+
+    var moves = extractMoves(game.pgn);
+    if (moves.length < 4) continue;
+
+    // Determine user color from game data
+    var username = '';
+    try {
+      var stored = localStorage.getItem('chess-username');
+      if (stored) username = stored.toLowerCase();
+    } catch(e) {}
+
+    var userColor = 'w'; // default
+    if (game.white && game.black) {
+      var wName = (typeof game.white === 'string' ? game.white : (game.white.username || '')).toLowerCase();
+      var bName = (typeof game.black === 'string' ? game.black : (game.black.username || '')).toLowerCase();
+      if (username && bName === username) {
+        userColor = 'b';
+      } else if (username && wName === username) {
+        userColor = 'w';
+      } else {
+        // Fallback: check result to guess — assume user is the loser for learning
+        if (game.result === '0-1') userColor = 'w';
+        else if (game.result === '1-0') userColor = 'b';
+      }
+    }
+
+    // Run detectors
+    var detectors = [
+      detectShortLoss,
+      detectPreCheckmate,
+      detectEarlyQueenMove,
+      detectMissingCastling,
+      detectSidePawnPush
+    ];
+
+    for (var d = 0; d < detectors.length; d++) {
+      try {
+        var results = detectors[d](game, chess, moves, userColor);
+        for (var r = 0; r < results.length; r++) {
+          allQuizzes.push(results[r]);
+        }
+      } catch(e) {
+        // Skip broken games silently
+      }
+    }
+  }
+
+  return allQuizzes;
+}
+
+
+/* ── Quiz UI ── */
+var quizzes = [];
+var current = 0;
+var score = 0;
+var totalQ = 0;
+var answered = false;
+
+function renderQuiz() {
+  var q = quizzes[current];
+  document.getElementById('pos-num').textContent = (current + 1) + '/' + totalQ;
+  document.getElementById('score-val').textContent = score + '/' + totalQ;
+  document.getElementById('quiz-ctx').innerHTML =
+    '<span class="pattern-tag">' + q.pattern + '</span> ' +
+    'You were <span class="quiz-color">' + q.color + '</span> &middot; ' + q.ctx;
+  document.getElementById('quiz-moves').textContent = q.movesText;
+  document.getElementById('quiz-prompt').textContent = 'What should you play here?';
+
+  // Render board
+  var boardEl = document.getElementById('quiz-board');
+  boardEl.innerHTML = '';
+  var boardId = 'dqb-' + current;
+  boardEl.id = boardId;
+  var opts = {};
+  if (q.flip) opts.flip = true;
+  brd(boardId, q.pieces, opts);
+
+  // Render answer buttons
+  var choices = shuffle([
+    { move: q.right, isRight: true },
+    { move: q.wrongs[0], isRight: false },
+    { move: q.wrongs[1], isRight: false }
+  ]);
+
+  var grid = document.getElementById('answer-grid');
+  grid.innerHTML = '';
+  answered = false;
+
+  choices.forEach(function(c) {
+    var btn = document.createElement('button');
+    btn.className = 'answer-btn';
+    btn.textContent = c.move;
+    btn.setAttribute('data-move', c.move);
+    btn.setAttribute('data-right', c.isRight ? '1' : '0');
+    btn.addEventListener('click', function(){ pick(this, q); });
+    grid.appendChild(btn);
+  });
+
+  // Hide feedback and next
+  document.getElementById('feedback').className = 'hidden';
+  document.getElementById('feedback').innerHTML = '';
+  document.getElementById('next-wrap').className = 'hidden';
+}
+
+function pick(btn, q) {
+  if (answered) return;
+  answered = true;
+
+  var isRight = btn.getAttribute('data-right') === '1';
+  var allBtns = document.querySelectorAll('.answer-btn');
+
+  allBtns.forEach(function(b) {
+    b.classList.add('locked');
+    if (b.getAttribute('data-right') === '1') b.classList.add('correct');
+    if (b === btn && !isRight) b.classList.add('wrong');
+  });
+
+  if (isRight) score++;
+  document.getElementById('score-val').textContent = score + '/' + totalQ;
+
+  var fb = document.getElementById('feedback');
+  var verdictClass = isRight ? 'grn' : 'rd';
+  var verdictText = isRight
+    ? '&#10003; Correct! +1'
+    : '&#10007; Wrong — you picked ' + btn.getAttribute('data-move') + '. The right move was ' + q.right + '.';
+  var tipClass = isRight ? 'tip green' : 'tip red';
+  var urlNote = q.gameUrl ? '<div style="margin-top:8px;font-size:12px;"><a href="' + q.gameUrl + '" target="_blank" style="color:#769656;">View game on Chess.com &rarr;</a></div>' : '';
+
+  fb.innerHTML =
+    '<div class="result-verdict ' + verdictClass + '">' + verdictText + '</div>' +
+    '<div class="' + tipClass + '"><strong>Why?</strong> ' + q.explanation + urlNote + '</div>';
+  fb.className = '';
+  document.getElementById('next-wrap').className = '';
+}
+
+function advance() {
+  current++;
+  if (current >= quizzes.length) {
+    showEnd();
+  } else {
+    renderQuiz();
+  }
+}
+
+function showEnd() {
+  document.getElementById('quiz-area').className = 'hidden';
+  document.getElementById('score-bar').className = 'stats hidden';
+  var end = document.getElementById('end-screen');
+  end.className = 'end-screen';
+
+  document.getElementById('end-score-val').textContent = score;
+  document.getElementById('end-denom').textContent = 'out of ' + totalQ;
+
+  var pct = Math.round(score / totalQ * 100);
+  var msg = '';
+  if (pct === 100) msg = 'Perfect! You\'ve learned from every mistake.';
+  else if (pct >= 70) msg = 'Great! Most patterns are clicking.';
+  else if (pct >= 40) msg = 'Getting there — review the patterns you missed.';
+  else msg = 'Keep studying — review the chapters below.';
+  document.getElementById('end-msg').textContent = msg;
+
+  document.getElementById('end-stats').innerHTML =
+    '<div class="stat"><div class="label">Final Score</div><div class="val grn">' + score + '/' + totalQ + '</div></div>' +
+    '<div class="stat"><div class="label">Accuracy</div><div class="val">' + pct + '%</div></div>' +
+    '<div class="stat"><div class="label">Patterns Tested</div><div class="val">' + totalQ + '</div></div>';
+}
+
+function restart() {
+  current = 0;
+  score = 0;
+  quizzes = shuffle(quizzes);
+  if (quizzes.length > 10) quizzes = quizzes.slice(0, 10);
+  totalQ = quizzes.length;
+  document.getElementById('quiz-area').className = '';
+  document.getElementById('score-bar').className = 'stats';
+  document.getElementById('end-screen').className = 'end-screen hidden';
+  renderQuiz();
+}
+
+/* ── Init ── */
+function init() {
+  var raw = null;
+  try {
+    raw = localStorage.getItem('chess-synced-games');
+  } catch(e) {}
+
+  if (!raw) {
+    document.getElementById('no-games').className = 'no-games';
+    return;
+  }
+
+  var games = [];
+  try {
+    games = JSON.parse(raw);
+  } catch(e) {
+    document.getElementById('no-games').className = 'no-games';
+    return;
+  }
+
+  if (!Array.isArray(games) || games.length === 0) {
+    document.getElementById('no-games').className = 'no-games';
+    return;
+  }
+
+  // Show generating state
+  document.getElementById('generating').className = 'generating-msg';
+
+  // Use setTimeout so the UI can paint the spinner
+  setTimeout(function() {
+    quizzes = generateQuizzes(games);
+
+    document.getElementById('generating').className = 'generating-msg hidden';
+
+    if (quizzes.length === 0) {
+      document.getElementById('no-patterns').className = 'no-games';
+      return;
+    }
+
+    // Shuffle and cap at 10
+    quizzes = shuffle(quizzes);
+    if (quizzes.length > 10) quizzes = quizzes.slice(0, 10);
+    totalQ = quizzes.length;
+
+    // Show quiz
+    document.getElementById('score-bar').className = 'stats';
+    document.getElementById('quiz-area').className = '';
+    renderQuiz();
+  }, 100);
+}
+
+document.getElementById('next-btn').addEventListener('click', advance);
+document.getElementById('retry-btn').addEventListener('click', restart);
+
+init();
+
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Badges — Chess Playbook</title>
+<link rel="stylesheet" href="shared.css">
+<style>
+.badges-hdr{text-align:center;padding:32px 0 24px;border-bottom:3px solid #1a1a1a;margin-bottom:32px;}
+.badges-hdr h1{font-family:'IBM Plex Mono',monospace;font-size:22px;font-weight:700;letter-spacing:1px;margin-bottom:6px;}
+.badges-hdr .sub{font-family:'IBM Plex Mono',monospace;font-size:13px;color:#777;}
+
+.summary-bar{display:flex;align-items:center;justify-content:space-between;background:#fff;border:2px solid #e0e0e0;border-radius:10px;padding:16px 20px;margin-bottom:28px;}
+.summary-bar .count{font-family:'IBM Plex Mono',monospace;font-size:24px;font-weight:700;color:#1a1a1a;}
+.summary-bar .count span{color:#1A6B5A;}
+.summary-bar .overall-bar{flex:1;margin:0 20px;background:#e0e0e0;border-radius:6px;height:12px;overflow:hidden;}
+.summary-bar .overall-fill{background:#1A6B5A;height:100%;border-radius:6px;transition:width .4s ease;}
+.summary-bar .pct{font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:700;color:#1A6B5A;}
+
+.badge-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:40px;}
+@media(max-width:768px){.badge-grid{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:480px){.badge-grid{grid-template-columns:1fr;}}
+
+.badge-card{background:#fff;border:2px solid #e0e0e0;border-radius:12px;padding:20px;position:relative;transition:border-color .3s,box-shadow .3s;}
+.badge-card.unlocked{border-color:#D4AF37;box-shadow:0 0 12px rgba(212,175,55,0.25);}
+.badge-card.locked{opacity:0.55;}
+.badge-card.locked .badge-icon{filter:grayscale(1);position:relative;}
+.badge-card.locked .lock-overlay{position:absolute;top:8px;right:8px;font-size:16px;opacity:0.6;}
+
+.badge-icon{font-size:36px;margin-bottom:10px;display:block;}
+.badge-title{font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:700;color:#1a1a1a;margin-bottom:4px;}
+.badge-desc{font-size:13px;color:#666;line-height:1.5;margin-bottom:12px;min-height:40px;}
+.badge-progress{margin-top:auto;}
+.badge-progress .bar-track{background:#e0e0e0;border-radius:6px;height:8px;overflow:hidden;margin-bottom:4px;}
+.badge-progress .bar-fill{height:100%;border-radius:6px;transition:width .4s ease;}
+.badge-card.unlocked .bar-fill{background:#D4AF37;}
+.badge-card.locked .bar-fill{background:#1A6B5A;}
+.badge-progress .bar-label{font-family:'IBM Plex Mono',monospace;font-size:10px;color:#999;display:flex;justify-content:space-between;}
+
+.badge-card.unlocked .badge-title{color:#D4AF37;}
+.badge-card.unlocked::after{content:'';position:absolute;inset:0;border-radius:12px;pointer-events:none;}
+
+@keyframes badge-glow{
+  0%,100%{box-shadow:0 0 12px rgba(212,175,55,0.25);}
+  50%{box-shadow:0 0 20px rgba(212,175,55,0.45);}
+}
+.badge-card.unlocked.just-unlocked{animation:badge-glow 2s ease-in-out 3;}
+</style>
+</head>
+<body>
+<div class="page-layout">
+<nav class="site-nav" id="site-nav"></nav>
+<div class="page-content">
+<div class="wrap">
+
+<div class="badges-hdr">
+  <h1>ACHIEVEMENT BADGES</h1>
+  <div class="sub">Track your chess improvement milestones</div>
+</div>
+
+<div class="summary-bar" id="summary-bar">
+  <div class="count"><span id="unlocked-count">0</span> / <span id="total-count">0</span></div>
+  <div class="overall-bar"><div class="overall-fill" id="overall-fill" style="width:0%"></div></div>
+  <div class="pct" id="overall-pct">0%</div>
+</div>
+
+<div class="badge-grid" id="badge-grid"></div>
+
+</div>
+</div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+<script src="shared.js"></script>
+<script>renderNav("badges")</script>
+<script>
+(function(){
+
+  // --- Data loading helpers ---
+  function loadJSON(key) {
+    try { return JSON.parse(localStorage.getItem(key)) || []; }
+    catch(e){ return []; }
+  }
+
+  var syncedGames = loadJSON("chess-synced-games");
+  var playedGames = loadJSON("chess-played-games");
+  var sessions = loadJSON("chess-sessions");
+  var trainerScores = (function(){
+    try { return JSON.parse(localStorage.getItem("chess-trainer-scores")) || {}; }
+    catch(e){ return {}; }
+  })();
+
+  var allGames = syncedGames.concat(playedGames);
+  var totalGames = allGames.length;
+
+  // --- PGN analysis helpers ---
+  function analyzePGN(pgn) {
+    var chess = new Chess();
+    var result = { valid:false, castled:false, sidePawnBefore6:false, allMinorBefore10:false, opening:'', moves:0, won:false, earlyQueenDefended:false };
+    if (!pgn) return result;
+    var loaded = chess.load_pgn(pgn);
+    if (!loaded) return result;
+    result.valid = true;
+    var history = chess.history({verbose:true});
+    result.moves = Math.ceil(history.length / 2);
+
+    // Determine player color and result
+    var headers = {};
+    var headerMatch = pgn.match(/\[(\w+)\s+"([^"]+)"\]/g);
+    if (headerMatch) {
+      for (var i = 0; i < headerMatch.length; i++) {
+        var m = headerMatch[i].match(/\[(\w+)\s+"([^"]+)"\]/);
+        if (m) headers[m[1]] = m[2];
+      }
+    }
+    var playerColor = 'w'; // default
+    var user = localStorage.getItem("chess-username") || "happery";
+    if (headers.Black && headers.Black.toLowerCase().indexOf(user.toLowerCase()) !== -1) playerColor = 'b';
+    if (headers.White && headers.White.toLowerCase().indexOf(user.toLowerCase()) !== -1) playerColor = 'w';
+
+    var res = headers.Result || '';
+    if ((playerColor === 'w' && res === '1-0') || (playerColor === 'b' && res === '0-1')) result.won = true;
+
+    // Check castling
+    for (var i = 0; i < history.length; i++) {
+      var mv = history[i];
+      if (mv.color === playerColor && (mv.flags.indexOf('k') !== -1 || mv.flags.indexOf('q') !== -1)) {
+        result.castled = true; break;
+      }
+    }
+
+    // Check side pawn pushes before move 6 (a or h pawn)
+    for (var i = 0; i < history.length; i++) {
+      var mv = history[i];
+      var moveNum = Math.floor(i / 2) + 1;
+      if (moveNum > 5) break;
+      if (mv.color === playerColor && mv.piece === 'p' && (mv.from[0] === 'a' || mv.from[0] === 'h')) {
+        result.sidePawnBefore6 = true; break;
+      }
+    }
+
+    // Check all minor pieces developed before move 10
+    var minorsDeveloped = 0;
+    var developedSquares = {};
+    for (var i = 0; i < history.length; i++) {
+      var mv = history[i];
+      var moveNum = Math.floor(i / 2) + 1;
+      if (moveNum > 10) break;
+      if (mv.color === playerColor && (mv.piece === 'n' || mv.piece === 'b')) {
+        var key = mv.piece + mv.from;
+        if (!developedSquares[key]) { developedSquares[key] = true; minorsDeveloped++; }
+      }
+    }
+    result.allMinorBefore10 = (minorsDeveloped >= 4);
+
+    // Check opening (first black move)
+    if (history.length >= 2) {
+      var firstBlack = history[1];
+      if (firstBlack && firstBlack.san === 'e6') result.opening = 'french';
+    }
+
+    // Check early queen attack defense (opponent brings queen out before move 5, player won)
+    for (var i = 0; i < history.length; i++) {
+      var mv = history[i];
+      var moveNum = Math.floor(i / 2) + 1;
+      if (moveNum > 5) break;
+      if (mv.color !== playerColor && mv.piece === 'q') {
+        if (result.won) result.earlyQueenDefended = true;
+        break;
+      }
+    }
+
+    return result;
+  }
+
+  // Analyze all games
+  var analyses = [];
+  for (var i = 0; i < allGames.length; i++) {
+    var g = allGames[i];
+    var pgn = g.pgn || g;
+    analyses.push(analyzePGN(typeof pgn === 'string' ? pgn : ''));
+  }
+
+  // --- Compute badge progress ---
+  // 1. Castle Commander - castled in 10 consecutive games
+  var castleStreak = 0, maxCastleStreak = 0;
+  for (var i = 0; i < analyses.length; i++) {
+    if (analyses[i].valid && analyses[i].castled) { castleStreak++; maxCastleStreak = Math.max(maxCastleStreak, castleStreak); }
+    else castleStreak = 0;
+  }
+
+  // 2. Center Control - no side pawn pushes for 5 games
+  var centerStreak = 0, maxCenterStreak = 0;
+  for (var i = 0; i < analyses.length; i++) {
+    if (analyses[i].valid && !analyses[i].sidePawnBefore6) { centerStreak++; maxCenterStreak = Math.max(maxCenterStreak, centerStreak); }
+    else centerStreak = 0;
+  }
+
+  // 3. Development First - all minors before move 10 in 3 games
+  var devCount = 0;
+  for (var i = 0; i < analyses.length; i++) {
+    if (analyses[i].valid && analyses[i].allMinorBefore10) devCount++;
+  }
+
+  // 4. French Connection - won 5 games with French
+  var frenchWins = 0;
+  for (var i = 0; i < analyses.length; i++) {
+    if (analyses[i].valid && analyses[i].opening === 'french' && analyses[i].won) frenchWins++;
+  }
+
+  // 5. Streak Master - 3-game win streak
+  var winStreak = 0, maxWinStreak = 0;
+  for (var i = 0; i < analyses.length; i++) {
+    if (analyses[i].valid && analyses[i].won) { winStreak++; maxWinStreak = Math.max(maxWinStreak, winStreak); }
+    else winStreak = 0;
+  }
+
+  // 6. Marathon - 50 total games
+  // 7. Century - 100 total games
+  // 8. Quick Learner - won in under 20 moves
+  var quickWin = false;
+  for (var i = 0; i < analyses.length; i++) {
+    if (analyses[i].valid && analyses[i].won && analyses[i].moves < 20) { quickWin = true; break; }
+  }
+
+  // 9. Tilt Proof - used session manager, stopped after 3 losses
+  var tiltProof = false;
+  for (var i = 0; i < sessions.length; i++) {
+    var s = sessions[i];
+    if (s && s.stopped && s.losses >= 3) { tiltProof = true; break; }
+  }
+
+  // 10. Scholar's Mate Shield
+  var scholarShield = false;
+  for (var i = 0; i < analyses.length; i++) {
+    if (analyses[i].valid && analyses[i].earlyQueenDefended) { scholarShield = true; break; }
+  }
+
+  // 11. Rating Climber - reached 400
+  var maxRating = 0;
+  for (var i = 0; i < allGames.length; i++) {
+    var g = allGames[i];
+    var r = g.rating || g.playerRating || 0;
+    if (r > maxRating) maxRating = r;
+  }
+
+  // 12. Perfect Session - all wins in a session (min 3)
+  var perfectSession = false;
+  for (var i = 0; i < sessions.length; i++) {
+    var s = sessions[i];
+    if (s && s.wins >= 3 && s.losses === 0 && s.draws === 0) { perfectSession = true; break; }
+  }
+
+  // 13. Opening Expert - 100% on all trainer drills
+  var trainerKeys = Object.keys(trainerScores);
+  var allPerfect = trainerKeys.length > 0;
+  var perfectCount = 0;
+  for (var i = 0; i < trainerKeys.length; i++) {
+    var sc = trainerScores[trainerKeys[i]];
+    if (sc && sc.score === sc.total) perfectCount++;
+    else allPerfect = false;
+  }
+
+  // 14. Analyst - analyzed 5 games
+  var analysisCount = 0;
+  try {
+    var analysisData = JSON.parse(localStorage.getItem("chess-analysis-log")) || [];
+    analysisCount = analysisData.length;
+  } catch(e){}
+  // Also count from synced games that have analysis flag
+  for (var i = 0; i < allGames.length; i++) {
+    if (allGames[i].analyzed) analysisCount++;
+  }
+
+  // 15. Week Warrior - 7-day activity streak
+  var activityDays = {};
+  for (var i = 0; i < allGames.length; i++) {
+    var g = allGames[i];
+    var d = g.date || g.end_time || '';
+    if (d) { var day = d.substring(0,10); activityDays[day] = true; }
+  }
+  for (var i = 0; i < sessions.length; i++) {
+    var s = sessions[i];
+    if (s && s.date) { var day = s.date.substring(0,10); activityDays[day] = true; }
+  }
+  var sortedDays = Object.keys(activityDays).sort();
+  var dayStreak = 0, maxDayStreak = 0;
+  for (var i = 0; i < sortedDays.length; i++) {
+    if (i === 0) { dayStreak = 1; }
+    else {
+      var prev = new Date(sortedDays[i-1]);
+      var curr = new Date(sortedDays[i]);
+      var diff = (curr - prev) / (1000*60*60*24);
+      if (diff === 1) dayStreak++;
+      else dayStreak = 1;
+    }
+    maxDayStreak = Math.max(maxDayStreak, dayStreak);
+  }
+
+  // --- Badge definitions ---
+  var badges = [
+    { id:'castle-commander', icon:'\u{1F3F0}', title:'Castle Commander', desc:'Castled in 10 consecutive games', current:maxCastleStreak, target:10 },
+    { id:'center-control', icon:'\u{1F3AF}', title:'Center Control', desc:'No side pawn pushes (a/h pawn before move 6) for 5 games', current:maxCenterStreak, target:5 },
+    { id:'development-first', icon:'\u{265E}', title:'Development First', desc:'Developed all minor pieces before move 10 in 3 games', current:devCount, target:3 },
+    { id:'french-connection', icon:'\u{1F1EB}\u{1F1F7}', title:'French Connection', desc:'Won 5 games with the French Defense (1...e6)', current:frenchWins, target:5 },
+    { id:'streak-master', icon:'\u{1F525}', title:'Streak Master', desc:'Achieved a 3-game win streak', current:maxWinStreak, target:3 },
+    { id:'marathon', icon:'\u{1F3C3}', title:'Marathon', desc:'Played 50 total games', current:totalGames, target:50 },
+    { id:'century', icon:'\u{1F4AF}', title:'Century', desc:'Played 100 total games', current:totalGames, target:100 },
+    { id:'quick-learner', icon:'\u{26A1}', title:'Quick Learner', desc:'Won a game in under 20 moves', current:quickWin?1:0, target:1 },
+    { id:'tilt-proof', icon:'\u{1F9CA}', title:'Tilt Proof', desc:'Used Session Manager and stopped after 3 losses', current:tiltProof?1:0, target:1 },
+    { id:'scholars-mate-shield', icon:'\u{1F6E1}\u{FE0F}', title:"Scholar's Mate Shield", desc:'Defended against early queen attack and won', current:scholarShield?1:0, target:1 },
+    { id:'rating-climber', icon:'\u{1F4C8}', title:'Rating Climber', desc:'Reached 400 rating on Chess.com', current:Math.min(maxRating,400), target:400 },
+    { id:'perfect-session', icon:'\u{2B50}', title:'Perfect Session', desc:'Won all games in a session (min 3 games)', current:perfectSession?1:0, target:1 },
+    { id:'opening-expert', icon:'\u{1F4DA}', title:'Opening Expert', desc:'Scored 100% on all Opening Trainer drills', current:allPerfect&&trainerKeys.length>0?1:0, target:1 },
+    { id:'analyst', icon:'\u{1F50D}', title:'Analyst', desc:'Analyzed 5 games in Post-Game Analysis', current:Math.min(analysisCount,5), target:5 },
+    { id:'week-warrior', icon:'\u{1F4AA}', title:'Week Warrior', desc:'7-day activity streak', current:maxDayStreak, target:7 }
+  ];
+
+  // --- Render ---
+  var grid = document.getElementById('badge-grid');
+  var unlockedTotal = 0;
+
+  for (var i = 0; i < badges.length; i++) {
+    var b = badges[i];
+    var unlocked = b.current >= b.target;
+    if (unlocked) unlockedTotal++;
+    var pct = Math.min(Math.round((b.current / b.target) * 100), 100);
+
+    var card = document.createElement('div');
+    card.className = 'badge-card ' + (unlocked ? 'unlocked' : 'locked');
+
+    var progressLabel = unlocked ? b.target + ' / ' + b.target : b.current + ' / ' + b.target;
+
+    card.innerHTML =
+      (unlocked ? '' : '<div class="lock-overlay">\u{1F512}</div>') +
+      '<span class="badge-icon">' + b.icon + '</span>' +
+      '<div class="badge-title">' + b.title + '</div>' +
+      '<div class="badge-desc">' + b.desc + '</div>' +
+      '<div class="badge-progress">' +
+        '<div class="bar-track"><div class="bar-fill" style="width:' + pct + '%"></div></div>' +
+        '<div class="bar-label"><span>' + progressLabel + '</span><span>' + pct + '%</span></div>' +
+      '</div>';
+
+    grid.appendChild(card);
+  }
+
+  // Summary
+  document.getElementById('unlocked-count').textContent = unlockedTotal;
+  document.getElementById('total-count').textContent = badges.length;
+  var overallPct = Math.round((unlockedTotal / badges.length) * 100);
+  document.getElementById('overall-fill').style.width = overallPct + '%';
+  document.getElementById('overall-pct').textContent = overallPct + '%';
+
+})();
+</script>
+</body>
+</html>
