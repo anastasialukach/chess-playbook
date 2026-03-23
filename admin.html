@@ -219,18 +219,21 @@
 
     var moveCount = 0;
     if(g.pgn){
-      var matches = g.pgn.match(/\d+\./g);
-      if(matches) moveCount = matches.length;
+      var mm = g.pgn.match(/\b(\d+)\.\s*[A-Za-z]/g);
+      if(mm){ var last=mm[mm.length-1].match(/(\d+)/); if(last) moveCount=parseInt(last[1],10); }
     }
 
     var dateStr = '';
+    var timeStr = '';
     if(g.end_time){
       var d = new Date(g.end_time * 1000);
       dateStr = d.toISOString().split('T')[0];
+      timeStr = d.toTimeString().slice(0,5);
     }
 
     return {
       date: dateStr,
+      time: timeStr,
       color: isWhite ? 'W' : 'B',
       myRating: mySide.rating || 0,
       oppRating: oppSide.rating || 0,
@@ -679,9 +682,9 @@ It runs silently — no UI, no errors shown.
               var my = isW ? g.white : g.black;
               var opp = isW ? g.black : g.white;
               var res = my.result === 'win' ? 'W' : DRAW_RESULTS.indexOf(my.result) !== -1 ? 'D' : 'L';
-              var mc = 0; if(g.pgn){ var mm = g.pgn.match(/\d+\./g); if(mm) mc = mm.length; }
-              var ds = ''; if(g.end_time){ ds = new Date(g.end_time*1000).toISOString().split('T')[0]; }
-              var parsed = {date:ds,color:isW?'W':'B',myRating:my.rating||0,oppRating:opp.rating||0,result:res,moves:mc,termination:my.result||'',timeControl:g.time_class||'',pgn:g.pgn||'',url:g.url||''};
+              var mc = 0; if(g.pgn){ var mm = g.pgn.match(/\b(\d+)\.\s*[A-Za-z]/g); if(mm){var last=mm[mm.length-1].match(/(\d+)/);if(last)mc=parseInt(last[1],10);} }
+              var ds = ''; var ts = ''; if(g.end_time){ var dd=new Date(g.end_time*1000); ds=dd.toISOString().split('T')[0]; ts=dd.toTimeString().slice(0,5); }
+              var parsed = {date:ds,time:ts,color:isW?'W':'B',myRating:my.rating||0,oppRating:opp.rating||0,result:res,moves:mc,termination:my.result||'',timeControl:g.time_class||'',pgn:g.pgn||'',url:g.url||''};
               if(!existingUrls[parsed.url]){ acc.push(parsed); existingUrls[parsed.url] = true; }
             });
             return acc;
