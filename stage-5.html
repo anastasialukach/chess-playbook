@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stage 5: The Rating Push</title>
+<link rel="stylesheet" href="shared.css">
+</head>
+<body>
+<nav class="site-nav" id="site-nav"></nav>
+<script src="shared.js"></script>
+<script>renderNav("stage-5")</script>
+<div class="wrap">
+
+  <div class="stage-hdr">
+    <span class="stage-num">Stage 5</span>
+    <h1>The Rating Push</h1>
+    <span class="stage-meta">30 Games &middot; Put It All Together</span>
+  </div>
+
+  <div class="con">
+    <h2>The Mission</h2>
+    <p>All the skills are in place. This stage is about consistency, discipline, and pushing your rating above 350. No new techniques &mdash; just perfect execution of everything you've learned.</p>
+  </div>
+
+  <div class="con">
+    <h2>Master Checklist &mdash; All Stages Combined</h2>
+    <ul class="checklist">
+      <li><strong>Opening:</strong> Play prescribed opening every game (Italian/French/QGD/Default)</li>
+      <li><strong>Development:</strong> 2+ pieces by move 6, castled by move 10</li>
+      <li><strong>CCT:</strong> Scan checks, captures, threats before every move</li>
+      <li><strong>f2/f7:</strong> Check after every opponent move</li>
+      <li><strong>Diagonals:</strong> Check h2/h7 and long diagonal after castling</li>
+      <li>No side pawns in first 10 moves</li>
+      <li>No pawn-grabbing with queen</li>
+      <li><strong>Three-Loss Rule:</strong> Stop after 3 consecutive losses</li>
+    </ul>
+  </div>
+
+  <div class="con">
+    <h2>Game Management</h2>
+    <ul>
+      <li>Max 5 games per session</li>
+      <li>Stop after 3 losses in a row</li>
+      <li>Stop after 3+ straight wins (lock in gains)</li>
+      <li>Use at least 3 minutes of your clock time per game</li>
+      <li>No sub-10-move losses allowed</li>
+    </ul>
+  </div>
+
+  <div class="tip green">Switch to 15|10 if you haven't already. The extra 10-second increment per move means you can actually use CCT every move. At your level, thinking beats speed.</div>
+
+  <div class="con">
+    <h2>Beat 300+ as Black</h2>
+    <p>Your 50-game data showed 13% WR (1-7) as Black vs 300+ players. With French + QGD + CCT, target 40%+. Against stronger players: play solid, don't overextend, wait for their mistake.</p>
+  </div>
+
+  <div class="con">
+    <h2>Your Rules</h2>
+    <ol class="rule-list">
+      <li>Follow game management rules (max 5 games, 3-loss stop).</li>
+      <li>Use at least 3 minutes of clock time.</li>
+      <li>Apply ALL habits from Stages 1-4 automatically.</li>
+      <li>Against 300+ as Black: play solid, don't panic, wait for their error.</li>
+    </ol>
+  </div>
+
+  <div class="con">
+    <h2>Session Checklist</h2>
+    <ul class="checklist">
+      <li>Followed game management rules?</li>
+      <li>Used 3+ minutes of clock time?</li>
+      <li>Applied all Stage 1-4 habits?</li>
+      <li>Against 300+, played solid and patient?</li>
+    </ul>
+  </div>
+
+  <div class="con">
+    <h2>Game Log</h2>
+    <div class="progress-bar"><div class="fill" id="prog-fill"></div></div>
+    <p id="prog-text" class="mono"></p>
+    <form class="game-log-form" id="log-form">
+      <select id="log-result" required>
+        <option value="">Result</option>
+        <option value="W">Win</option>
+        <option value="D">Draw</option>
+        <option value="L">Loss</option>
+      </select>
+      <input type="text" id="log-rating" placeholder="Opp rating" required>
+      <input type="text" id="log-notes" placeholder="Notes (opening, blunder, etc.)">
+      <button type="submit">Log Game</button>
+    </form>
+    <table class="tbl">
+      <thead><tr><th>#</th><th>Result</th><th>Rating</th><th>Notes</th></tr></thead>
+      <tbody id="log-body"></tbody>
+    </table>
+  </div>
+
+  <div class="tip green">Rating above 320 at end of 30 games. Peak above 350. If you hit these numbers, you've graduated. Export your final PGN to the Dashboard and celebrate.</div>
+
+  <div class="stage-nav">
+    <a href="stage-4.html">&larr; Stage 4</a>
+    <a href="dashboard.html">Dashboard &rarr;</a>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  var KEY = 'chess-s5-games';
+  var TARGET = 30;
+  function load(){ return JSON.parse(localStorage.getItem(KEY) || '[]'); }
+  function save(g){ localStorage.setItem(KEY, JSON.stringify(g)); }
+  function render(){
+    var games = load();
+    var tbody = document.getElementById('log-body');
+    tbody.innerHTML = '';
+    for(var i=0;i<games.length;i++){
+      var g = games[i];
+      var tr = document.createElement('tr');
+      var cls = g.result==='W'?'grn':g.result==='L'?'rd':'blu';
+      tr.innerHTML = '<td class="mono">'+(i+1)+'</td><td class="mono '+cls+'">'+g.result+'</td><td class="mono">'+g.rating+'</td><td>'+g.notes+'</td>';
+      tbody.appendChild(tr);
+    }
+    var pct = Math.min(100, Math.round(games.length/TARGET*100));
+    document.getElementById('prog-fill').style.width = pct+'%';
+    document.getElementById('prog-text').textContent = games.length+' of '+TARGET+' games';
+  }
+  document.getElementById('log-form').addEventListener('submit', function(e){
+    e.preventDefault();
+    var games = load();
+    games.push({result:document.getElementById('log-result').value, rating:document.getElementById('log-rating').value, notes:document.getElementById('log-notes').value});
+    save(games);
+    render();
+    this.reset();
+  });
+  render();
+})();
+</script>
+</body>
+</html>

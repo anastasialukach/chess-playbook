@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stage 1: Stop the Bleeding</title>
+<link rel="stylesheet" href="shared.css">
+</head>
+<body>
+<nav class="site-nav" id="site-nav"></nav>
+<script src="shared.js"></script>
+<script>renderNav("stage-1")</script>
+<div class="wrap">
+
+  <div class="stage-hdr">
+    <span class="stage-num">1</span>
+    <h1>Stop the Bleeding</h1>
+    <div class="stage-meta">20 Games &middot; Defense First</div>
+  </div>
+
+  <div class="con">
+    <h2>The Mission</h2>
+    <p>Your 50-game analysis shows 6 losses in under 10 moves. This stage eliminates those. Every game must survive past move 10.</p>
+  </div>
+
+  <div class="con">
+    <h2>Your Rules</h2>
+    <ol class="rule-list">
+      <li><strong>Three-Loss Rule:</strong> After 3 consecutive losses, STOP. Close the app. Minimum 30 minutes before playing again.</li>
+      <li><strong>f2/f7 Check:</strong> After every opponent move, glance at f2 (as White) or f7 (as Black). Is anything new pointing at it?</li>
+      <li><strong>No Side Pawns:</strong> First 10 moves must be center pawns (e/d), knight/bishop development, or castling. Zero a/b/g/h pawn moves.</li>
+      <li><strong>Default System vs Weird:</strong> Against anything unusual (1.e3, 1.b3, 1.g4), play: e5, Nf6, Bc5, O-O, d6.</li>
+    </ol>
+  </div>
+
+  <div class="con">
+    <h2>Patterns to Watch</h2>
+    <p>The f2 and f7 squares are the weakest points on the board at the start of the game &mdash; each is defended only by the king.</p>
+    <div id="s1-f2f7"></div>
+    <p style="margin-top:16px"><strong>Default System vs Weird Openings</strong> &mdash; If your opponent plays something unusual, set up this formation as Black: e5, Nf6, Bc5, O-O, d6.</p>
+    <div id="s1-default"></div>
+  </div>
+
+  <div class="con">
+    <h2>Per-Game Checklist</h2>
+    <ul class="checklist">
+      <li><input type="checkbox"> Survived past move 10?</li>
+      <li><input type="checkbox"> Checked f2/f7 after every opponent move?</li>
+      <li><input type="checkbox"> Zero side pawn moves in first 10 moves?</li>
+      <li><input type="checkbox"> Followed Three-Loss Rule?</li>
+    </ul>
+  </div>
+
+  <div class="con">
+    <h2>Game Log</h2>
+    <form id="log-form" class="game-log-form">
+      <select id="log-result" required>
+        <option value="">Result</option>
+        <option value="W">W</option>
+        <option value="L">L</option>
+        <option value="D">D</option>
+      </select>
+      <input type="number" id="log-rating" placeholder="Opp Rating" required>
+      <input type="text" id="log-notes" placeholder="Notes">
+      <button type="submit">Log Game</button>
+    </form>
+    <table class="tbl">
+      <thead>
+        <tr><th>#</th><th>Result</th><th>Opp Rating</th><th>Notes</th></tr>
+      </thead>
+      <tbody id="log-body"></tbody>
+    </table>
+  </div>
+
+  <div class="con">
+    <h2>Progress</h2>
+    <div id="prog-text" style="margin-bottom:8px">0 of 20 games</div>
+    <div class="progress-bar"><div class="fill" id="prog-fill" style="width:0%"></div></div>
+  </div>
+
+  <div class="tip green">
+    <strong>Success Criteria:</strong> 15+ of 20 games last past move 10. No tilt streak longer than 3 losses. When done, export your games from Chess.com and paste them into the Dashboard.
+  </div>
+
+  <div class="stage-nav">
+    <a href="/">&larr; Playbook</a>
+    <a href="/stage-2">Stage 2 &rarr;</a>
+  </div>
+
+</div>
+
+<script>
+  brd('s1-f2f7', SP, {rd:['f2'], bl:['f7']});
+  brd('s1-default', ad(rm(SP,['e7','g8','f8','e8','h8','d7']), [['bP','e5'],['bN','f6'],['bB','c5'],['bK','g8'],['bR','f8'],['bP','d6']]), {hl:['e5','f6','c5','g8','d6']});
+</script>
+
+<script>
+(function(){
+  var KEY = 'chess-s1-games';
+  var TARGET = 20;
+
+  function load(){ return JSON.parse(localStorage.getItem(KEY) || '[]'); }
+  function save(games){ localStorage.setItem(KEY, JSON.stringify(games)); }
+
+  function render(){
+    var games = load();
+    var tbody = document.getElementById('log-body');
+    tbody.innerHTML = '';
+    for(var i=0;i<games.length;i++){
+      var g = games[i];
+      var tr = document.createElement('tr');
+      var cls = g.result==='W'?'grn':g.result==='L'?'rd':'blu';
+      tr.innerHTML = '<td class="mono">'+(i+1)+'</td><td class="mono '+cls+'">'+g.result+'</td><td class="mono">'+g.rating+'</td><td>'+g.notes+'</td>';
+      tbody.appendChild(tr);
+    }
+    var pct = Math.min(100, Math.round(games.length/TARGET*100));
+    document.getElementById('prog-fill').style.width = pct+'%';
+    document.getElementById('prog-text').textContent = games.length+' of '+TARGET+' games';
+  }
+
+  document.getElementById('log-form').addEventListener('submit', function(e){
+    e.preventDefault();
+    var games = load();
+    games.push({
+      result: document.getElementById('log-result').value,
+      rating: document.getElementById('log-rating').value,
+      notes: document.getElementById('log-notes').value
+    });
+    save(games);
+    render();
+    this.reset();
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>

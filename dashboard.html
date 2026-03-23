@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard — Chess Training</title>
+<link rel="stylesheet" href="shared.css">
+</head>
+<body>
+<nav class="site-nav" id="site-nav"></nav>
+<script src="shared.js"></script>
+<script>renderNav("dashboard")</script>
+<div class="wrap">
+
+  <div class="stage-hdr">
+    <div class="stage-num">Track Record</div>
+    <h1>Dashboard</h1>
+    <div class="stage-meta">Import games · Track progress · See improvement</div>
+  </div>
+
+  <div id="stage-progress"></div>
+
+  <div class="stats">
+    <div class="stat"><div class="label">Total Games</div><div class="val" id="stat-total">0</div></div>
+    <div class="stat"><div class="label">Overall Win Rate</div><div class="val" id="stat-wr">0%</div></div>
+    <div class="stat"><div class="label">Current Stage</div><div class="val" id="stat-stage">Stage 1</div></div>
+    <div class="stat"><div class="label">Best Stage WR</div><div class="val" id="stat-best">--</div></div>
+  </div>
+
+  <h3>Import Games from Chess.com</h3>
+  <div class="con">
+    <p>Go to Chess.com &rarr; Your profile &rarr; Games &rarr; Export &rarr; Copy PGN. Paste below.</p>
+    <textarea class="pgn-input" id="pgn-input" placeholder="Paste PGN here..."></textarea>
+    <button class="parse-btn" id="parse-btn">Parse Games</button>
+    <div id="pgn-results"></div>
+  </div>
+
+  <div id="import-history"></div>
+
+</div>
+<script>
+(function(){
+  var STAGES = [
+    {key:'chess-s1-games',name:'S1: Stop the Bleeding',target:20},
+    {key:'chess-s2-games',name:'S2: Build a Foundation',target:25},
+    {key:'chess-s3-games',name:'S3: Fight for the Center',target:25},
+    {key:'chess-s4-games',name:'S4: Punish Their Mistakes',target:25},
+    {key:'chess-s5-games',name:'S5: The Rating Push',target:30}
+  ];
+
+  function renderStages(){
+    var html = '';
+    var currentFound = false;
+    var totalGames = 0, totalWins = 0;
+    var bestWR = 0, bestStage = '';
+
+    for(var i=0;i<STAGES.length;i++){
+      var s = STAGES[i];
+      var games = JSON.parse(localStorage.getItem(s.key) || '[]');
+      var wins = games.filter(function(g){return g.result==='W';}).length;
+      var wr = games.length > 0 ? Math.round(wins/games.length*100) : 0;
+      var pct = Math.min(100, Math.round(games.length/s.target*100));
+      var isCurrent = !currentFound && games.length < s.target;
+      if(isCurrent) currentFound = true;
+
+      totalGames += games.length;
+      totalWins += wins;
+      if(games.length >= s.target && wr > bestWR){ bestWR = wr; bestStage = 'S'+(i+1); }
+
+      html += '<div class="stage-card'+(isCurrent?' current':'')+'">';
+      html += '<div class="stage-title">'+(isCurrent?'&#9658; ':'')+s.name+'</div>';
+      html += '<div class="stage-desc">'+games.length+' / '+s.target+' games';
+      if(games.length>0) html += ' &middot; '+wr+'% WR';
+      html += '</div>';
+      html += '<div class="progress-bar"><div class="fill" style="width:'+pct+'%"></div></div>';
+      html += '</div>';
+    }
+    document.getElementById('stage-progress').innerHTML = html;
+
+    var overallWR = totalGames > 0 ? Math.round(totalWins/totalGames*100) : 0;
+    var currentStage = currentFound ? '' : 'Done';
+    for(var i=0;i<STAGES.length;i++){
+      var g = JSON.parse(localStorage.getItem(STAGES[i].key) || '[]');
+      if(g.length < STAGES[i].target){ currentStage = 'Stage '+(i+1); break; }
+    }
+    if(!currentStage) currentStage = 'Complete!';
+
+    document.getElementById('stat-total').textContent = totalGames;
+    document.getElementById('stat-wr').textContent = overallWR+'%';
+    document.getElementById('stat-stage').textContent = currentStage;
+    document.getElementById('stat-best').textContent = bestWR > 0 ? bestWR+'% ('+bestStage+')' : '--';
+  }
+
+  function parsePGN(text){
+    var games = [];
+    var lines = text.split('\n');
+    var current = {};
+    var inMoves = false;
+    var moveText = '';
+
+    for(var i=0;i<lines.length;i++){
+      var line = lines[i].trim();
+      var headerMatch = line.match(/^\[(\w+)\s+"([^"]*)"\]$/);
+      if(headerMatch){
+        if(inMoves && moveText){
+          current.moves = (moveText.match(/\d+\./g)||[]).length;
+          games.push(current);
+          current = {};
+          moveText = '';
+          inMoves = false;
+        }
+        current[headerMatch[1]] = headerMatch[2];
+      } else if(line === ''){
+        if(Object.keys(current).length > 0 && !inMoves) inMoves = true;
+      } else if(inMoves || Object.keys(current).length > 0){
+        inMoves = true;
+        moveText += ' ' + line;
+      }
+    }
+    if(Object.keys(current).length > 0){
+      current.moves = (moveText.match(/\d+\./g)||[]).length;
+      games.push(current);
+    }
+
+    var processed = [];
+    for(var i=0;i<games.length;i++){
+      var g = games[i];
+      var isWhite = (g.White||'').toLowerCase() === 'happery';
+      var result = g.Result || '';
+      var outcome = result === '1-0' ? (isWhite?'W':'L') : result === '0-1' ? (isWhite?'L':'W') : 'D';
+      processed.push({
+        date: g.Date || '',
+        color: isWhite ? 'W' : 'B',
+        oppRating: isWhite ? (g.BlackElo||'?') : (g.WhiteElo||'?'),
+        result: outcome,
+        moves: g.moves || 0,
+        termination: g.Termination || ''
+      });
+    }
+    return processed;
+  }
+
+  function renderPGNResults(games){
+    if(games.length === 0){
+      document.getElementById('pgn-results').innerHTML = '<p class="dim">No games found in PGN.</p>';
+      return;
+    }
+
+    var wins = games.filter(function(g){return g.result==='W';}).length;
+    var losses = games.filter(function(g){return g.result==='L';}).length;
+    var draws = games.length - wins - losses;
+    var wAsWhite = games.filter(function(g){return g.color==='W';});
+    var wAsBlack = games.filter(function(g){return g.color==='B';});
+    var wrWhite = wAsWhite.length > 0 ? Math.round(wAsWhite.filter(function(g){return g.result==='W';}).length/wAsWhite.length*100) : 0;
+    var wrBlack = wAsBlack.length > 0 ? Math.round(wAsBlack.filter(function(g){return g.result==='W';}).length/wAsBlack.length*100) : 0;
+    var avgMoves = Math.round(games.reduce(function(a,g){return a+g.moves;},0)/games.length);
+    var avgOpp = Math.round(games.reduce(function(a,g){return a+parseInt(g.oppRating||0);},0)/games.length);
+
+    var html = '<div class="stats">';
+    html += '<div class="stat"><div class="label">Games</div><div class="val">'+games.length+'</div></div>';
+    html += '<div class="stat"><div class="label">Record</div><div class="val grn">'+wins+'</div><div class="note">W '+wins+' / L '+losses+' / D '+draws+'</div></div>';
+    html += '<div class="stat"><div class="label">WR White</div><div class="val">'+wrWhite+'%</div></div>';
+    html += '<div class="stat"><div class="label">WR Black</div><div class="val">'+wrBlack+'%</div></div>';
+    html += '<div class="stat"><div class="label">Avg Moves</div><div class="val">'+avgMoves+'</div></div>';
+    html += '<div class="stat"><div class="label">Avg Opp</div><div class="val">'+avgOpp+'</div></div>';
+    html += '</div>';
+
+    html += '<table class="tbl"><thead><tr><th>#</th><th>Date</th><th>Color</th><th>Opp</th><th>Result</th><th>Moves</th></tr></thead><tbody>';
+    for(var i=0;i<games.length;i++){
+      var g = games[i];
+      var cls = g.result==='W'?'grn':g.result==='L'?'rd':'blu';
+      var colorTag = g.color==='W'?'<span class="tag wt">W</span>':'<span class="tag bt">B</span>';
+      html += '<tr><td class="mono">'+(i+1)+'</td><td class="mono dim">'+g.date+'</td><td>'+colorTag+'</td><td class="mono">'+g.oppRating+'</td><td class="mono '+cls+'">'+g.result+'</td><td class="mono">'+g.moves+'</td></tr>';
+    }
+    html += '</tbody></table>';
+
+    document.getElementById('pgn-results').innerHTML = html;
+
+    var existing = JSON.parse(localStorage.getItem('chess-pgn-imports') || '[]');
+    localStorage.setItem('chess-pgn-imports', JSON.stringify(existing.concat(games)));
+  }
+
+  document.getElementById('parse-btn').addEventListener('click', function(){
+    var text = document.getElementById('pgn-input').value;
+    var games = parsePGN(text);
+    renderPGNResults(games);
+  });
+
+  function renderHistory(){
+    var games = JSON.parse(localStorage.getItem('chess-pgn-imports') || '[]');
+    if(games.length === 0) return;
+    var html = '<h3>Import History</h3><table class="tbl"><thead><tr><th>#</th><th>Date</th><th>Color</th><th>Opp</th><th>Result</th><th>Moves</th></tr></thead><tbody>';
+    for(var i=0;i<games.length;i++){
+      var g = games[i];
+      var cls = g.result==='W'?'grn':g.result==='L'?'rd':'blu';
+      var colorTag = g.color==='W'?'<span class="tag wt">W</span>':'<span class="tag bt">B</span>';
+      html += '<tr><td class="mono">'+(i+1)+'</td><td class="mono dim">'+g.date+'</td><td>'+colorTag+'</td><td class="mono">'+g.oppRating+'</td><td class="mono '+cls+'">'+g.result+'</td><td class="mono">'+g.moves+'</td></tr>';
+    }
+    html += '</tbody></table>';
+    html += '<button class="parse-btn" id="clear-history" style="background:#d73a49;margin-top:8px;">Clear History</button>';
+    document.getElementById('import-history').innerHTML = html;
+    document.getElementById('clear-history').addEventListener('click', function(){
+      if(confirm('Clear all import history?')){
+        localStorage.removeItem('chess-pgn-imports');
+        document.getElementById('import-history').innerHTML = '';
+      }
+    });
+  }
+
+  renderStages();
+  renderHistory();
+})();
+</script>
+</body>
+</html>

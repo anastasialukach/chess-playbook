@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stage 2: Build a Foundation</title>
+<link rel="stylesheet" href="shared.css">
+</head>
+<body>
+<nav class="site-nav" id="site-nav"></nav>
+<script src="shared.js"></script>
+<script>renderNav("stage-2")</script>
+<div class="wrap">
+
+  <div class="stage-hdr">
+    <span class="stage-num">2</span>
+    <h1>Build a Foundation</h1>
+    <div class="stage-meta">25 Games &middot; Opening Consistency</div>
+  </div>
+
+  <div class="con">
+    <h2>The Mission</h2>
+    <p>Your games show a different opening every time. This stage locks in ONE system as White and ONE as Black. Same moves, every game. Consistency builds pattern recognition.</p>
+  </div>
+
+  <div class="con">
+    <h2>As White &mdash; Italian Setup</h2>
+    <div class="moves">
+      <span class="mn">1.</span><span class="mw">e4</span>
+      <span class="mn">2.</span><span class="mw">Nf3</span>
+      <span class="mn">3.</span><span class="mw">Bc4</span>
+      <span class="mn">4.</span><span class="mw">O-O</span>
+      <span class="mn">5.</span><span class="mw">d3</span>
+    </div>
+    <div id="s2-italian"></div>
+  </div>
+
+  <div class="con">
+    <h2>As Black vs 1.e4 &mdash; French Defense</h2>
+    <div class="moves">
+      <span class="mn">1.</span><span class="mb">e6</span>
+      <span class="mn">2.</span><span class="mb">d5</span>
+      <span class="mc">(if 3.e5, play 3...c5)</span>
+    </div>
+    <div id="s2-french"></div>
+  </div>
+
+  <div class="con">
+    <h2>As Black vs 1.d4 &mdash; QGD Setup</h2>
+    <div class="moves">
+      <span class="mn">1.</span><span class="mb">d5</span>
+      <span class="mn">2.</span><span class="mb">Nf6</span>
+      <span class="mn">3.</span><span class="mb">e6</span>
+      <span class="mn">4.</span><span class="mb">Be7</span>
+      <span class="mn">5.</span><span class="mb">O-O</span>
+    </div>
+    <div id="s2-qgd"></div>
+  </div>
+
+  <div class="con">
+    <h2>Opening Flowchart</h2>
+    <ul>
+      <li>Opponent plays <strong>1.e4</strong>? &rarr; You play <strong>1...e6</strong> (French)</li>
+      <li>Opponent plays <strong>1.d4</strong>? &rarr; You play <strong>1...d5</strong> (QGD)</li>
+      <li>Opponent plays <strong>anything else</strong>? &rarr; You play <strong>1...e5</strong> (Default System from Stage 1)</li>
+    </ul>
+  </div>
+
+  <div class="con">
+    <h2>Your Rules</h2>
+    <ol class="rule-list">
+      <li><strong>Play your prescribed opening every game.</strong> No experimenting.</li>
+      <li><strong>Develop 2+ pieces before move 6.</strong></li>
+      <li><strong>Castle by move 10.</strong></li>
+      <li><strong>Continue all Stage 1 habits</strong> (f2/f7 check, no side pawns, Three-Loss Rule).</li>
+    </ol>
+  </div>
+
+  <div class="con">
+    <h2>Per-Game Checklist</h2>
+    <ul class="checklist">
+      <li><input type="checkbox"> Played prescribed opening?</li>
+      <li><input type="checkbox"> Developed 2+ pieces by move 6?</li>
+      <li><input type="checkbox"> Castled by move 10?</li>
+      <li><input type="checkbox"> Maintained all Stage 1 habits?</li>
+    </ul>
+  </div>
+
+  <div class="con">
+    <h2>Game Log</h2>
+    <form id="log-form" class="game-log-form">
+      <select id="log-result" required>
+        <option value="">Result</option>
+        <option value="W">W</option>
+        <option value="L">L</option>
+        <option value="D">D</option>
+      </select>
+      <input type="number" id="log-rating" placeholder="Opp Rating" required>
+      <input type="text" id="log-notes" placeholder="Notes">
+      <button type="submit">Log Game</button>
+    </form>
+    <table class="tbl">
+      <thead>
+        <tr><th>#</th><th>Result</th><th>Opp Rating</th><th>Notes</th></tr>
+      </thead>
+      <tbody id="log-body"></tbody>
+    </table>
+  </div>
+
+  <div class="con">
+    <h2>Progress</h2>
+    <div id="prog-text" style="margin-bottom:8px">0 of 25 games</div>
+    <div class="progress-bar"><div class="fill" id="prog-fill" style="width:0%"></div></div>
+  </div>
+
+  <div class="tip green">
+    <strong>Success Criteria:</strong> Opening repertoire followed in 20+ of 25 games. Rating above 280.
+  </div>
+
+  <div class="stage-nav">
+    <a href="/stage-1">&larr; Stage 1</a>
+    <a href="/stage-3">Stage 3 &rarr;</a>
+  </div>
+
+</div>
+
+<script>
+  brd('s2-italian', ad(rm(SP,['e2','g1','f1','d2','e1','h1']), [['wP','e4'],['wN','f3'],['wB','c4'],['wK','g1'],['wR','f1'],['wP','d3']]), {hl:['e4','f3','c4','g1','d3']});
+  brd('s2-french', ad(rm(SP,['e2','d2','e7','d7']), [['wP','e4'],['wP','d4'],['bP','e6'],['bP','d5']]), {hl:['e6','d5']});
+  brd('s2-qgd', ad(rm(SP,['d7','g8','e7','f8','e8','h8']), [['bP','d5'],['bN','f6'],['bP','e6'],['bB','e7'],['bK','g8'],['bR','f8']]), {hl:['d5','f6','e6','e7','g8']});
+</script>
+
+<script>
+(function(){
+  var KEY = 'chess-s2-games';
+  var TARGET = 25;
+
+  function load(){ return JSON.parse(localStorage.getItem(KEY) || '[]'); }
+  function save(games){ localStorage.setItem(KEY, JSON.stringify(games)); }
+
+  function render(){
+    var games = load();
+    var tbody = document.getElementById('log-body');
+    tbody.innerHTML = '';
+    for(var i=0;i<games.length;i++){
+      var g = games[i];
+      var tr = document.createElement('tr');
+      var cls = g.result==='W'?'grn':g.result==='L'?'rd':'blu';
+      tr.innerHTML = '<td class="mono">'+(i+1)+'</td><td class="mono '+cls+'">'+g.result+'</td><td class="mono">'+g.rating+'</td><td>'+g.notes+'</td>';
+      tbody.appendChild(tr);
+    }
+    var pct = Math.min(100, Math.round(games.length/TARGET*100));
+    document.getElementById('prog-fill').style.width = pct+'%';
+    document.getElementById('prog-text').textContent = games.length+' of '+TARGET+' games';
+  }
+
+  document.getElementById('log-form').addEventListener('submit', function(e){
+    e.preventDefault();
+    var games = load();
+    games.push({
+      result: document.getElementById('log-result').value,
+      rating: document.getElementById('log-rating').value,
+      notes: document.getElementById('log-notes').value
+    });
+    save(games);
+    render();
+    this.reset();
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>

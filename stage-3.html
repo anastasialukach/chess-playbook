@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stage 3: Fight for the Center</title>
+<link rel="stylesheet" href="shared.css">
+</head>
+<body>
+<nav class="site-nav" id="site-nav"></nav>
+<script src="shared.js"></script>
+<script>renderNav("stage-3")</script>
+<div class="wrap">
+
+  <div class="stage-hdr">
+    <span class="stage-num">Stage 3</span>
+    <h1>Fight for the Center</h1>
+    <span class="stage-meta">25 Games &middot; Middle Game</span>
+  </div>
+
+  <div class="con">
+    <h2>The Mission</h2>
+    <p>Stages 1-2 fixed your openings. Now you need to survive past move 15. This stage teaches CCT scanning and center control &mdash; the two skills that catch 90% of mid-game blunders.</p>
+  </div>
+
+  <div class="con">
+    <h2>CCT Scan</h2>
+    <p>Before EVERY move, ask:</p>
+    <ul>
+      <li><strong>Checks</strong> &mdash; can opponent check me?</li>
+      <li><strong>Captures</strong> &mdash; can opponent take something?</li>
+      <li><strong>Threats</strong> &mdash; what's opponent's best move if I do nothing?</li>
+    </ul>
+    <div class="tip red">If the answer is "checkmate" or "lose my queen" &mdash; deal with THAT first.</div>
+  </div>
+
+  <div class="con">
+    <h2>Center Control</h2>
+    <div id="s3-center"></div>
+    <p>d4-d5-e4-e5 are the four most important squares. A knight on e4 controls 8 squares. A knight on a3 controls 4. Same piece, twice the power.</p>
+  </div>
+
+  <script>
+    brd('s3-center', SP, {hl:['d4','d5','e4','e5']});
+  </script>
+
+  <div class="con">
+    <h2>Development Checkpoint</h2>
+    <p>At move 10, check: Both knights developed? At least one bishop out? Castled? If not &mdash; develop before attacking.</p>
+  </div>
+
+  <div class="con">
+    <h2>Dangerous Patterns to CCT-Scan</h2>
+
+    <h3>Qxh7# Pattern</h3>
+
+    <div class="compare">
+      <div class="compare-row">
+        <div class="compare-label bad">Bad: Ignore the queen</div>
+      </div>
+      <div class="compare-row">
+        <div class="compare-cell"><div id="cmp-qh-a1"></div><p class="mono">Castle, Qh5 on board</p></div>
+        <div class="compare-cell"><div id="cmp-qh-a2"></div><p class="mono">Ignore Qh5, push e5</p></div>
+        <div class="compare-cell"><div id="cmp-qh-a3"></div><p class="mono">Qxh7# &mdash; mate</p></div>
+      </div>
+
+      <div class="compare-row">
+        <div class="compare-label good">Good: Block with g6</div>
+      </div>
+      <div class="compare-row">
+        <div class="compare-cell"><div id="cmp-qh-b1"></div><p class="mono">Castle, Qh5 on board</p></div>
+        <div class="compare-cell"><div id="cmp-qh-b2"></div><p class="mono">Play g6, block queen</p></div>
+        <div class="compare-cell"><div id="cmp-qh-b3"></div><p class="mono">Queen retreats, safe</p></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  (function(){
+    var qh7Base = [['wK','g1'],['wQ','h5'],['wR','f1'],['wP','f4'],['wP','g2'],['wP','h2'],['bK','g8'],['bR','f8'],['bN','f6'],['bP','g7'],['bP','h7'],['bP','f7']];
+
+    // Bad line
+    brd('cmp-qh-a1', qh7Base, {mini:true, hl:['g8','f8']});
+
+    var a2 = rm(qh7Base, ['g7']);
+    a2 = ad(a2, [['bP','e5']]);
+    brd('cmp-qh-a2', a2, {mini:true, rd:['h7']});
+
+    var a3 = rm(a2, ['h7']);
+    a3 = ad(a3, [['wQ','h7']]);
+    brd('cmp-qh-a3', a3, {mini:true, rd:['h7','g8']});
+
+    // Good line
+    brd('cmp-qh-b1', qh7Base, {mini:true, hl:['g8','f8']});
+
+    var b2 = rm(qh7Base, ['g7']);
+    b2 = ad(b2, [['bP','g6']]);
+    brd('cmp-qh-b2', b2, {mini:true, hl:['g6','f6']});
+
+    var b3 = rm(b2, [['wQ','h5']]);
+    b3 = ad(b3, [['wQ','d1']]);
+    brd('cmp-qh-b3', b3, {mini:true, hl:['g6']});
+  })();
+  </script>
+
+  <div class="con">
+    <h2>Your Rules</h2>
+    <ol class="rule-list">
+      <li>CCT scan before every move (5 seconds minimum).</li>
+      <li>Development checkpoint at move 10. Both knights + 1 bishop + castled = ready to attack.</li>
+      <li>No pawn-grabbing with queen. If winning a pawn pulls your piece from center for 2+ moves, don't take it.</li>
+      <li>Keep pieces in the center, not on the rim. Knights on c3/f3/d4/e4, not a3/h3.</li>
+    </ol>
+  </div>
+
+  <div class="con">
+    <h2>Session Checklist</h2>
+    <ul class="checklist">
+      <li>Did CCT scan before every move?</li>
+      <li>At move 10: both knights + 1 bishop out + castled?</li>
+      <li>Kept pieces in center, not on rim?</li>
+      <li>Reached move 20?</li>
+    </ul>
+  </div>
+
+  <div class="con">
+    <h2>Game Log</h2>
+    <div class="progress-bar"><div class="fill" id="prog-fill"></div></div>
+    <p id="prog-text" class="mono"></p>
+    <form class="game-log-form" id="log-form">
+      <select id="log-result" required>
+        <option value="">Result</option>
+        <option value="W">Win</option>
+        <option value="D">Draw</option>
+        <option value="L">Loss</option>
+      </select>
+      <input type="text" id="log-rating" placeholder="Opp rating" required>
+      <input type="text" id="log-notes" placeholder="Notes (opening, blunder, etc.)">
+      <button type="submit">Log Game</button>
+    </form>
+    <table class="tbl">
+      <thead><tr><th>#</th><th>Result</th><th>Rating</th><th>Notes</th></tr></thead>
+      <tbody id="log-body"></tbody>
+    </table>
+  </div>
+
+  <div class="tip green">Average game length 20+ moves. Win rate 50%+ across 25 games.</div>
+
+  <div class="stage-nav">
+    <a href="stage-2.html">&larr; Stage 2</a>
+    <a href="stage-4.html">Stage 4 &rarr;</a>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  var KEY = 'chess-s3-games';
+  var TARGET = 25;
+  function load(){ return JSON.parse(localStorage.getItem(KEY) || '[]'); }
+  function save(g){ localStorage.setItem(KEY, JSON.stringify(g)); }
+  function render(){
+    var games = load();
+    var tbody = document.getElementById('log-body');
+    tbody.innerHTML = '';
+    for(var i=0;i<games.length;i++){
+      var g = games[i];
+      var tr = document.createElement('tr');
+      var cls = g.result==='W'?'grn':g.result==='L'?'rd':'blu';
+      tr.innerHTML = '<td class="mono">'+(i+1)+'</td><td class="mono '+cls+'">'+g.result+'</td><td class="mono">'+g.rating+'</td><td>'+g.notes+'</td>';
+      tbody.appendChild(tr);
+    }
+    var pct = Math.min(100, Math.round(games.length/TARGET*100));
+    document.getElementById('prog-fill').style.width = pct+'%';
+    document.getElementById('prog-text').textContent = games.length+' of '+TARGET+' games';
+  }
+  document.getElementById('log-form').addEventListener('submit', function(e){
+    e.preventDefault();
+    var games = load();
+    games.push({result:document.getElementById('log-result').value, rating:document.getElementById('log-rating').value, notes:document.getElementById('log-notes').value});
+    save(games);
+    render();
+    this.reset();
+  });
+  render();
+})();
+</script>
+</body>
+</html>
