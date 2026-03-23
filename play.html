@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Play — Chess Playbook</title>
+<link rel="stylesheet" href="shared.css">
+<style>
+.play-btns{display:flex;gap:10px;margin:14px 0 10px;flex-wrap:wrap;}
+.play-btn{display:inline-block;background:#769656;color:#fff;padding:10px 22px;border-radius:6px;text-decoration:none;font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600;border:none;cursor:pointer;transition:background .15s;}
+.play-btn:hover{background:#5a7a44;}
+.play-btn.outline{background:transparent;color:#769656;border:2px solid #769656;}
+.play-btn.outline:hover{background:#f0f7ec;}
+.play-note{font-size:13px;color:#888;margin-top:6px;line-height:1.6;}
+.opening-line{display:block;margin:4px 0;}
+.reset-link{font-family:'IBM Plex Mono',monospace;font-size:12px;color:#999;cursor:pointer;text-decoration:underline;margin-top:6px;display:inline-block;border:none;background:none;padding:0;}
+.reset-link:hover{color:#1a1a1a;}
+.post-game ol{margin:0 0 14px 20px;font-size:15px;line-height:1.8;}
+.post-game ol li{padding:2px 0;}
+.post-game-links{display:flex;gap:10px;flex-wrap:wrap;}
+</style>
+</head>
+<body>
+<nav class="site-nav" id="site-nav"></nav>
+<script src="shared.js"></script>
+<script>renderNav("play")</script>
+<div class="wrap">
+
+<div class="stage-hdr">
+  <div class="stage-num">Play &amp; Practice</div>
+  <h1>Play &amp; Practice</h1>
+  <div class="stage-meta">Play against AI · Practice openings · Apply what you've learned</div>
+</div>
+
+<!-- Quick Reminder -->
+<div class="tip green">
+  <strong>Before you play:</strong> Remember your opening systems.<br>
+  <span class="opening-line"><strong>WHITE:</strong> <span class="mono">e4, Nf3, Bc4, O-O, d3</span></span>
+  <span class="opening-line"><strong>BLACK vs e4:</strong> <span class="mono">e5, Nf6, Nc6, Bc5, O-O</span></span>
+  <span class="opening-line"><strong>BLACK vs d4:</strong> <span class="mono">d5, Nf6, e6, Bd6, O-O</span></span>
+  <span class="opening-line"><strong>BLACK vs weird:</strong> <span class="mono">e5, Nf6, Bc5, O-O, d6</span></span>
+</div>
+
+<!-- Play Options -->
+<h3>Play Options</h3>
+
+<div class="con">
+  <h4>1. Play on Lichess (Recommended)</h4>
+  <p>Play against Stockfish AI at adjustable difficulty. Free, no account needed.</p>
+  <div class="play-btns">
+    <a class="play-btn" href="https://lichess.org/setup/ai?color=white&variant=standard&timeMode=1&time=15&increment=10" target="_blank" rel="noopener">Play as White</a>
+    <a class="play-btn" href="https://lichess.org/setup/ai?color=black&variant=standard&timeMode=1&time=15&increment=10" target="_blank" rel="noopener">Play as Black</a>
+  </div>
+  <p class="play-note">Use 15+10 time control (recommended for your level). After playing, your games sync automatically if you create a free Lichess account.</p>
+</div>
+
+<div class="con">
+  <h4>2. Play on Chess.com</h4>
+  <p>Continue building your Chess.com record as <span class="mono">'happery'</span>.</p>
+  <div class="play-btns">
+    <a class="play-btn" href="https://www.chess.com/play/computer" target="_blank" rel="noopener">Open Chess.com</a>
+  </div>
+  <p class="play-note">Games auto-sync to your dashboard via the Sync button.</p>
+</div>
+
+<div class="con">
+  <h4>3. Puzzles</h4>
+  <p>10 rated puzzles before every session. Think first, then move.</p>
+  <div class="play-btns">
+    <a class="play-btn" href="https://lichess.org/training" target="_blank" rel="noopener">Lichess Puzzles</a>
+    <a class="play-btn outline" href="https://www.chess.com/puzzles" target="_blank" rel="noopener">Chess.com Puzzles</a>
+  </div>
+</div>
+
+<!-- Pre-Game Checklist -->
+<h3>Pre-Game Checklist</h3>
+
+<ul class="checklist" id="pregame-checklist">
+  <li><input type="checkbox" data-key="0"> Did 10 rated puzzles</li>
+  <li><input type="checkbox" data-key="1"> Reviewed last loss</li>
+  <li><input type="checkbox" data-key="2"> Know my opening lines</li>
+  <li><input type="checkbox" data-key="3"> Three-Loss Rule active</li>
+  <li><input type="checkbox" data-key="4"> Time control set to 15+10</li>
+</ul>
+<button class="reset-link" id="reset-checklist">Reset Checklist</button>
+
+<!-- Post-Game -->
+<h3>After Your Game</h3>
+
+<div class="con post-game">
+  <h4>Post-Game Review</h4>
+  <ol>
+    <li>Go to <a href="/dashboard">Dashboard</a> → Sync to import your latest game</li>
+    <li>Check if you followed your opening system</li>
+    <li>If you lost: find the <strong>ONE move</strong> that lost the game</li>
+    <li>Take the <a href="/quiz">Blunder Quiz</a> to drill your patterns</li>
+  </ol>
+</div>
+
+<script>
+(function() {
+  var STORAGE_KEY = 'chess-pregame-checklist';
+  var checklist = document.getElementById('pregame-checklist');
+  var boxes = checklist.querySelectorAll('input[type="checkbox"]');
+  var saved = {};
+  try { saved = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; } catch(e) {}
+
+  boxes.forEach(function(box) {
+    var k = box.getAttribute('data-key');
+    if (saved[k]) box.checked = true;
+    box.addEventListener('change', function() {
+      var state = {};
+      boxes.forEach(function(b) {
+        state[b.getAttribute('data-key')] = b.checked;
+      });
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    });
+  });
+
+  document.getElementById('reset-checklist').addEventListener('click', function() {
+    boxes.forEach(function(b) { b.checked = false; });
+    localStorage.removeItem(STORAGE_KEY);
+  });
+})();
+</script>
+
+</div>
+</body>
+</html>

@@ -3,8 +3,39 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dashboard — Chess Training</title>
+<title>Dashboard — Chess Playbook</title>
 <link rel="stylesheet" href="shared.css">
+<style>
+.tabs{display:flex;gap:0;margin:0 0 24px;border-bottom:2px solid #e0e0e0;}
+.tab-btn{font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;letter-spacing:0.5px;padding:10px 18px;background:none;border:none;border-bottom:3px solid transparent;cursor:pointer;color:#888;transition:color .15s,border-color .15s;margin-bottom:-2px;}
+.tab-btn:hover{color:#1a1a1a;}
+.tab-btn.active{color:#1a1a1a;border-bottom-color:#769656;}
+.tab-panel{display:none;}
+.tab-panel.active{display:block;}
+.sync-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px;}
+.sync-input{font-family:'IBM Plex Mono',monospace;font-size:13px;padding:8px 12px;border:2px solid #e0e0e0;border-radius:6px;background:#fff;width:180px;}
+.sync-btn{background:#22863a;color:#fff;border:none;padding:10px 20px;border-radius:6px;font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600;cursor:pointer;transition:background .15s;}
+.sync-btn:hover{background:#1a7030;}
+.sync-btn:disabled{background:#999;cursor:not-allowed;}
+.sync-status{font-family:'IBM Plex Mono',monospace;font-size:12px;color:#555;margin-top:4px;}
+.sync-progress{font-family:'IBM Plex Mono',monospace;font-size:12px;color:#769656;margin-top:8px;min-height:20px;}
+.last-sync{font-family:'IBM Plex Mono',monospace;font-size:11px;color:#999;margin-left:8px;}
+.filter-bar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;}
+.filter-btn{font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;padding:5px 12px;border:2px solid #e0e0e0;border-radius:4px;background:#fff;cursor:pointer;color:#555;transition:all .15s;}
+.filter-btn:hover{border-color:#999;}
+.filter-btn.active{border-color:#769656;background:#f0efe6;color:#1a1a1a;}
+.pattern-tbl td,.pattern-tbl th{padding:8px 10px;}
+.chart-wrap{background:#fff;border:2px solid #e0e0e0;border-radius:10px;padding:16px;margin:14px 0;}
+.chart-title{font-family:'IBM Plex Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:#999;margin-bottom:10px;}
+.empty-state{text-align:center;padding:40px 20px;color:#888;font-size:15px;}
+.empty-state .empty-icon{font-size:32px;margin-bottom:8px;display:block;opacity:0.4;}
+.pgn-fallback{margin-top:24px;padding-top:20px;border-top:1px solid #eee;}
+.pgn-fallback h4{font-family:'IBM Plex Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:#999;margin-bottom:8px;}
+.pgn-fallback .pgn-input{min-height:80px;font-size:11px;}
+.pgn-fallback .parse-btn{font-size:11px;padding:6px 14px;}
+.game-link{color:#769656;text-decoration:none;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;}
+.game-link:hover{text-decoration:underline;}
+</style>
 </head>
 <body>
 <nav class="site-nav" id="site-nav"></nav>
@@ -15,31 +46,79 @@
   <div class="stage-hdr">
     <div class="stage-num">Track Record</div>
     <h1>Dashboard</h1>
-    <div class="stage-meta">Import games · Track progress · See improvement</div>
+    <div class="stage-meta">Sync from Chess.com &middot; Track progress &middot; See improvement</div>
   </div>
 
-  <div id="stage-progress"></div>
-
-  <div class="stats">
-    <div class="stat"><div class="label">Total Games</div><div class="val" id="stat-total">0</div></div>
-    <div class="stat"><div class="label">Overall Win Rate</div><div class="val" id="stat-wr">0%</div></div>
-    <div class="stat"><div class="label">Current Stage</div><div class="val" id="stat-stage">Stage 1</div></div>
-    <div class="stat"><div class="label">Best Stage WR</div><div class="val" id="stat-best">--</div></div>
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="sync">Sync &amp; Stats</button>
+    <button class="tab-btn" data-tab="games">Game Log</button>
+    <button class="tab-btn" data-tab="stages">Stages</button>
   </div>
 
-  <h3>Import Games from Chess.com</h3>
-  <div class="con">
-    <p>Go to Chess.com &rarr; Your profile &rarr; Games &rarr; Export &rarr; Copy PGN. Paste below.</p>
-    <textarea class="pgn-input" id="pgn-input" placeholder="Paste PGN here..."></textarea>
-    <button class="parse-btn" id="parse-btn">Parse Games</button>
-    <div id="pgn-results"></div>
+  <!-- ============ SYNC & STATS TAB ============ -->
+  <div class="tab-panel active" id="tab-sync">
+
+    <div class="con">
+      <h4>Chess.com Sync</h4>
+      <div class="sync-row">
+        <input type="text" class="sync-input" id="sync-username" value="happery" placeholder="Chess.com username">
+        <button class="sync-btn" id="sync-btn">Sync from Chess.com</button>
+        <span class="last-sync" id="last-sync"></span>
+      </div>
+      <div class="sync-progress" id="sync-progress"></div>
+      <div class="sync-status" id="sync-status"></div>
+    </div>
+
+    <div id="stats-section">
+      <div class="stats" id="stats-overview"></div>
+      <div class="stats" id="stats-detail"></div>
+    </div>
+
+    <div id="patterns-section"></div>
+
+    <div id="chart-section"></div>
+
   </div>
 
-  <div id="import-history"></div>
+  <!-- ============ GAME LOG TAB ============ -->
+  <div class="tab-panel" id="tab-games">
+    <div id="game-log-content"></div>
+  </div>
+
+  <!-- ============ STAGES TAB ============ -->
+  <div class="tab-panel" id="tab-stages">
+    <div id="stage-progress"></div>
+
+    <div class="pgn-fallback">
+      <h4>Manual PGN Import (Fallback)</h4>
+      <p class="dim" style="font-size:13px;margin-bottom:8px;">Paste PGN text if you prefer manual import over Chess.com sync.</p>
+      <textarea class="pgn-input" id="pgn-input" placeholder="Paste PGN here..."></textarea>
+      <button class="parse-btn" id="parse-btn">Parse Games</button>
+      <div id="pgn-results"></div>
+    </div>
+  </div>
 
 </div>
 <script>
 (function(){
+
+  // ============ TAB NAVIGATION ============
+  var tabBtns = document.querySelectorAll('.tab-btn');
+  var tabPanels = document.querySelectorAll('.tab-panel');
+  tabBtns.forEach(function(btn){
+    btn.addEventListener('click', function(){
+      tabBtns.forEach(function(b){ b.classList.remove('active'); });
+      tabPanels.forEach(function(p){ p.classList.remove('active'); });
+      btn.classList.add('active');
+      document.getElementById('tab-' + btn.getAttribute('data-tab')).classList.add('active');
+    });
+  });
+
+  // ============ CONSTANTS ============
+  var STORAGE_KEY = 'chess-synced-games';
+  var SYNC_TS_KEY = 'chess-last-sync';
+  var DRAW_RESULTS = ['stalemate','repetition','agreed','insufficient','50move','timevsinsufficient'];
+
   var STAGES = [
     {key:'chess-s1-games',name:'S1: Stop the Bleeding',target:20},
     {key:'chess-s2-games',name:'S2: Build a Foundation',target:25},
@@ -48,49 +127,520 @@
     {key:'chess-s5-games',name:'S5: The Rating Push',target:30}
   ];
 
+  // ============ HELPERS ============
+  function getGames(){
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch(e){ return []; }
+  }
+
+  function saveGames(games){
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(games));
+  }
+
+  function wrBadge(pct){
+    var cls = pct >= 50 ? 'hi' : pct >= 35 ? 'md' : 'lo';
+    return '<span class="wr '+cls+'">'+pct+'%</span>';
+  }
+
+  function truncate(str, len){
+    if(!str) return '--';
+    return str.length > len ? str.substring(0, len) + '...' : str;
+  }
+
+  function extractOpening(game){
+    // Try ECOUrl first
+    if(game.eco){
+      try {
+        var parts = game.eco.split('/');
+        var name = decodeURIComponent(parts[parts.length-1]).replace(/-/g,' ');
+        if(name) return name;
+      } catch(e){}
+    }
+    // Try PGN ECO header
+    if(game.pgn){
+      var m = game.pgn.match(/\[ECOUrl\s+"([^"]+)"\]/);
+      if(m){
+        try {
+          var p = m[1].split('/');
+          return decodeURIComponent(p[p.length-1]).replace(/-/g,' ');
+        } catch(e){}
+      }
+      var m2 = game.pgn.match(/\[Opening\s+"([^"]+)"\]/);
+      if(m2) return m2[1];
+    }
+    return '--';
+  }
+
+  function parseGameFromAPI(g, username){
+    var uname = username.toLowerCase();
+    var isWhite = (g.white.username || '').toLowerCase() === uname;
+    var mySide = isWhite ? g.white : g.black;
+    var oppSide = isWhite ? g.black : g.white;
+
+    var result;
+    if(mySide.result === 'win'){
+      result = 'W';
+    } else if(DRAW_RESULTS.indexOf(mySide.result) !== -1){
+      result = 'D';
+    } else {
+      result = 'L';
+    }
+
+    var moveCount = 0;
+    if(g.pgn){
+      var matches = g.pgn.match(/\d+\./g);
+      if(matches) moveCount = matches.length;
+    }
+
+    var opening = extractOpening(g);
+
+    var dateStr = '';
+    if(g.end_time){
+      var d = new Date(g.end_time * 1000);
+      dateStr = d.toISOString().split('T')[0];
+    }
+
+    return {
+      date: dateStr,
+      color: isWhite ? 'W' : 'B',
+      myRating: mySide.rating || 0,
+      oppRating: oppSide.rating || 0,
+      result: result,
+      moves: moveCount,
+      opening: opening,
+      termination: mySide.result || '',
+      timeControl: g.time_class || '',
+      pgn: g.pgn || '',
+      url: g.url || ''
+    };
+  }
+
+  // ============ CHESS.COM SYNC ============
+  var syncBtn = document.getElementById('sync-btn');
+  var syncProgress = document.getElementById('sync-progress');
+  var syncStatus = document.getElementById('sync-status');
+
+  function showLastSync(){
+    var ts = localStorage.getItem(SYNC_TS_KEY);
+    var el = document.getElementById('last-sync');
+    if(ts){
+      el.textContent = 'Last synced: ' + new Date(parseInt(ts)).toLocaleString();
+    } else {
+      el.textContent = '';
+    }
+  }
+
+  syncBtn.addEventListener('click', async function(){
+    var username = document.getElementById('sync-username').value.trim();
+    if(!username){
+      syncStatus.innerHTML = '<span class="rd">Enter a username.</span>';
+      return;
+    }
+
+    syncBtn.disabled = true;
+    syncBtn.textContent = 'Syncing...';
+    syncProgress.textContent = 'Fetching game archives...';
+    syncStatus.textContent = '';
+
+    try {
+      var archiveRes = await fetch('https://api.chess.com/pub/player/' + encodeURIComponent(username) + '/games/archives');
+      if(!archiveRes.ok) throw new Error('Could not fetch archives (HTTP ' + archiveRes.status + '). Check the username.');
+      var archiveData = await archiveRes.json();
+      var urls = archiveData.archives || [];
+
+      if(urls.length === 0){
+        syncProgress.textContent = '';
+        syncStatus.innerHTML = '<span class="rd">No game archives found for "' + username + '".</span>';
+        syncBtn.disabled = false;
+        syncBtn.textContent = 'Sync from Chess.com';
+        return;
+      }
+
+      var allGames = [];
+      var existingGames = getGames();
+      var existingUrls = {};
+      existingGames.forEach(function(g){ if(g.url) existingUrls[g.url] = true; });
+
+      for(var i = 0; i < urls.length; i++){
+        var archiveUrl = urls[i];
+        // Extract month label for progress display
+        var parts = archiveUrl.split('/');
+        var monthLabel = parts[parts.length-2] + '/' + parts[parts.length-1];
+        syncProgress.textContent = 'Fetching ' + monthLabel + '... (' + (i+1) + '/' + urls.length + ')';
+
+        try {
+          var gamesRes = await fetch(archiveUrl);
+          if(!gamesRes.ok) continue;
+          var gamesData = await gamesRes.json();
+          var monthGames = gamesData.games || [];
+
+          for(var j = 0; j < monthGames.length; j++){
+            var parsed = parseGameFromAPI(monthGames[j], username);
+            if(!existingUrls[parsed.url]){
+              allGames.push(parsed);
+              existingUrls[parsed.url] = true;
+            }
+          }
+
+          syncProgress.textContent = 'Fetching ' + monthLabel + '... Found ' + allGames.length + ' new games';
+        } catch(e){
+          // Skip failed month, continue
+        }
+      }
+
+      // Merge with existing and save
+      var merged = existingGames.concat(allGames);
+      // Sort by date ascending
+      merged.sort(function(a,b){ return a.date < b.date ? -1 : a.date > b.date ? 1 : 0; });
+      saveGames(merged);
+
+      localStorage.setItem(SYNC_TS_KEY, Date.now().toString());
+      showLastSync();
+
+      syncProgress.textContent = '';
+      syncStatus.innerHTML = '<span class="grn">Synced ' + merged.length + ' total games (' + allGames.length + ' new) from Chess.com.</span>';
+
+      renderStats();
+      renderPatterns();
+      renderChart();
+      renderGameLog();
+
+    } catch(e){
+      syncProgress.textContent = '';
+      syncStatus.innerHTML = '<span class="rd">Error: ' + e.message + '</span>';
+    }
+
+    syncBtn.disabled = false;
+    syncBtn.textContent = 'Sync from Chess.com';
+  });
+
+  // ============ STATS OVERVIEW ============
+  function renderStats(){
+    var games = getGames();
+    var el1 = document.getElementById('stats-overview');
+    var el2 = document.getElementById('stats-detail');
+
+    if(games.length === 0){
+      el1.innerHTML = '';
+      el2.innerHTML = '';
+      document.getElementById('stats-section').innerHTML = '<div class="empty-state"><span class="empty-icon">&#9817;</span>No games synced yet. Click "Sync from Chess.com" to get started.</div>';
+      return;
+    }
+
+    // Restore stats-section structure if it was replaced by empty state
+    if(!document.getElementById('stats-overview')){
+      document.getElementById('stats-section').innerHTML = '<div class="stats" id="stats-overview"></div><div class="stats" id="stats-detail"></div>';
+      el1 = document.getElementById('stats-overview');
+      el2 = document.getElementById('stats-detail');
+    }
+
+    var wins = games.filter(function(g){ return g.result==='W'; }).length;
+    var losses = games.filter(function(g){ return g.result==='L'; }).length;
+    var draws = games.length - wins - losses;
+    var wr = Math.round(wins/games.length*100);
+
+    var currentRating = games[games.length-1].myRating;
+    var peakRating = 0;
+    games.forEach(function(g){ if(g.myRating > peakRating) peakRating = g.myRating; });
+
+    var whiteGames = games.filter(function(g){ return g.color==='W'; });
+    var blackGames = games.filter(function(g){ return g.color==='B'; });
+    var wrWhite = whiteGames.length > 0 ? Math.round(whiteGames.filter(function(g){ return g.result==='W'; }).length / whiteGames.length * 100) : 0;
+    var wrBlack = blackGames.length > 0 ? Math.round(blackGames.filter(function(g){ return g.result==='W'; }).length / blackGames.length * 100) : 0;
+
+    var avgMoves = Math.round(games.reduce(function(a,g){ return a + g.moves; }, 0) / games.length);
+    var avgOpp = Math.round(games.reduce(function(a,g){ return a + (g.oppRating||0); }, 0) / games.length);
+
+    el1.innerHTML =
+      '<div class="stat"><div class="label">Total Games</div><div class="val">' + games.length + '</div><div class="note">W ' + wins + ' / L ' + losses + ' / D ' + draws + '</div></div>' +
+      '<div class="stat"><div class="label">Win Rate</div><div class="val">' + wr + '%</div></div>' +
+      '<div class="stat"><div class="label">Current Rating</div><div class="val mono">' + currentRating + '</div></div>' +
+      '<div class="stat"><div class="label">Peak Rating</div><div class="val mono grn">' + peakRating + '</div></div>';
+
+    el2.innerHTML =
+      '<div class="stat"><div class="label">WR as White</div><div class="val">' + wrWhite + '%</div><div class="note">' + whiteGames.length + ' games</div></div>' +
+      '<div class="stat"><div class="label">WR as Black</div><div class="val">' + wrBlack + '%</div><div class="note">' + blackGames.length + ' games</div></div>' +
+      '<div class="stat"><div class="label">Avg Game Length</div><div class="val mono">' + avgMoves + '</div><div class="note">moves</div></div>' +
+      '<div class="stat"><div class="label">Avg Opponent</div><div class="val mono">' + avgOpp + '</div><div class="note">rating</div></div>';
+  }
+
+  // ============ PATTERN DETECTION ============
+  function renderPatterns(){
+    var games = getGames();
+    var el = document.getElementById('patterns-section');
+    if(games.length === 0){ el.innerHTML = ''; return; }
+
+    var patterns = [];
+
+    // Pattern: Side Pawns in first 8 moves
+    var sidePawnCount = 0, sidePawnWins = 0;
+    games.forEach(function(g){
+      if(!g.pgn) return;
+      // Extract moves up to move 8
+      var early = '';
+      var m = g.pgn.match(/1\.\s[\s\S]*/);
+      if(!m) return;
+      var moveText = m[0];
+      // Get text before move 9
+      var cutoff = moveText.match(/\b9\./);
+      if(cutoff) early = moveText.substring(0, cutoff.index);
+      else early = moveText;
+
+      if(/\b[abh][3-6]\b/.test(early) || /\bb[45]\b/.test(early)){
+        sidePawnCount++;
+        if(g.result === 'W') sidePawnWins++;
+      }
+    });
+    if(sidePawnCount > 0){
+      patterns.push({name:'Early Side Pawns', desc:'a/b/h pawns in first 8 moves', count: sidePawnCount, wr: Math.round(sidePawnWins/sidePawnCount*100)});
+    }
+
+    // Pattern: No Castling (user's side)
+    var noCastleCount = 0, noCastleWins = 0;
+    games.forEach(function(g){
+      if(!g.pgn) return;
+      var moveText = g.pgn.match(/1\.\s[\s\S]*/);
+      if(!moveText) return;
+      moveText = moveText[0];
+
+      // Check if user castled by looking at their moves
+      var hasCastle = false;
+      // Split into move pairs
+      var movePairs = moveText.split(/\d+\.\s*/);
+      for(var k = 1; k < movePairs.length; k++){
+        var parts = movePairs[k].trim().split(/\s+/);
+        var userMove = g.color === 'W' ? parts[0] : (parts[1] || '');
+        if(userMove && (userMove.indexOf('O-O') !== -1)){
+          hasCastle = true;
+          break;
+        }
+      }
+      if(!hasCastle){
+        noCastleCount++;
+        if(g.result === 'W') noCastleWins++;
+      }
+    });
+    if(noCastleCount > 0){
+      patterns.push({name:'No Castling', desc:'you didn\'t castle', count: noCastleCount, wr: Math.round(noCastleWins/noCastleCount*100)});
+    }
+
+    // Pattern: Opponent Early Queen (Q move before move 7)
+    var earlyQueenCount = 0, earlyQueenWins = 0;
+    games.forEach(function(g){
+      if(!g.pgn) return;
+      var m = g.pgn.match(/1\.\s[\s\S]*/);
+      if(!m) return;
+      var moveText = m[0];
+      var cutoff = moveText.match(/\b7\./);
+      var early = cutoff ? moveText.substring(0, cutoff.index) : moveText;
+
+      // Check opponent's moves for Q moves
+      var movePairs = early.split(/\d+\.\s*/);
+      for(var k = 1; k < movePairs.length; k++){
+        var parts = movePairs[k].trim().split(/\s+/);
+        var oppMove = g.color === 'W' ? (parts[1] || '') : parts[0];
+        if(oppMove && oppMove.charAt(0) === 'Q'){
+          earlyQueenCount++;
+          if(g.result === 'W') earlyQueenWins++;
+          break;
+        }
+      }
+    });
+    if(earlyQueenCount > 0){
+      patterns.push({name:'Faced Early Queen', desc:'opponent Q move before move 7', count: earlyQueenCount, wr: Math.round(earlyQueenWins/earlyQueenCount*100)});
+    }
+
+    // Pattern: Short Games (<=10 moves)
+    var shortCount = 0, shortWins = 0;
+    games.forEach(function(g){
+      if(g.moves <= 10){
+        shortCount++;
+        if(g.result === 'W') shortWins++;
+      }
+    });
+    if(shortCount > 0){
+      patterns.push({name:'Short Games', desc:'ended in 10 moves or fewer', count: shortCount, wr: Math.round(shortWins/shortCount*100)});
+    }
+
+    if(patterns.length === 0){ el.innerHTML = ''; return; }
+
+    var html = '<h3>Pattern Detection</h3>';
+    html += '<table class="tbl pattern-tbl"><thead><tr><th>Pattern</th><th>Games</th><th>Win Rate</th></tr></thead><tbody>';
+    patterns.forEach(function(p){
+      html += '<tr><td><strong>' + p.name + '</strong><br><span class="dim" style="font-size:12px;">' + p.desc + '</span></td>';
+      html += '<td class="mono">' + p.count + '</td>';
+      html += '<td>' + wrBadge(p.wr) + '</td></tr>';
+    });
+    html += '</tbody></table>';
+    el.innerHTML = html;
+  }
+
+  // ============ RATING CHART ============
+  function renderChart(){
+    var games = getGames();
+    var el = document.getElementById('chart-section');
+    if(games.length < 2){ el.innerHTML = ''; return; }
+
+    var ratings = games.map(function(g){ return g.myRating || 0; }).filter(function(r){ return r > 0; });
+    if(ratings.length < 2){ el.innerHTML = ''; return; }
+
+    var minR = Math.min.apply(null, ratings);
+    var maxR = Math.max.apply(null, ratings);
+    var peak = maxR;
+    // Add padding
+    minR = Math.max(0, minR - 30);
+    maxR = maxR + 30;
+    var range = maxR - minR || 1;
+
+    var W = 560;
+    var H = 200;
+    var padL = 40, padR = 10, padT = 10, padB = 25;
+    var chartW = W - padL - padR;
+    var chartH = H - padT - padB;
+
+    var points = [];
+    for(var i = 0; i < ratings.length; i++){
+      var x = padL + (i / (ratings.length - 1)) * chartW;
+      var y = padT + chartH - ((ratings[i] - minR) / range) * chartH;
+      points.push({x:x, y:y, rating:ratings[i], idx:i});
+    }
+
+    var pathD = points.map(function(p,i){ return (i===0?'M':'L') + p.x.toFixed(1) + ',' + p.y.toFixed(1); }).join(' ');
+
+    // Peak line Y
+    var peakY = padT + chartH - ((peak - minR) / range) * chartH;
+
+    var svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" style="width:100%;height:auto;max-height:220px;" xmlns="http://www.w3.org/2000/svg">';
+
+    // Y axis labels
+    var ySteps = 5;
+    for(var s = 0; s <= ySteps; s++){
+      var val = Math.round(minR + (s / ySteps) * range);
+      var yPos = padT + chartH - (s / ySteps) * chartH;
+      svg += '<line x1="' + padL + '" y1="' + yPos + '" x2="' + (W-padR) + '" y2="' + yPos + '" stroke="#e8e8e8" stroke-width="0.5"/>';
+      svg += '<text x="' + (padL-4) + '" y="' + (yPos+3) + '" text-anchor="end" fill="#999" font-family="IBM Plex Mono,monospace" font-size="8">' + val + '</text>';
+    }
+
+    // Peak dashed line
+    svg += '<line x1="' + padL + '" y1="' + peakY.toFixed(1) + '" x2="' + (W-padR) + '" y2="' + peakY.toFixed(1) + '" stroke="#999" stroke-width="0.5" stroke-dasharray="4,3"/>';
+    svg += '<text x="' + (W-padR) + '" y="' + (peakY-4).toFixed(1) + '" text-anchor="end" fill="#999" font-family="IBM Plex Mono,monospace" font-size="8">Peak: ' + peak + '</text>';
+
+    // Rating line
+    svg += '<path d="' + pathD + '" fill="none" stroke="#22863a" stroke-width="1.5" stroke-linejoin="round"/>';
+
+    // Dots (sample if too many)
+    var dotStep = ratings.length > 80 ? Math.ceil(ratings.length / 80) : 1;
+    for(var i = 0; i < points.length; i += dotStep){
+      var p = points[i];
+      svg += '<circle cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) + '" r="2" fill="#22863a"/>';
+    }
+    // Always show last dot
+    var last = points[points.length-1];
+    svg += '<circle cx="' + last.x.toFixed(1) + '" cy="' + last.y.toFixed(1) + '" r="3" fill="#22863a" stroke="#fff" stroke-width="1"/>';
+
+    // X axis labels (game #)
+    var xLabels = [1, Math.round(ratings.length/2), ratings.length];
+    xLabels.forEach(function(n){
+      var xPos = padL + ((n-1) / (ratings.length - 1)) * chartW;
+      svg += '<text x="' + xPos.toFixed(1) + '" y="' + (H-4) + '" text-anchor="middle" fill="#999" font-family="IBM Plex Mono,monospace" font-size="8">#' + n + '</text>';
+    });
+
+    svg += '</svg>';
+
+    el.innerHTML = '<div class="chart-wrap"><div class="chart-title">Rating Over Time</div>' + svg + '</div>';
+  }
+
+  // ============ GAME LOG TAB ============
+  var currentFilter = 'all';
+
+  function renderGameLog(){
+    var games = getGames();
+    var el = document.getElementById('game-log-content');
+    if(games.length === 0){
+      el.innerHTML = '<div class="empty-state"><span class="empty-icon">&#9817;</span>No games yet. Sync from Chess.com first.</div>';
+      return;
+    }
+
+    // Reverse for most recent first
+    var sorted = games.slice().reverse();
+
+    // Filter
+    var filtered = sorted;
+    if(currentFilter === 'wins') filtered = sorted.filter(function(g){ return g.result==='W'; });
+    else if(currentFilter === 'losses') filtered = sorted.filter(function(g){ return g.result==='L'; });
+    else if(currentFilter === 'white') filtered = sorted.filter(function(g){ return g.color==='W'; });
+    else if(currentFilter === 'black') filtered = sorted.filter(function(g){ return g.color==='B'; });
+
+    var html = '<div class="filter-bar">';
+    ['all','wins','losses','white','black'].forEach(function(f){
+      var labels = {all:'All ('+sorted.length+')', wins:'Wins', losses:'Losses', white:'As White', black:'As Black'};
+      html += '<button class="filter-btn' + (currentFilter===f?' active':'') + '" data-filter="' + f + '">' + labels[f] + '</button>';
+    });
+    html += '</div>';
+
+    html += '<p class="dim" style="font-size:12px;margin-bottom:8px;">Showing ' + filtered.length + ' games</p>';
+
+    html += '<div style="overflow-x:auto;"><table class="tbl"><thead><tr><th>#</th><th>Date</th><th>Color</th><th>My Rtg</th><th>Opp Rtg</th><th>Result</th><th>Moves</th><th>Opening</th><th>Link</th></tr></thead><tbody>';
+
+    for(var i = 0; i < filtered.length; i++){
+      var g = filtered[i];
+      var cls = g.result==='W' ? 'grn' : g.result==='L' ? 'rd' : 'blu';
+      var colorTag = g.color==='W' ? '<span class="tag wt">W</span>' : '<span class="tag bt">B</span>';
+      var resultTag = g.result==='W' ? '<span class="tag win">W</span>' : g.result==='L' ? '<span class="tag loss">L</span>' : '<span class="tag">D</span>';
+      var opening = truncate(g.opening || '--', 20);
+      var link = g.url ? '<a class="game-link" href="' + g.url + '" target="_blank" rel="noopener">View</a>' : '--';
+
+      html += '<tr>';
+      html += '<td class="mono dim">' + (i+1) + '</td>';
+      html += '<td class="mono dim" style="font-size:12px;">' + (g.date||'--') + '</td>';
+      html += '<td>' + colorTag + '</td>';
+      html += '<td class="mono">' + (g.myRating||'--') + '</td>';
+      html += '<td class="mono">' + (g.oppRating||'--') + '</td>';
+      html += '<td>' + resultTag + '</td>';
+      html += '<td class="mono">' + (g.moves||'--') + '</td>';
+      html += '<td style="font-size:12px;">' + opening + '</td>';
+      html += '<td>' + link + '</td>';
+      html += '</tr>';
+    }
+
+    html += '</tbody></table></div>';
+    el.innerHTML = html;
+
+    // Filter button handlers
+    el.querySelectorAll('.filter-btn').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        currentFilter = btn.getAttribute('data-filter');
+        renderGameLog();
+      });
+    });
+  }
+
+  // ============ STAGES TAB ============
   function renderStages(){
     var html = '';
     var currentFound = false;
-    var totalGames = 0, totalWins = 0;
-    var bestWR = 0, bestStage = '';
 
-    for(var i=0;i<STAGES.length;i++){
+    for(var i = 0; i < STAGES.length; i++){
       var s = STAGES[i];
-      var games = JSON.parse(localStorage.getItem(s.key) || '[]');
-      var wins = games.filter(function(g){return g.result==='W';}).length;
+      var games = [];
+      try { games = JSON.parse(localStorage.getItem(s.key) || '[]'); } catch(e){}
+      var wins = games.filter(function(g){ return g.result==='W'; }).length;
       var wr = games.length > 0 ? Math.round(wins/games.length*100) : 0;
       var pct = Math.min(100, Math.round(games.length/s.target*100));
       var isCurrent = !currentFound && games.length < s.target;
       if(isCurrent) currentFound = true;
 
-      totalGames += games.length;
-      totalWins += wins;
-      if(games.length >= s.target && wr > bestWR){ bestWR = wr; bestStage = 'S'+(i+1); }
-
-      html += '<div class="stage-card'+(isCurrent?' current':'')+'">';
-      html += '<div class="stage-title">'+(isCurrent?'&#9658; ':'')+s.name+'</div>';
-      html += '<div class="stage-desc">'+games.length+' / '+s.target+' games';
-      if(games.length>0) html += ' &middot; '+wr+'% WR';
+      html += '<div class="stage-card' + (isCurrent?' current':'') + '">';
+      html += '<div class="stage-title">' + (isCurrent?'&#9658; ':'') + s.name + '</div>';
+      html += '<div class="stage-desc">' + games.length + ' / ' + s.target + ' games';
+      if(games.length > 0) html += ' &middot; ' + wr + '% WR';
       html += '</div>';
       html += '<div class="progress-bar"><div class="fill" style="width:'+pct+'%"></div></div>';
       html += '</div>';
     }
     document.getElementById('stage-progress').innerHTML = html;
-
-    var overallWR = totalGames > 0 ? Math.round(totalWins/totalGames*100) : 0;
-    var currentStage = currentFound ? '' : 'Done';
-    for(var i=0;i<STAGES.length;i++){
-      var g = JSON.parse(localStorage.getItem(STAGES[i].key) || '[]');
-      if(g.length < STAGES[i].target){ currentStage = 'Stage '+(i+1); break; }
-    }
-    if(!currentStage) currentStage = 'Complete!';
-
-    document.getElementById('stat-total').textContent = totalGames;
-    document.getElementById('stat-wr').textContent = overallWR+'%';
-    document.getElementById('stat-stage').textContent = currentStage;
-    document.getElementById('stat-best').textContent = bestWR > 0 ? bestWR+'% ('+bestStage+')' : '--';
   }
 
+  // ============ PGN MANUAL IMPORT ============
   function parsePGN(text){
     var games = [];
     var lines = text.split('\n');
@@ -98,11 +648,12 @@
     var inMoves = false;
     var moveText = '';
 
-    for(var i=0;i<lines.length;i++){
+    for(var i = 0; i < lines.length; i++){
       var line = lines[i].trim();
       var headerMatch = line.match(/^\[(\w+)\s+"([^"]*)"\]$/);
       if(headerMatch){
         if(inMoves && moveText){
+          current.moveText = moveText;
           current.moves = (moveText.match(/\d+\./g)||[]).length;
           games.push(current);
           current = {};
@@ -118,97 +669,78 @@
       }
     }
     if(Object.keys(current).length > 0){
+      current.moveText = moveText;
       current.moves = (moveText.match(/\d+\./g)||[]).length;
       games.push(current);
     }
 
+    var username = document.getElementById('sync-username').value.trim().toLowerCase() || 'happery';
     var processed = [];
-    for(var i=0;i<games.length;i++){
+    for(var i = 0; i < games.length; i++){
       var g = games[i];
-      var isWhite = (g.White||'').toLowerCase() === 'happery';
+      var isWhite = (g.White||'').toLowerCase() === username;
       var result = g.Result || '';
       var outcome = result === '1-0' ? (isWhite?'W':'L') : result === '0-1' ? (isWhite?'L':'W') : 'D';
       processed.push({
         date: g.Date || '',
         color: isWhite ? 'W' : 'B',
-        oppRating: isWhite ? (g.BlackElo||'?') : (g.WhiteElo||'?'),
+        myRating: parseInt(isWhite ? (g.WhiteElo||'0') : (g.BlackElo||'0')) || 0,
+        oppRating: parseInt(isWhite ? (g.BlackElo||'0') : (g.WhiteElo||'0')) || 0,
         result: outcome,
         moves: g.moves || 0,
-        termination: g.Termination || ''
+        opening: g.Opening || '--',
+        termination: g.Termination || '',
+        timeControl: g.TimeControl || '',
+        pgn: '[White "' + (g.White||'') + '"]\n' + (g.moveText||''),
+        url: g.Link || ''
       });
     }
     return processed;
   }
 
-  function renderPGNResults(games){
-    if(games.length === 0){
+  document.getElementById('parse-btn').addEventListener('click', function(){
+    var text = document.getElementById('pgn-input').value;
+    if(!text.trim()){
+      document.getElementById('pgn-results').innerHTML = '<p class="dim">Paste PGN text first.</p>';
+      return;
+    }
+    var newGames = parsePGN(text);
+    if(newGames.length === 0){
       document.getElementById('pgn-results').innerHTML = '<p class="dim">No games found in PGN.</p>';
       return;
     }
 
-    var wins = games.filter(function(g){return g.result==='W';}).length;
-    var losses = games.filter(function(g){return g.result==='L';}).length;
-    var draws = games.length - wins - losses;
-    var wAsWhite = games.filter(function(g){return g.color==='W';});
-    var wAsBlack = games.filter(function(g){return g.color==='B';});
-    var wrWhite = wAsWhite.length > 0 ? Math.round(wAsWhite.filter(function(g){return g.result==='W';}).length/wAsWhite.length*100) : 0;
-    var wrBlack = wAsBlack.length > 0 ? Math.round(wAsBlack.filter(function(g){return g.result==='W';}).length/wAsBlack.length*100) : 0;
-    var avgMoves = Math.round(games.reduce(function(a,g){return a+g.moves;},0)/games.length);
-    var avgOpp = Math.round(games.reduce(function(a,g){return a+parseInt(g.oppRating||0);},0)/games.length);
+    // Merge into synced games (de-dupe by url if available)
+    var existing = getGames();
+    var existingUrls = {};
+    existing.forEach(function(g){ if(g.url) existingUrls[g.url] = true; });
 
-    var html = '<div class="stats">';
-    html += '<div class="stat"><div class="label">Games</div><div class="val">'+games.length+'</div></div>';
-    html += '<div class="stat"><div class="label">Record</div><div class="val grn">'+wins+'</div><div class="note">W '+wins+' / L '+losses+' / D '+draws+'</div></div>';
-    html += '<div class="stat"><div class="label">WR White</div><div class="val">'+wrWhite+'%</div></div>';
-    html += '<div class="stat"><div class="label">WR Black</div><div class="val">'+wrBlack+'%</div></div>';
-    html += '<div class="stat"><div class="label">Avg Moves</div><div class="val">'+avgMoves+'</div></div>';
-    html += '<div class="stat"><div class="label">Avg Opp</div><div class="val">'+avgOpp+'</div></div>';
-    html += '</div>';
+    var added = 0;
+    newGames.forEach(function(g){
+      if(g.url && existingUrls[g.url]) return;
+      existing.push(g);
+      added++;
+    });
 
-    html += '<table class="tbl"><thead><tr><th>#</th><th>Date</th><th>Color</th><th>Opp</th><th>Result</th><th>Moves</th></tr></thead><tbody>';
-    for(var i=0;i<games.length;i++){
-      var g = games[i];
-      var cls = g.result==='W'?'grn':g.result==='L'?'rd':'blu';
-      var colorTag = g.color==='W'?'<span class="tag wt">W</span>':'<span class="tag bt">B</span>';
-      html += '<tr><td class="mono">'+(i+1)+'</td><td class="mono dim">'+g.date+'</td><td>'+colorTag+'</td><td class="mono">'+g.oppRating+'</td><td class="mono '+cls+'">'+g.result+'</td><td class="mono">'+g.moves+'</td></tr>';
-    }
-    html += '</tbody></table>';
+    existing.sort(function(a,b){ return a.date < b.date ? -1 : a.date > b.date ? 1 : 0; });
+    saveGames(existing);
 
-    document.getElementById('pgn-results').innerHTML = html;
+    document.getElementById('pgn-results').innerHTML = '<p class="grn">Added ' + added + ' games (' + newGames.length + ' parsed, duplicates skipped).</p>';
 
-    var existing = JSON.parse(localStorage.getItem('chess-pgn-imports') || '[]');
-    localStorage.setItem('chess-pgn-imports', JSON.stringify(existing.concat(games)));
-  }
-
-  document.getElementById('parse-btn').addEventListener('click', function(){
-    var text = document.getElementById('pgn-input').value;
-    var games = parsePGN(text);
-    renderPGNResults(games);
+    renderStats();
+    renderPatterns();
+    renderChart();
+    renderGameLog();
   });
 
-  function renderHistory(){
-    var games = JSON.parse(localStorage.getItem('chess-pgn-imports') || '[]');
-    if(games.length === 0) return;
-    var html = '<h3>Import History</h3><table class="tbl"><thead><tr><th>#</th><th>Date</th><th>Color</th><th>Opp</th><th>Result</th><th>Moves</th></tr></thead><tbody>';
-    for(var i=0;i<games.length;i++){
-      var g = games[i];
-      var cls = g.result==='W'?'grn':g.result==='L'?'rd':'blu';
-      var colorTag = g.color==='W'?'<span class="tag wt">W</span>':'<span class="tag bt">B</span>';
-      html += '<tr><td class="mono">'+(i+1)+'</td><td class="mono dim">'+g.date+'</td><td>'+colorTag+'</td><td class="mono">'+g.oppRating+'</td><td class="mono '+cls+'">'+g.result+'</td><td class="mono">'+g.moves+'</td></tr>';
-    }
-    html += '</tbody></table>';
-    html += '<button class="parse-btn" id="clear-history" style="background:#d73a49;margin-top:8px;">Clear History</button>';
-    document.getElementById('import-history').innerHTML = html;
-    document.getElementById('clear-history').addEventListener('click', function(){
-      if(confirm('Clear all import history?')){
-        localStorage.removeItem('chess-pgn-imports');
-        document.getElementById('import-history').innerHTML = '';
-      }
-    });
-  }
-
+  // ============ INITIAL RENDER ============
+  showLastSync();
+  renderStats();
+  renderPatterns();
+  renderChart();
+  renderGameLog();
   renderStages();
-  renderHistory();
+
 })();
 </script>
 </body>

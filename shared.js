@@ -79,6 +79,10 @@ function renderNav(active) {
       {id:'ch-tilt',label:'Tilt Control',ch:'07'},
       {id:'ch-practice',label:'Practice Plan',ch:'08'}
     ]},
+    {heading:'Practice', items:[
+      {id:'quiz',label:'Blunder Quiz'},
+      {id:'play',label:'Play & Practice'}
+    ]},
     {heading:'Training Program', items:[
       {id:'stage-1',label:'S1: Stop the Bleeding'},
       {id:'stage-2',label:'S2: Build Foundation'},
