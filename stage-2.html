@@ -89,6 +89,10 @@
 
   <div class="con">
     <h2>Progress</h2>
+    <div id="tracking-banner" style="display:flex;align-items:center;justify-content:space-between;background:#f8f7f0;border:1px solid #e0e0e0;border-radius:6px;padding:8px 12px;margin-bottom:10px;font-family:'IBM Plex Mono',monospace;font-size:12px;">
+      <span id="tracking-info">Not started yet</span>
+      <button id="tracking-btn" style="background:#769656;color:#fff;border:none;padding:6px 14px;border-radius:4px;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;cursor:pointer;">Start Tracking</button>
+    </div>
     <div id="prog-text" style="margin-bottom:8px">0 of 25 games</div>
     <div class="progress-bar"><div class="fill" id="prog-fill" style="width:0%"></div></div>
   </div>
@@ -149,9 +153,19 @@
 <script>
 (function(){
   var TARGET = 25;
+  var STAGE_KEY = 'chess-stage-2-start';
   var allGames = JSON.parse(localStorage.getItem('chess-synced-games') || '[]');
-  var games = allGames.slice(-TARGET);
-  var total = allGames.length;
+  var startDate = localStorage.getItem(STAGE_KEY) || '';
+  var games = [];
+  if(startDate){
+    for(var i=0;i<allGames.length;i++){
+      if(allGames[i].date >= startDate) games.push(allGames[i]);
+    }
+    games = games.slice(0, TARGET);
+  } else {
+    games = [];
+  }
+  var total = games.length;
 
   // Progress
   var count = Math.min(total, TARGET);
@@ -211,6 +225,23 @@
         '<td>' + (g.url ? '<a href="' + g.url + '" target="_blank">&#x2197;</a>' : '—') + '</td>';
       tbody.appendChild(tr);
     }
+  }
+
+  // Tracking banner
+  var trackBanner = document.getElementById('tracking-banner');
+  var trackInfo = document.getElementById('tracking-info');
+  var trackBtn = document.getElementById('tracking-btn');
+  if(startDate){
+    var dp=startDate.split('-');
+    var mn=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    trackInfo.textContent = 'Tracking from ' + mn[parseInt(dp[1],10)-1] + ' ' + parseInt(dp[2],10) + ', ' + dp[0];
+    trackBtn.textContent = 'Reset';
+    trackBtn.style.background = '#d73a49';
+    trackBtn.onclick = function(){ localStorage.removeItem(STAGE_KEY); location.reload(); };
+  } else {
+    trackInfo.textContent = 'Not started \u2014 click to begin tracking new games';
+    trackBtn.textContent = 'Start Tracking';
+    trackBtn.onclick = function(){ localStorage.setItem(STAGE_KEY, new Date().toISOString().split('T')[0]); location.reload(); };
   }
 })();
 </script>

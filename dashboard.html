@@ -141,11 +141,11 @@
   var DRAW_RESULTS = ['stalemate','repetition','agreed','insufficient','50move','timevsinsufficient'];
 
   var STAGES = [
-    {key:'chess-s1-games',name:'S1: Stop the Bleeding',target:20},
-    {key:'chess-s2-games',name:'S2: Build a Foundation',target:25},
-    {key:'chess-s3-games',name:'S3: Fight for the Center',target:25},
-    {key:'chess-s4-games',name:'S4: Punish Their Mistakes',target:25},
-    {key:'chess-s5-games',name:'S5: The Rating Push',target:30}
+    {startKey:'chess-stage-1-start',name:'S1: Stop the Bleeding',target:20},
+    {startKey:'chess-stage-2-start',name:'S2: Build a Foundation',target:25},
+    {startKey:'chess-stage-3-start',name:'S3: Fight for the Center',target:25},
+    {startKey:'chess-stage-4-start',name:'S4: Punish Their Mistakes',target:25},
+    {startKey:'chess-stage-5-start',name:'S5: The Rating Push',target:25}
   ];
 
   // ============ HELPERS ============
@@ -208,20 +208,23 @@
 
     var moveCount = 0;
     if(g.pgn){
-      var matches = g.pgn.match(/\d+\./g);
-      if(matches) moveCount = matches.length;
+      var mm = g.pgn.match(/\b(\d+)\.\s*[A-Za-z]/g);
+      if(mm){ var last=mm[mm.length-1].match(/(\d+)/); if(last) moveCount=parseInt(last[1],10); }
     }
 
     var opening = extractOpening(g);
 
     var dateStr = '';
+    var timeStr = '';
     if(g.end_time){
       var d = new Date(g.end_time * 1000);
       dateStr = d.toISOString().split('T')[0];
+      timeStr = d.toTimeString().slice(0,5);
     }
 
     return {
       date: dateStr,
+      time: timeStr,
       color: isWhite ? 'W' : 'B',
       myRating: mySide.rating || 0,
       oppRating: oppSide.rating || 0,
@@ -612,7 +615,9 @@
 
       html += '<tr>';
       html += '<td class="mono dim">' + (i+1) + '</td>';
-      html += '<td class="mono dim" style="font-size:12px;">' + (g.date||'--') + '</td>';
+      var fmtDate = '--';
+      if(g.date){var dp=g.date.split('-');var mn=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];fmtDate=mn[parseInt(dp[1],10)-1]+' '+parseInt(dp[2],10)+(g.time?' '+g.time:'');}
+      html += '<td class="mono dim" style="font-size:12px;">' + fmtDate + '</td>';
       html += '<td>' + colorTag + '</td>';
       html += '<td class="mono">' + (g.myRating||'--') + '</td>';
       html += '<td class="mono">' + (g.oppRating||'--') + '</td>';
@@ -639,22 +644,37 @@
   function renderStages(){
     var html = '';
     var currentFound = false;
+    var allGames = getGames();
+    var MN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
     for(var i = 0; i < STAGES.length; i++){
       var s = STAGES[i];
+      var startDate = localStorage.getItem(s.startKey) || '';
       var games = [];
-      try { games = JSON.parse(localStorage.getItem(s.key) || '[]'); } catch(e){}
+      if(startDate){
+        for(var j=0;j<allGames.length;j++){
+          if(allGames[j].date >= startDate) games.push(allGames[j]);
+        }
+        games = games.slice(0, s.target);
+      }
       var wins = games.filter(function(g){ return g.result==='W'; }).length;
       var wr = games.length > 0 ? Math.round(wins/games.length*100) : 0;
       var pct = Math.min(100, Math.round(games.length/s.target*100));
       var isCurrent = !currentFound && games.length < s.target;
       if(isCurrent) currentFound = true;
 
+      var statusLine = '';
+      if(!startDate){
+        statusLine = 'Not started';
+      } else {
+        var dp=startDate.split('-');
+        statusLine = games.length + ' / ' + s.target + ' games · since ' + MN[parseInt(dp[1],10)-1] + ' ' + parseInt(dp[2],10);
+        if(games.length > 0) statusLine += ' · ' + wr + '% WR';
+      }
+
       html += '<div class="stage-card' + (isCurrent?' current':'') + '">';
       html += '<div class="stage-title">' + (isCurrent?'&#9658; ':'') + s.name + '</div>';
-      html += '<div class="stage-desc">' + games.length + ' / ' + s.target + ' games';
-      if(games.length > 0) html += ' &middot; ' + wr + '% WR';
-      html += '</div>';
+      html += '<div class="stage-desc">' + statusLine + '</div>';
       html += '<div class="progress-bar"><div class="fill" style="width:'+pct+'%"></div></div>';
       html += '</div>';
     }
@@ -675,7 +695,7 @@
       if(headerMatch){
         if(inMoves && moveText){
           current.moveText = moveText;
-          current.moves = (moveText.match(/\d+\./g)||[]).length;
+          var mm=moveText.match(/\b(\d+)\.\s*[A-Za-z]/g);current.moves=0;if(mm){var last=mm[mm.length-1].match(/(\d+)/);if(last)current.moves=parseInt(last[1],10);}
           games.push(current);
           current = {};
           moveText = '';
@@ -691,7 +711,7 @@
     }
     if(Object.keys(current).length > 0){
       current.moveText = moveText;
-      current.moves = (moveText.match(/\d+\./g)||[]).length;
+      var mm2=moveText.match(/\b(\d+)\.\s*[A-Za-z]/g);current.moves=0;if(mm2){var last2=mm2[mm2.length-1].match(/(\d+)/);if(last2)current.moves=parseInt(last2[1],10);}
       games.push(current);
     }
 
