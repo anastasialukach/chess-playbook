@@ -122,12 +122,12 @@
 <script>
 // Pattern A: Fried Liver (Bxf7+)
 const flBase=ad(rm(SP,['e2','f1','b1','g1','e7','g8','f8']),[['wP','e4'],['wB','c4'],['wN','c3'],['wN','f3'],['bP','e5'],['bN','f6'],['bB','c5']]);
-brd('cmp-fl-a1',ad(rm(flBase,['e8','h8']),[['bK','g8'],['bR','f8']]),{mini:true,hl:['g8','f8']});
-brd('cmp-fl-a2',ad(rm(flBase,['e8','h8','f3','h7']),[['bK','g8'],['bR','f8'],['wN','g5'],['bP','h6']]),{mini:true,rd:['h6','f7'],hl:['g5']});
-brd('cmp-fl-a3',ad(rm(flBase,['e8','h8','f3','h7','c4','f8']),[['bK','g8'],['wN','g5'],['bP','h6'],['wB','f7']]),{mini:true,rd:['f7','g8'],hl:['f7']});
-brd('cmp-fl-b1',ad(rm(flBase,['d7']),[['bP','d5']]),{mini:true,hl:['d5']});
-brd('cmp-fl-b2',ad(rm(flBase,['d7','e4','f6']),[['wP','d5'],['bN','d5']]),{mini:true,hl:['d5']});
-brd('cmp-fl-b3',ad(rm(flBase,['d7','e4','f6','c8']),[['wP','d5'],['bN','d5'],['bB','e6']]),{mini:true,hl:['d5','e6']});
+brd('cmp-fl-a1',ad(rm(flBase,['e8','h8']),[['bK','g8'],['bR','f8']]),{mini:true,hl:['g8','f8'],flip:true});
+brd('cmp-fl-a2',ad(rm(flBase,['e8','h8','f3','h7']),[['bK','g8'],['bR','f8'],['wN','g5'],['bP','h6']]),{mini:true,rd:['h6','f7'],hl:['g5'],flip:true});
+brd('cmp-fl-a3',ad(rm(flBase,['e8','h8','f3','h7','c4','f8']),[['bK','g8'],['wN','g5'],['bP','h6'],['wB','f7']]),{mini:true,rd:['f7','g8'],hl:['f7'],flip:true});
+brd('cmp-fl-b1',ad(rm(flBase,['d7']),[['bP','d5']]),{mini:true,hl:['d5'],flip:true});
+brd('cmp-fl-b2',ad(rm(flBase,['d7','e4','f6']),[['wP','d5'],['bN','d5']]),{mini:true,hl:['d5'],flip:true});
+brd('cmp-fl-b3',ad(rm(flBase,['d7','e4','f6','c8']),[['wP','d5'],['bN','d5'],['bB','e6']]),{mini:true,hl:['d5','e6'],flip:true});
 
 // Pattern B: Knight Retreat Ng1?? → Qxf2#
 const nrBase=ad(rm(SP,['e2','g1','b1','f1','e7','f8','d8','d7']),[['wP','e4'],['wN','f3'],['wN','c3'],['wB','c4'],['bP','e5'],['bB','c5'],['bQ','f6'],['wP','d5']]);
@@ -140,12 +140,12 @@ brd('cmp-nr-b3',ad(rm(nrBase,['e4','e5','f3']),[['bP','e4'],['wN','g5']]),{mini:
 
 // Pattern C: Qxh7#
 const bmBase=ad(rm(SP,['d1','c1','e7','g8','e8','h8','g7']),[['wQ','h5'],['wB','h6'],['bN','f6'],['bK','g8'],['bR','f8'],['bP','g7']]);
-brd('cmp-bm-a1',bmBase,{mini:true,hl:['g8','f8'],rd:['h7']});
-brd('cmp-bm-a2',ad(rm(bmBase,['e7']),[['bP','e5']]),{mini:true,rd:['h7','h5']});
-brd('cmp-bm-a3',ad(rm(bmBase,['e7','h5','h7']),[['bP','e5'],['wQ','h7']]),{mini:true,rd:['h7','g8']});
-brd('cmp-bm-b1',bmBase,{mini:true,hl:['g8','f8'],rd:['h7']});
-brd('cmp-bm-b2',ad(rm(bmBase,['g7']),[['bP','g6']]),{mini:true,hl:['g6','f6']});
-brd('cmp-bm-b3',ad(rm(bmBase,['g7','h6']),[['bP','g6']]),{mini:true,hl:['g6','f6','g8']});
+brd('cmp-bm-a1',bmBase,{mini:true,hl:['g8','f8'],rd:['h7'],flip:true});
+brd('cmp-bm-a2',ad(rm(bmBase,['e7']),[['bP','e5']]),{mini:true,rd:['h7','h5'],flip:true});
+brd('cmp-bm-a3',ad(rm(bmBase,['e7','h5','h7']),[['bP','e5'],['wQ','h7']]),{mini:true,rd:['h7','g8'],flip:true});
+brd('cmp-bm-b1',bmBase,{mini:true,hl:['g8','f8'],rd:['h7'],flip:true});
+brd('cmp-bm-b2',ad(rm(bmBase,['g7']),[['bP','g6']]),{mini:true,hl:['g6','f6'],flip:true});
+brd('cmp-bm-b3',ad(rm(bmBase,['g7','h6']),[['bP','g6']]),{mini:true,hl:['g6','f6','g8'],flip:true});
 
 // Pattern D: Long diagonal Qg2#
 const oeBase=[['wR','a1'],['wR','e5'],['wB','e2'],['wK','g1'],['wP','a3'],['wP','c3'],['wP','d4'],['wP','f2'],['wP','g2'],['wP','h2'],['bK','g8'],['bP','a7'],['bP','b6'],['bP','e6'],['bP','f7'],['bP','g7'],['bP','h7'],['bR','a8'],['bB','c8'],['bQ','c6']];

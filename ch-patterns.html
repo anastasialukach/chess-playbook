@@ -81,12 +81,12 @@ brd('cmp-11b3',ad(rm(g11,['f1','d2','d8','e1','h1']),[['wB','c4'],['wP','d3'],['
 
 // G33 comparisons
 const g33=ad(rm(SP,['e2','e7','b8']),[['wP','e4'],['bP','e5'],['bN','c6']]);
-brd('cmp-33a1',ad(rm(g33,['f1','a7']),[['wB','b5'],['bP','a6']]),{mini:true,rd:['a6']});
-brd('cmp-33a2',ad(rm(g33,['f1','a7','b7']),[['wB','c4'],['bP','a6'],['bP','b5']]),{mini:true,rd:['a6','b5']});
-brd('cmp-33a3',ad(rm(g33,['f1','a7','b7','d1']),[['wB','c4'],['bP','a6'],['bP','b5'],['wQ','f3']]),{mini:true,rd:['f7']});
-brd('cmp-33b1',ad(rm(g33,['f1','g8']),[['wB','b5'],['bN','f6']]),{mini:true,hl:['f6']});
-brd('cmp-33b2',ad(rm(g33,['f1','g8','f8']),[['wB','c4'],['bN','f6'],['bB','c5']]),{mini:true,hl:['c5','f6']});
-brd('cmp-33b3',ad(rm(g33,['f1','g8','f8','e8','h8']),[['wB','c4'],['bN','f6'],['bB','c5'],['bK','g8'],['bR','f8']]),{mini:true,hl:['g8','f8']});
+brd('cmp-33a1',ad(rm(g33,['f1','a7']),[['wB','b5'],['bP','a6']]),{mini:true,rd:['a6'],flip:true});
+brd('cmp-33a2',ad(rm(g33,['f1','a7','b7']),[['wB','c4'],['bP','a6'],['bP','b5']]),{mini:true,rd:['a6','b5'],flip:true});
+brd('cmp-33a3',ad(rm(g33,['f1','a7','b7','d1']),[['wB','c4'],['bP','a6'],['bP','b5'],['wQ','f3']]),{mini:true,rd:['f7'],flip:true});
+brd('cmp-33b1',ad(rm(g33,['f1','g8']),[['wB','b5'],['bN','f6']]),{mini:true,hl:['f6'],flip:true});
+brd('cmp-33b2',ad(rm(g33,['f1','g8','f8']),[['wB','c4'],['bN','f6'],['bB','c5']]),{mini:true,hl:['c5','f6'],flip:true});
+brd('cmp-33b3',ad(rm(g33,['f1','g8','f8','e8','h8']),[['wB','c4'],['bN','f6'],['bB','c5'],['bK','g8'],['bR','f8']]),{mini:true,hl:['g8','f8'],flip:true});
 
 // f2/f7
 brd('b-f2f7',SP,{rd:['f2'],bl:['f7']});

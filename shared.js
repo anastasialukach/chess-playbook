@@ -24,10 +24,13 @@ function brd(id, pcs, opts) {
   const hlS=new Set(o.hl||[]),rdS=new Set(o.rd||[]),blS=new Set(o.bl||[]),gdS=new Set(o.gd||[]),skS=new Set(o.sk||[]);
   const map={};
   (pcs||[]).forEach(p=>map[p[1]]=p[0]);
+  const flip=o.flip||false;
   let h='<div class="bwrap"><div class="brd'+(mini?' mini':'')+'">';
-  for(let row=8;row>=1;row--){
+  for(let ri=0;ri<8;ri++){
+    const row=flip?ri+1:8-ri;
     for(let ci=0;ci<8;ci++){
-      const sq=COLS[ci]+row;
+      const col=flip?7-ci:ci;
+      const sq=COLS[col]+row;
       const lt=(ci+row)%2===1;
       let cls='sq '+(lt?'lt':'dk');
       if(hlS.has(sq)) cls+=' hl';
